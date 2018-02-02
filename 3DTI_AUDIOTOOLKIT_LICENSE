@@ -1,0 +1,34 @@
+Copyright (c) 2015-2018 University of Malaga and Imperial College London.
+All rights reserved.
+
+This copy of 3dti_AudioToolkit is free software; you can redistribute 
+it and/or modify it under the terms of the GNU General Public License 
+version 3 as published by the Free Software Foundation.
+
+3dti_AudioToolkit is distributed in the hope that it will be useful, but 
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
+or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for 
+more details.
+
+You should have received a copy of the GNU General Public License version
+3 along with this program; if not, see http://www.gnu.org/licenses.
+
+Linking 3dti_AudioToolkit statically or dynamically with other software 
+(such as a library, module or application) is making a combined work based
+on 3dti_AudioToolkit. Thus, the terms and conditions of the GNU General 
+Public License version 3 cover this combined work.
+
+If such software can only be used together with 3dti_AudioToolkit, then not
+only the combined work but the software itself is a work derived from 
+3dti_AudioToolkit and as such shall be licensed under the terms of the GNU 
+General Public License version 3. This includes the situation where 
+3dti_AudioToolkit is only being used through an abstraction layer.
+
+As a special exception to the above, the partners of the 3D Tune-In consortium
+may use this software as developed during the lifetime of the 3D Tune-In 
+project (up to 30th April, 2018), even for comercial purposes, without the 
+obligation of licensing their applications under the terms of the GNU General 
+Public License version 3, provided that, the partner has communicated such 
+development to University of Malaga and Imperial College London and this 
+software is appropriately acknowledged. This exception doesn't apply to the 
+use of any advancemens or changes in this software after 30th April, 2018.
