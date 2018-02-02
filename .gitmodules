@@ -1,0 +1,8 @@
+[submodule "3dti_ResourceManager/third_party_libraries/sofacoustics"]
+	path = 3dti_ResourceManager/third_party_libraries/sofacoustics
+	url = https://github.com/sofacoustics/API_Cpp.git
+	branch = master
+[submodule "3dti_ResourceManager/third_party_libraries/cereal"]
+	path = 3dti_ResourceManager/third_party_libraries/cereal
+	url = https://github.com/USCiLab/cereal.git
+	branch = master
