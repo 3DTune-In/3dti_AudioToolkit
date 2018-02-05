@@ -82,7 +82,7 @@ The 3D Tune-In Toolkit Resource Management Package uses:
 
 ## Further Reading
 
-For complete documentation on 3dti AudioToolkit, see the doc directory of this distribution.
+For complete documentation on the 3D Tune-In Toolkit, see the doc directory of this distribution.
 
 ## Credits
 
@@ -119,4 +119,4 @@ The 3D Tune-In Toolkit and the 3D Tune-In Resource Management Package software t
 
 ![European Union](docs/images/EU_flag.png "European Union") This project has received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No 644051. 
 
-We would like to acknowledge Prof. Brian FG Katz and his team for their contributions in the field of sound spatialization, which were used as the basis for part of this software.
+We would like to acknowledge Dr. Brian FG Katz and his team for their contributions in the field of sound spatialization, which were used as the basis for part of this software.
