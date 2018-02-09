@@ -205,5 +205,3 @@ namespace HAHLSimulation {
 	};
 }// end namespace HAHLSimulation
 #endif
-
-

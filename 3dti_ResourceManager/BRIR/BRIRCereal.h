@@ -71,12 +71,6 @@ namespace BRIR {
 	*/
 	bool CreateFrom3dti(const std::string & input3dti, shared_ptr<Binaural::CEnvironment> environment);			
 
-	/** \brief Loads the data in input3dtiStream as BRIR in environment.
-	*	\param [in] stream that contains the data to be loaded
-	*	\param [in] environment in which the data will be loaded.
-	*   \eh On error, an error code is reported to the error handler.
-	*   \retval Returns true on success. False otherwise
-	*/
 	bool CreateFrom3dtiStream(std::istream& input3dtiStream, shared_ptr<Binaural::CEnvironment> environment);
 }
 

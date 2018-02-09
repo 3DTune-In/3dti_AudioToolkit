@@ -28,11 +28,26 @@
 //#include <vector>
 
 namespace HRTF
-{    
+{   
+	/** \brief Returns the sample rate in Hz in the sofa file
+	*	\param [in] path of the sofa file
+	*   \eh On error, an error code is reported to the error handler.
+	*/
 	int GetSampleRateFromSofa(const std::string & sofafile);
 
+	/** \brief Loads an HRTF from a sofa file
+	*	\param [in] path of the sofa file
+	*	\param [out] listener affected by the hrtf
+	*   \eh On error, an error code is reported to the error handler.
+	*/
 	bool CreateFromSofa(const std::string & sofafile, shared_ptr<Binaural::CListener> listener);
+
+	/** \brief Loads an HRTF from SOFA file so a 3DTI file can be created later
+	*	\param [in] path of the sofa file
+	*	\param [out] listener affected by the hrtf
+	*   \eh On error, an error code is reported to the error handler. */
 	bool Create3DTIFromSofa(const std::string & sofafile, shared_ptr<Binaural::CListener> listener);
+
 	bool LoadHRTFTableFromSOFA(const std::string & sofafile, shared_ptr<Binaural::CListener> listener);
 
     //static CHRTF CreateFromListen(const std::vector<std::string> & listenFiles);

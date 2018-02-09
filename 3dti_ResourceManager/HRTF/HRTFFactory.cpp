@@ -102,7 +102,7 @@ namespace HRTF
 
 	//////////////////////////////////////////////////////////////////////
 
-	bool CreateFromSofa(const std::string & sofafile, shared_ptr<Binaural::CListener> listener) 
+	bool CreateFromSofa(const std::string & sofafile, shared_ptr<Binaural::CListener> listener)
 	{
 		if (LoadHRTFTableFromSOFA(sofafile, listener))
 		{

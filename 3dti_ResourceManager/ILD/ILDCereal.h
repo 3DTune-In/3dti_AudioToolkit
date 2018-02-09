@@ -43,28 +43,36 @@
 #include <cereal/archives/portable_binary.hpp>
 #include <cereal/types/unordered_map.hpp>
 
-// Serialization function for ILD key
+/** \brief Serialization function for ILD key
+*	\param [out] archive for serialization
+*	\param [in] k key 
+*   \eh Nothing is reported to the error handler.
+*/
 template <class Archive>
 void serialize(Archive & ar, CILD_Key & k)
 {
 	ar(k.distance, k.azimuth);
 }
 
-// Serialization functio fo the coefficients of the biquad fiter
+/** \brief Serialization function for the coefficients of the biquad fiter
+*	\param [out] archive for serialization
+*	\param [in] coeficients of the two biquad filters used in the serialization
+*   \eh Nothing is reported to the error handler.
+*/
 template<class Archive>
 void serialize(Archive & ar, T_ILD_TwoBiquadFilterCoefs & c)
 {
 	ar(c.coefs);
 }
 
-// Auxiliary struct required to archive ILD with sampling rate
+/** \details Auxiliary struct required to archive ILD with sampling rate */
 struct ILDDetail_struct
 {
 	uint32_t samplingRate;
 	T_ILD_HashTable table;
 };
 
-// Serialization function for ILD archive
+/** \details Serialization function for ILD archive */
 template <class Archive>
 void serialize(Archive & ar, ILDDetail_struct & h)
 {	
@@ -73,17 +81,39 @@ void serialize(Archive & ar, ILDDetail_struct & h)
 
 namespace ILD 
 {
+	/** \details Serialization function for ILD archive */
 	enum T_ILDTable { ILDNearFieldEffectTable = 0 , ILDSpatializationTable	};
 	
 	/*T_ILD_HashTable CreateFrom3dti(const std::string & input3dti); ///< Create ILD from 3dti file. 
 	T_ILD_HashTable CreateFrom3dtiStream(std::istream& input3dtiStream); ///< Create ILD from a stream opened from a 3dti file*/
 
+	/** \brief Returns the sample rate in the input3dti file
+	*	\param [in] 3dti file path
+	*   \eh On error, an error code is reported to the error handler.
+	*/
 	int GetSampleRateFrom3dti(const std::string & input3dti);	///< Get sample rate from ILD 3dti file
 
-	bool CreateFrom3dti_ILDNearFieldEffectTable(const std::string & input3dti, shared_ptr<Binaural::CListener> listener); ///< Create ILD from 3dti file. 
-	bool CreateFrom3dti_ILDSpatializationTable (const std::string & input3dti, shared_ptr<Binaural::CListener> listener); ///< Create ILD from 3dti file. 
+	/** \brief Create ILD from 3dti file.
+	*   \details Creates a table to process the ILD effect from the 3dti file.
+	*	\param [in] 3dti file path with the data to create the ILD table
+	*	\param [out] Listener that is affected by the ILD
+	*   \eh On error, an error code is reported to the error handler.
+	*/
+	bool CreateFrom3dti_ILDNearFieldEffectTable(const std::string & input3dti, shared_ptr<Binaural::CListener> listener); 
+	/** \brief Creates the spacialization table for ILD from the 3dti input file. 
+	*	\param [in] 3dti file path with the data to create the spacialization table
+	*	\param [out] Listener that is affected by spacialization table
+	*   \eh On error, an error code is reported to the error handler.
+	*/
+	bool CreateFrom3dti_ILDSpatializationTable (const std::string & input3dti, shared_ptr<Binaural::CListener> listener ); 
 	
-	bool CreateFrom3dtiStream(std::istream& input3dtiStream, shared_ptr<Binaural::CListener> listener, T_ILDTable tableDestiny); ///< Create ILD from a stream opened from a 3dti file
+	/** \brief Create ILD from a stream opened from a 3dti file
+	*	\param [in] 3dti file path with the data to create the spacialization table
+	*	\param [out] Listener that is affected by spacialization table
+	*	\param [out] table containing the ouput data
+	*   \eh On error, an error code is reported to the error handler.
+	*/
+	bool CreateFrom3dtiStream(std::istream& input3dtiStream, shared_ptr<Binaural::CListener> listener, T_ILDTable tableDestiny);
 }
 
 #endif

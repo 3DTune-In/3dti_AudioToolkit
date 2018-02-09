@@ -28,10 +28,25 @@
 
 namespace BRIR
 {
+	/** \brief Returns the sample rate in Hz in the sofa file
+	*	\param [in] path of the sofa file
+	*   \eh On error, an error code is reported to the error handler.
+	*/
 	int GetSampleRateFromSofa(const std::string & sofafile);
 
-	bool CreateFromSofa(const std::string & sofafile, shared_ptr<Binaural::CEnvironment> environment);    
-	bool Create3DTIFromSofa(const std::string & sofafile, shared_ptr<Binaural::CEnvironment> environment);				
+	/** \brief Loads an BRIR from a sofa file
+	*	\param [in] path of the sofa file
+	*	\param [out] listener affected by the hrtf
+	*   \eh On error, an error code is reported to the error handler.
+	*/
+	bool CreateFromSofa(const std::string & sofafile, shared_ptr<Binaural::CEnvironment> environment);
+
+	/** \brief Loads a BRIR from SOFA file so a 3DTI file can be created later
+	*	\param [in] path of the sofa file
+	*	\param [out] listener affected by the hrtf
+	*   \eh On error, an error code is reported to the error handler. */
+	bool Create3DTIFromSofa(const std::string & sofafile, shared_ptr<Binaural::CEnvironment> environment);
+	
 	bool LoadBRIRTableFromSOFA(const std::string & sofafile, shared_ptr<Binaural::CEnvironment> environment);
 };
 

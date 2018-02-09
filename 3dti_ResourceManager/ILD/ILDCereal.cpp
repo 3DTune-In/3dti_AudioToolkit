@@ -87,10 +87,10 @@ namespace ILD {
 	{
 		try
 		{
-			cereal::PortableBinaryInputArchive archive(input3dtiStream);
+			cereal::PortableBinaryInputArchive archive( input3dtiStream );
 			//T_ILD_HashTable ild_data;
 			ILDDetail_struct ild_data;
-			archive(ild_data);
+			archive( ild_data );
 			
 			if (tableDestiny == T_ILDTable::ILDNearFieldEffectTable) {
 				//listener->GetILD()->AddILDNearFieldEffectTable(std::move(ild_data));
@@ -100,8 +100,7 @@ namespace ILD {
 			{
 				//listener->GetILD()->AddILDSpatialziationTable(std::move(ild_data));
 				listener->GetILD()->AddILDSpatialziationTable(std::move(ild_data.table));
-			}
-			
+			}			
 
 			SET_RESULT(RESULT_OK, "ILD created from 3DTI stream");
 			return true;
