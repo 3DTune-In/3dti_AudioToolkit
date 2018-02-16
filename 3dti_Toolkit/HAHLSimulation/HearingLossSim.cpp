@@ -282,7 +282,8 @@ namespace HAHLSimulation {
 		Common::CEarPair<CMonoBuffer<float>> audiogramOutput;
 		audiogramOutput.left.Fill(outputBuffer.left.GetNsamples(), 0.0f);
 		audiogramOutput.right.Fill(outputBuffer.right.GetNsamples(), 0.0f);
-		if (enableMultibandExpander.left && enableHearingLossSimulation.left)
+
+		if( enableMultibandExpander.left && enableHearingLossSimulation.left )
 			multibandExpanders.left.Process(smearingOutput.left, audiogramOutput.left);
 		else
 			audiogramOutput.left = smearingOutput.left;
@@ -354,10 +355,11 @@ namespace HAHLSimulation {
 	float CHearingLossSim::CalculateRatioFromDBHL(float dBHL)
 	{
 		float limitedDBHL = dBHL;
-		if (limitedDBHL > 100.0f)
+		if( limitedDBHL > 100.0f )
 			limitedDBHL = 100.0f;
 
-		return (T100 - A100) / (T100 - A100 + (A100 - T100)*limitedDBHL*0.01f);
+		float den = ( T100 - A100 + (A100 - T100) * limitedDBHL * 0.01f );
+		return fabs(den) < 0.0000001 ? 0 : (T100 - A100) / den;
 	}
 
 	//////////////////////////////////////////////
@@ -397,6 +399,7 @@ namespace HAHLSimulation {
 			EnableMultibandExpander(Common::T_ear::RIGHT);
 			return;
 		}
+
 		if (ear == Common::T_ear::LEFT)
 			enableMultibandExpander.left = true;
 		if (ear == Common::T_ear::RIGHT)
