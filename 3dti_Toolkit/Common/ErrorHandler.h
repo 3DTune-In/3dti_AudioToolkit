@@ -35,6 +35,8 @@ using namespace std;
 /** \brief If SWITCH_ON_3DTI_ERRORHANDLER is undefined, the error handler is completely disabled, causing 0 overhead
 */
 
+#define SWITCH_ON_3DTI_ERRORHANDLER
+
 #ifdef _3DTI_ANDROID_ERRORHANDLER
 
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "3DTI_CORE", __VA_ARGS__))
