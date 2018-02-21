@@ -25,7 +25,7 @@
 namespace HAHLSimulation {
 
 	/** \brief Get all hearing loss values (dBHL) for an audiometry, depending on a specified preset of the HL classification scale	
-	*	\param [in] curve letter specifiying the curve from the HL classification scale ('A' to 'K')
+	*	\param [in] curve letter specifying the curve from the HL classification scale ('A' to 'K')
 	*	\param [in] extend of slope to be applied to the curveseverity from the HL classification scale (0 to 6)
 	*	\param [in] severity of HL applied as an offset to the values returned in hl
 	*	\param [out] hl audiometry with all hearing loss levels (dBHL) corresponding to the chosen HL classification scale (curve and scale)

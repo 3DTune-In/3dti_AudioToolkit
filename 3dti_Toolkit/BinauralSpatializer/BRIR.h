@@ -104,12 +104,12 @@ namespace Binaural
 		CBRIR() :ownerEnvironment{ nullptr }, BRIR_ready{ false } {}
 
 		/**	\brief Start a new BRIR configuration.
-		*	\param [in] _BRIRlength integer that indicates the BRIR length
+		*	\param [in] _BRIRLength integer that indicates the BRIR length
 		*
 		* When this method is called: (1) Reset the previous BRIR, (2) Block the spatialization algorithm. 
 		*   \eh On error, an error code is reported to the error handler.
 		*/
-		void BeginSetup(int32_t _BRIRlength);		
+		void BeginSetup(int32_t _BRIRLength);		
 		
 		/** \brief Set a new BRIR vector in the BRIR matrix
 		*	\param [in] vsPosition Virtual Speaker position (N,S,E,W)
@@ -132,23 +132,23 @@ namespace Binaural
 		*/
 		void EndSetup();
 
-		/** \brief Get BRIR filter lenght in time domain
-		*   \retval length int BRIR filter lenght in time domain
+		/** \brief Get BRIR filter length in time domain
+		*   \retval length int BRIR filter length in time domain
 		*   \eh Nothing is reported to the error handler.
 		*/
 		int GetBRIRLength();
 
-		/** \brief Get BRIR filter lenght in frequency domain
-		*   \retval length BRIR filter lenght in frequency domain
+		/** \brief Get BRIR filter length in frequency domain
+		*   \retval length BRIR filter length in frequency domain
 		*   \eh Nothing is reported to the error handler.
 		*/
 		int GetBRIRLength_frequency();
 
-		/** \brief Get BRIR sub-filter (after partition) lenght in frequency domain
-		*   \retval length BRIR sub-filter lenght in frequency domain
+		/** \brief Get BRIR sub-filter (after partition) length in frequency domain
+		*   \retval length BRIR sub-filter length in frequency domain
 		*   \eh Nothing is reported to the error handler.
 		*/
-		int GetBRIROneSubfilterLenght();
+		int GetBRIROneSubfilterLength();
 
 		/** \brief Get number of sub-filters (blocks) fo the brir partition
 		*	\retval dataLength Number of sub filters
@@ -213,8 +213,8 @@ namespace Binaural
 		// ATTRIBUTES
 		///////////////
 		CEnvironment* ownerEnvironment;	// Pointer to the Environment
-		int32_t BRIRlength;				// BRIR vector length
-		int32_t BRIRlength_frequency;	// BRIR lenght in frequency domain 
+		int32_t BRIRLength;				// BRIR vector length
+		int32_t BRIRLength_frequency;	// BRIR length in frequency domain 
 		int32_t bufferSize;				// Input signal buffer size
 		bool setupInProgress;			// Variable that indicates the BRIR add is in progress
 		bool BRIR_ready;				// Indicate that the BRIR table is ready in order to create the ABIR table

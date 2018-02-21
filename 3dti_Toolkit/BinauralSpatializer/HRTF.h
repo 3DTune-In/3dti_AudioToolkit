@@ -154,7 +154,7 @@ namespace Binaural
 		*   \eh Nothing is reported to the error handler.
 		*/
 		CHRTF(CListener* _ownerListener) 	
-			:ownerListener{ _ownerListener }, enableCustomizedITD{ false }, resamplingStep{ DEFAULT_RESAMPLING_STEP }, HRIRlength{ 0 }, HRTFLoaded{ false }, setupInProgress{ false }
+			:ownerListener{ _ownerListener }, enableCustomizedITD{ false }, resamplingStep{ DEFAULT_RESAMPLING_STEP }, HRIRLength{ 0 }, HRTFLoaded{ false }, setupInProgress{ false }
 		{}
 
 		/** \brief Default Constructor
@@ -162,7 +162,7 @@ namespace Binaural
 		*   \eh Nothing is reported to the error handler.
 		*/
 		CHRTF()
-			:ownerListener{ nullptr }, enableCustomizedITD{ false }, resamplingStep{ DEFAULT_RESAMPLING_STEP }, HRIRlength{ 0 }, HRTFLoaded{ false }, setupInProgress{ false }
+			:ownerListener{ nullptr }, enableCustomizedITD{ false }, resamplingStep{ DEFAULT_RESAMPLING_STEP }, HRIRLength{ 0 }, HRTFLoaded{ false }, setupInProgress{ false }
 		{}
 
 		/** \brief Get size of each HRIR buffer
@@ -171,15 +171,15 @@ namespace Binaural
 		*/
 		int32_t GetHRIRLength() const
 		{
-			return HRIRlength;
+			return HRIRLength;
 		}
 
 		/** \brief Start a new HRTF configuration
-		*	\param [in] _HRIRlength buffer size of the HRIR to be added		
+		*	\param [in] _HRIRLength buffer size of the HRIR to be added		
 		*   \eh On success, RESULT_OK is reported to the error handler.
 		*       On error, an error code is reported to the error handler.
 		*/
-		void BeginSetup(int32_t _HRIRlength);
+		void BeginSetup(int32_t _HRIRLength);
 		
 		/** \brief Set the full HRIR matrix.
 		*	\param [in] newTable full table with all HRIR data
@@ -277,7 +277,7 @@ namespace Binaural
 		// ATTRIBUTES
 		///////////////
 		CListener* ownerListener;						// owner Listener
-		int32_t HRIRlength;								// HRIR vector length
+		int32_t HRIRLength;								// HRIR vector length
 		int32_t bufferSize;								// Input signal buffer size
 		//int32_t sampleRate;							// Sample Rate		
 		int32_t HRIR_partitioned_NumberOfSubfilters;	// Number of subfilters (blocks) for the UPC algorithm

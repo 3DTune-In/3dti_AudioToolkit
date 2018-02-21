@@ -186,7 +186,7 @@ namespace HAHLSimulation {
 		*/
 		void DisableQuantizationAfterEqualizer();
 
-		/** \brief Set numer of bits for processing quantization 		
+		/** \brief Set number of bits for processing quantization 		
 		*	\param [in] nBits number of bits for quantization 
 		*   \eh Nothing is reported to the error handler.
 		*/

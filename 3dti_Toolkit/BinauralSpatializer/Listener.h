@@ -133,11 +133,11 @@ class CHRTF;
 		*/	
 		Common::AudioState_Struct GetCoreAudioState() const;
 
-		/** \brief Get the minimun allowed distance between the listener and any source
-		*	\retval distance value in meters that stores the minimun allowed distance between the listener and any source		
+		/** \brief Get the minimum allowed distance between the listener and any source
+		*	\retval distance value in meters that stores the minimum allowed distance between the listener and any source		
 		*   \eh Nothing is reported to the error handler.
 		*/
-		float GetMinimunDistanceToSource();
+		float GetMinimumDistanceToSource();
 
 		/** \brief Get CMagnitudes instance from owner Core
 		*	\retval magnitudes magnitudes object
@@ -171,14 +171,14 @@ class CHRTF;
 		*/
 		void SetDirectionality_dB(Common::T_ear ear, float _directionalityAttenuation);
 
-		/** \brief Get anechoic directionalty attenuation for one ear
+		/** \brief Get anechoic directionality attenuation for one ear
 		*	\param [in] ear for which ear we want to get directionality attenuation
 		*	\retval attenuation current attenuation for that ear, in dB
 		*   \eh Nothing is reported to the error handler.
 		*/
 		float GetAnechoicDirectionalityAttenuation_dB(Common::T_ear ear) const;
 
-		/** \brief Get reverb directionalty attenuation for one ear
+		/** \brief Get reverb directionality attenuation for one ear
 		*	\param [in] ear for which ear we want to get directionality attenuation
 		*	\retval attenuation current attenuation for that ear, in dB
 		*   \eh Nothing is reported to the error handler.
@@ -224,7 +224,7 @@ class CHRTF;
 		
 		Common::CTransform listenerTransform;		// Transform matrix (position and orientation) of listener    
 		float listenerHeadRadius;					// Head radius of listener     
-		float listenerMinimunDistanceToSource;		// Minimun distante between the listener and the source		
+		float listenerMinimumDistanceToSource;		// Minimum distante between the listener and the source		
 
 		float listenerILDAttenutationDB;			// Attenuation to apply when the ILD is in use (HighPerformance)
 

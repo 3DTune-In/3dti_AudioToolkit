@@ -170,18 +170,18 @@ namespace Binaural {
 		
 		for (int i=0; i < environmentBRIR->GetBRIRNumberOfSubfilters(); i++) 
 		{
-			newAIR_W_left[i].resize(environmentBRIR->GetBRIROneSubfilterLenght(), 0.0f);
-			newAIR_X_left[i].resize(environmentBRIR->GetBRIROneSubfilterLenght(), 0.0f);
-			newAIR_Y_left[i].resize(environmentBRIR->GetBRIROneSubfilterLenght(), 0.0f);
-			newAIR_W_right[i].resize(environmentBRIR->GetBRIROneSubfilterLenght(), 0.0f);
-			newAIR_X_right[i].resize(environmentBRIR->GetBRIROneSubfilterLenght(), 0.0f);
-			newAIR_Y_right[i].resize(environmentBRIR->GetBRIROneSubfilterLenght(), 0.0f);
+			newAIR_W_left[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+			newAIR_X_left[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+			newAIR_Y_left[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+			newAIR_W_right[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+			newAIR_X_right[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+			newAIR_Y_right[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
 		}
 
 		//3. AIR codification from BRIR
 		for (int i = 0; i < environmentBRIR->GetBRIRNumberOfSubfilters(); i++) 
 		{
-			for (int j = 0; j < environmentBRIR->GetBRIROneSubfilterLenght(); j++) 
+			for (int j = 0; j < environmentBRIR->GetBRIROneSubfilterLength(); j++) 
 			{
 				newAIR_W_left[i][j] = 0.707107f * (northLeft[i][j] + southLeft[i][j] + eastLeft[i][j] + westLeft[i][j]);
 				newAIR_X_left[i][j] = northLeft[i][j] - southLeft[i][j];

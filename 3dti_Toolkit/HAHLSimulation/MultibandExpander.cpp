@@ -42,9 +42,9 @@ namespace HAHLSimulation {
 			return;
 		}
 
-		bandsFrequencies_Hz.clear();
+		bandFrequencies_Hz.clear();
 		bandExpanders.clear();
-		bandsGains_dB.clear();
+		bandGains_dB.clear();
 		bandAttenuations.clear();
 
 		// Setup equalizer	
@@ -71,8 +71,8 @@ namespace HAHLSimulation {
 			}
 
 			// Add band to list of frequencies and gains
-			bandsFrequencies_Hz.push_back(bandFrequency);
-			bandsGains_dB.push_back(0.0f);
+			bandFrequencies_Hz.push_back(bandFrequency);
+			bandGains_dB.push_back(0.0f);
 			bandFrequency *= bandFrequencyStep;
 
 			// Setup expanders
@@ -102,8 +102,8 @@ namespace HAHLSimulation {
 		//	}		
 
 		//	// Add band to list of frequencies and gains
-		//	bandsFrequencies_Hz.push_back(f);
-		//	bandsGains_dB.push_back(0.0f);
+		//	bandFrequencies_Hz.push_back(f);
+		//	bandGains_dB.push_back(0.0f);
 		//	f *= freqStep;
 		// // Expanders...
 		//}
@@ -122,7 +122,7 @@ namespace HAHLSimulation {
 	// Get configured number of filters per band, to increase bandwidth
 	int CMultibandExpander::GetNumberOfFiltersPerBand()
 	{
-		return (filterBank.GetNumFilters() / bandsFrequencies_Hz.size());
+		return (filterBank.GetNumFilters() / bandFrequencies_Hz.size());
 	}
 
 	//////////////////////////////////////////////
@@ -131,7 +131,7 @@ namespace HAHLSimulation {
 		outputBuffer.Fill(outputBuffer.size(), 0.0f);
 
 		// Mix internal band outputs into groups, process expanders of each group, apply attenuations, and mix into output buffer
-		for (int band = 0; band < bandsFrequencies_Hz.size(); band++)
+		for (int band = 0; band < bandFrequencies_Hz.size(); band++)
 		{
 			CMonoBuffer<float> oneBandBuffer(inputBuffer.size(), 0.0f);
 
@@ -160,7 +160,7 @@ namespace HAHLSimulation {
 	// Specifies the gain for each band in dB
 	//void CMultibandExpander::SetGains_dB(vector<float> gains_dB)
 	//{
-	//	if (gains_dB.size() != bandsFrequencies_Hz.size())
+	//	if (gains_dB.size() != bandFrequencies_Hz.size())
 	//	{
 	//		SET_RESULT(RESULT_ERROR_INVALID_PARAM, "number of elements must agree ( gains_dB Vs number of bands in the equalizer)");
 	//		return;
@@ -176,21 +176,21 @@ namespace HAHLSimulation {
 	// Specifies the gain for each band in dB
 	//void CMultibandExpander::ResetGains_dB()
 	//{
-	//	for (int c = 0; c < bandsGains_dB.size(); c++)
+	//	for (int c = 0; c < bandGains_dB.size(); c++)
 	//		SetBandGain_dB(c, 0.0f);
 	//}
 
 	//--------------------------------------------------------------
 	//void CMultibandExpander::SetBandGain_dB(int bandIndex, float gain_dB)
 	//{
-	//	if (bandIndex < 0 || bandIndex >= bandsFrequencies_Hz.size())
+	//	if (bandIndex < 0 || bandIndex >= bandFrequencies_Hz.size())
 	//	{
 	//		SET_RESULT(RESULT_ERROR_INVALID_PARAM, "bad band index");
 	//		return;
 	//	}
 	//
 	//	SET_RESULT(RESULT_OK, "");
-	//	bandsGains_dB[bandIndex] = gain_dB;
+	//	bandGains_dB[bandIndex] = gain_dB;
 	//
 	//	// Set gain for all internal bands	
 	//	float gain = pow(10.0, gain_dB / 20.0);
@@ -205,25 +205,25 @@ namespace HAHLSimulation {
 	//--------------------------------------------------------------
 	float CMultibandExpander::GetBandFrequency(int bandIndex)
 	{
-		if (bandIndex < 0 || bandIndex >= bandsFrequencies_Hz.size())
+		if (bandIndex < 0 || bandIndex >= bandFrequencies_Hz.size())
 		{
 			SET_RESULT(RESULT_ERROR_INVALID_PARAM, "bad band index");
 			return 0;
 		}
 		SET_RESULT(RESULT_OK, "");
-		return bandsFrequencies_Hz[bandIndex];
+		return bandFrequencies_Hz[bandIndex];
 	}
 
 	//////////////////////////////////////////////
 	//float CMultibandExpander::GetBandGain_dB(int bandIndex)
 	//{
-	//	if (bandIndex < 0 || bandIndex >= bandsFrequencies_Hz.size())
+	//	if (bandIndex < 0 || bandIndex >= bandFrequencies_Hz.size())
 	//	{
 	//		SET_RESULT(RESULT_ERROR_INVALID_PARAM, "bad band index");
 	//		return 0.0f;
 	//	}
 	//	SET_RESULT(RESULT_OK, "");
-	//	return bandsGains_dB[bandIndex];
+	//	return bandGains_dB[bandIndex];
 	//}
 
 	//////////////////////////////////////////////

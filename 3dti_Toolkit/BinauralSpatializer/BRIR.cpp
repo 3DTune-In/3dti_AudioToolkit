@@ -27,12 +27,12 @@ namespace Binaural {
 
 
 	//PUBLIC METHODS
-	void CBRIR::BeginSetup(int32_t _BRIRlength) 
+	void CBRIR::BeginSetup(int32_t _BRIRLength) 
 	{		
 		if ((ownerEnvironment!=nullptr) && (ownerEnvironment->ownerCore != nullptr))
 		{			
-			BRIRlength = _BRIRlength;
-			BRIRlength_frequency = _BRIRlength * 2.0f;
+			BRIRLength = _BRIRLength;
+			BRIRLength_frequency = _BRIRLength * 2.0f;
 			bufferSize = ownerEnvironment->GetCoreAudioState().bufferSize;
 
 			//Clear every table	
@@ -42,7 +42,7 @@ namespace Binaural {
 			//UPC algorithm init variables
 			BRIRsubfilterLength_time = 2 * bufferSize;
 			BRIRsubfilterLength_frequency = 2 * BRIRsubfilterLength_time;
-			float temp_impulseResponseNumberOfBlocks = (float)BRIRlength / (float)bufferSize;
+			float temp_impulseResponseNumberOfBlocks = (float)BRIRLength / (float)bufferSize;
 			BRIRNumOfSubfilters = static_cast<int>(std::ceil(temp_impulseResponseNumberOfBlocks));
 
 			setupInProgress = true;
@@ -117,7 +117,7 @@ namespace Binaural {
 			//UPC algorithm init variables
 			BRIRsubfilterLength_time = 2 * bufferSize;
 			BRIRsubfilterLength_frequency = 2 * BRIRsubfilterLength_time;
-			float temp_impulseResponseNumberOfBlocks = (float)BRIRlength / (float)bufferSize;
+			float temp_impulseResponseNumberOfBlocks = (float)BRIRLength / (float)bufferSize;
 			BRIRNumOfSubfilters = static_cast<int>(std::ceil(temp_impulseResponseNumberOfBlocks));
 
 			setupInProgress = true;
@@ -137,8 +137,8 @@ namespace Binaural {
 		t_BRIR_partitioned.clear();
 
 		//Update parameters	
-		BRIRlength = 0;
-		BRIRlength_frequency = 0;
+		BRIRLength = 0;
+		BRIRLength_frequency = 0;
 		bufferSize = 0;
 	}
 
@@ -183,14 +183,14 @@ namespace Binaural {
 	}
 
 	int CBRIR::GetBRIRLength() {
-		return BRIRlength;
+		return BRIRLength;
 	}
 
 	int CBRIR::GetBRIRLength_frequency() {
-		return BRIRlength_frequency;
+		return BRIRLength_frequency;
 	}
 
-	int CBRIR::GetBRIROneSubfilterLenght() {
+	int CBRIR::GetBRIROneSubfilterLength() {
 		return BRIRsubfilterLength_frequency;
 	}
 
@@ -269,9 +269,9 @@ namespace Binaural {
 	{
 		CMonoBuffer<float> data_FFT_doubleSize;
 		//Resize with double size and zeros to make the zero-padded demanded by the algorithm
-		data_FFT_doubleSize.resize(BRIRlength * 2, 0.0f);
+		data_FFT_doubleSize.resize(BRIRLength * 2, 0.0f);
 		//Fill each AIR block
-		//for (int j = 0; j < BRIRlength; j++)
+		//for (int j = 0; j < BRIRLength; j++)
 		//{
 		//	data_FFT_doubleSize[j] = newData_time[j];
 		//}

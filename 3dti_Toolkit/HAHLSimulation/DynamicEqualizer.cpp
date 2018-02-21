@@ -55,7 +55,7 @@ namespace HAHLSimulation {
 
 		updateBandGainsIsPending = false;
 
-		bandsFrequencies_Hz.clear();
+		bandFrequencies_Hz.clear();
 		levels.clear();
 
 		float f = iniFreq_Hz;
@@ -63,7 +63,7 @@ namespace HAHLSimulation {
 
 		for (int c = 0; c < bandsNumber; c++)
 		{
-			bandsFrequencies_Hz.push_back(f);
+			bandFrequencies_Hz.push_back(f);
 
 			filterBank.AddFilter()->Setup(samplingRate, f, Q_BPF, Common::T_filterType::BANDPASS);
 
@@ -104,7 +104,7 @@ namespace HAHLSimulation {
 		updateBandGainsIsPending = true;
 
 		// 2.- Get the closest level to the RMS values for each channel
-		float closestLevel_dB = std::numeric_limits<float>::max();
+		float closestLevel_dB = std::numberic_limits<float>::max();
 
 		CEqLevel *closestLevelL = NULL;
 
@@ -123,7 +123,7 @@ namespace HAHLSimulation {
 		if (levelsInterpolation)
 		{
 			// 3.1.- ...If using interpolation of levels, we get the second closest level
-			closestLevel_dB = std::numeric_limits<float>::max();
+			closestLevel_dB = std::numberic_limits<float>::max();
 
 			CEqLevel *secondClosestLevelL = NULL;
 			CEqLevel *secondClosestLevelR = NULL;
@@ -262,12 +262,12 @@ namespace HAHLSimulation {
 	//--------------------------------------------------------------
 	float CDynamicEqualizer::GetBandFrequency(int bandIndex)
 	{
-		if (bandIndex < 0 || bandIndex >= bandsFrequencies_Hz.size())
+		if (bandIndex < 0 || bandIndex >= bandFrequencies_Hz.size())
 		{
 			SET_RESULT(RESULT_ERROR_INVALID_PARAM, "bad index");
 			return 0;
 		}
-		return bandsFrequencies_Hz[bandIndex];
+		return bandFrequencies_Hz[bandIndex];
 	}
 
 	//////////////////////////////////////////////

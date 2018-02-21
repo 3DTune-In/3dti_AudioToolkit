@@ -175,7 +175,7 @@ struct TResultStruct
 	string description;		///< Description of result
 	string suggestion;		///< Suggestion for fixing error or further information about result
 	string filename;		///< File from which result was reported
-	int linenumber;			///< Line numer at which result was reported (within filename file)
+	int linenumber;			///< Line number at which result was reported (within filename file)
 };
 
 /** \brief Stream output of \link TResultStruct \endlink

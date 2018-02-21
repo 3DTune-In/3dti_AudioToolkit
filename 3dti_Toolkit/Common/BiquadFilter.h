@@ -154,7 +154,7 @@ namespace Common {
 		double ProcessSample(const double sample, const double a1, const double a2, const double b0, const double b1, const double b2, double &z1, double &z2);
 
 
-		void UpdateAttributesAfterCrossFading();// Set current coefficients to new cofficients and updates the delay cells and the crossFadingNeeded attribute.
+		void UpdateAttributesAfterCrossfading();// Set current coefficients to new cofficients and updates the delay cells and the crossfadingNeeded attribute.
 
 		////////////////
 		// ATTRIBUTES
@@ -167,7 +167,7 @@ namespace Common {
 
 		double new_b0, new_b1, new_b2, new_a1, new_a2;                  // New coefficients to implement cross fading
 		double new_z1_l, new_z2_l, new_z1_r, new_z2_r;                  // Keep last values to implement the delays of the filter (left and right channels)
-		bool   crossFadingNeeded;                                       // True when cross fading must be applied in the next frame
+		bool   crossfadingNeeded;                                       // True when cross fading must be applied in the next frame
 	};
 }
 #endif

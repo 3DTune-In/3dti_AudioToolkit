@@ -56,7 +56,7 @@ namespace Common {
 		new_b2 = 0;
 		new_a1 = 0;
 		new_a2 = 0;
-		crossFadingNeeded = false;
+		crossfadingNeeded = false;
 		new_z1_l = 0;
 		new_z2_l = 0;
 		new_z1_r = 0;
@@ -89,7 +89,7 @@ namespace Common {
 
 	void CBiquadFilter::SetCoefficients(float _b0, float _b1, float _b2, float _a1, float _a2)
 	{
-		crossFadingNeeded = true;
+		crossfadingNeeded = true;
 
 		new_b0 = _b0;
 		new_b1 = _b1;
@@ -272,7 +272,7 @@ namespace Common {
 		//   See schemes in: https://en.wikipedia.org/wiki/Digital_biquad_filter
 		//   y(n) = b0.x(n) + b1.x(n-1) + b2.x(n-2) + a1.y(n-1) + a2.y(n-2) 	
 
-		if (crossFadingNeeded && size > 0)  // size > 1 to avoid division by zero if size were 1 while calculating alpha
+		if (crossfadingNeeded && size > 0)  // size > 1 to avoid division by zero if size were 1 while calculating alpha
 		{
 			for (int c = 0; c < size; c++)
 			{
@@ -287,7 +287,7 @@ namespace Common {
 				outBuffer[c] = addResult ? outBuffer[c] + res : res;
 			}
 
-			UpdateAttributesAfterCrossFading();
+			UpdateAttributesAfterCrossfading();
 		}
 		else
 		{
@@ -312,7 +312,7 @@ namespace Common {
 
 		//SET_RESULT(RESULT_OK, "Biquad filter process succesfull");
 
-		if (crossFadingNeeded)
+		if (crossfadingNeeded)
 		{
 			for (int c = 0; c < size; c++)
 			{
@@ -324,7 +324,7 @@ namespace Common {
 				buffer[c] = sample * (1.0 - alpha) + new_sample * alpha;
 			}
 
-			UpdateAttributesAfterCrossFading();
+			UpdateAttributesAfterCrossfading();
 		}
 		else
 		{
@@ -369,9 +369,9 @@ namespace Common {
 		return res;
 	}
 	//////////////////////////////////////////////
-	void CBiquadFilter::UpdateAttributesAfterCrossFading()
+	void CBiquadFilter::UpdateAttributesAfterCrossfading()
 	{
-		crossFadingNeeded = false;
+		crossfadingNeeded = false;
 
 		z1_l = new_z1_l;
 		z2_l = new_z2_l;
