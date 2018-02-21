@@ -84,7 +84,7 @@ namespace Common
 
 		if (inBuffer_Time.size() == inputSize) {
 
-			//Step 1- extend the input time signal buffer in order to have double lenght
+			//Step 1- extend the input time signal buffer in order to have double length
 			std::vector<float> inBuffer_Time_dobleSize;
 			inBuffer_Time_dobleSize.reserve(inputSize * 2);
 			inBuffer_Time_dobleSize.insert(inBuffer_Time_dobleSize.begin(), storageInput_buffer.begin(), storageInput_buffer.end());
@@ -140,7 +140,7 @@ namespace Common
 
 		if (inBuffer_Time.size() == inputSize && IR.size() != 0 ) 
 		{
-			//Step 1- extend the input time signal buffer in order to have double lenght
+			//Step 1- extend the input time signal buffer in order to have double length
 			std::vector<float> inBuffer_Time_dobleSize;
 			inBuffer_Time_dobleSize.reserve(inputSize * 2);
 			inBuffer_Time_dobleSize.insert(inBuffer_Time_dobleSize.begin(), storageInput_buffer.begin(), storageInput_buffer.end());

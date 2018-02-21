@@ -162,7 +162,7 @@ namespace HAHLSimulation {
 		*	\retval n number of bands for each level of the dynamic equalizer
 		*   \eh Nothing is reported to the error handler.
 		*/
-		int GetNumBands() { return bandsFrequencies_Hz.size(); }
+		int GetNumBands() { return bandFrequencies_Hz.size(); }
 
 		/** \brief Set the compression percentage for all the levels towards the level 0.
 		*	\param [in] percentage percentage of compression. 100% means all the level's gains are set to
@@ -288,14 +288,14 @@ namespace HAHLSimulation {
 		float level_db;                         // Signal level provided by the envelope detector
 		Common::CEnvelopeDetector envelopeDetector;     // Envelope detector	
 		bool levelsInterpolation;				// When false, applies only the closest equalization curve. Otherwise, interpolates the closest two.
-		vector<float> bandsFrequencies_Hz;      // Center frequencies for each equalizer band, in Hertzs
+		vector<float> bandFrequencies_Hz;      // Center frequencies for each equalizer band, in Hertzs
 		vector<CEqLevel> levels;                // Levels of the dynamic equalizer
 		Common::CFiltersBank filterBank;        // Filter Bank to proccess the data
 		bool updateBandGainsIsPending;          // true to update the gains of the bands before processing the next frame
 		float compressionPercentage;            // Compression percentage towards the level 0 that will be applied
 		float overalOffset_dB;                  // Overal offset in dBs applied to every band and level 
 		float maxGain_dB;                       // Maximun gain value in dBs 
-		float minGain_dB;                       // Minimun gain value in dBs 
+		float minGain_dB;                       // Minimum gain value in dBs 
 
 
 		void ApplyLevel(CEqLevel &level, bool applyCompression);	// Aplies the level to the filtersBank

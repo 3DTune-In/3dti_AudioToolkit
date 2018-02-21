@@ -617,27 +617,27 @@ namespace Binaural {
 	///Calculate a new source transform position taking into account the restrictions, source that can not be inside of the listener head
 	Common::CTransform CSingleSourceDSP::CalculateTransformPositionWithRestrictions(Common::CTransform sourceTransform)
 	{		
-		float sourceMinimunDistance = 0.1f;		//Default value, just in case
+		float sourceMinimumDistance = 0.1f;		//Default value, just in case
 		if (ownerCore!=nullptr){
 			if (ownerCore->GetListener() != nullptr) {
 				
-				//Get the minimun distance possible
-				sourceMinimunDistance = ownerCore->GetListener()->GetMinimunDistanceToSource();			
+				//Get the minimum distance possible
+				sourceMinimumDistance = ownerCore->GetListener()->GetMinimumDistanceToSource();			
 				//Get distance between listener and source						
 				Common::CVector3 vectorToSource = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(sourceTransform);
 				float sourceDistance = vectorToSource.GetDistance();	// OPTIMIZATION: we could use GetSqrDistance instead
 				//Check if the distance is less than the minumun
-				if (sourceDistance < sourceMinimunDistance)
+				if (sourceDistance < sourceMinimumDistance)
 				{
 					//How to project a point on to a sphere
-					//Let p be the point (source position), s the sphere's centre (listener position) and r the radius (minimun distance)
+					//Let p be the point (source position), s the sphere's centre (listener position) and r the radius (minimum distance)
 					//then x = s + r*(p-s)/(norm(p-s)) where x is the point projected (new source position)									
 					//Get s (listner position)
 					Common::CTransform listernerTransform = ownerCore->GetListener()->GetListenerTransform();
 					Common::CVector3 listenerPosition = listernerTransform.GetPosition();
 					if (sourceDistance != 0.0f) {
 						//Get projectionVector vector			
-						float scale = sourceMinimunDistance / sourceDistance;
+						float scale = sourceMinimumDistance / sourceDistance;
 						lastSourceProjectionVector = Common::CVector3(scale * vectorToSource.x, scale * vectorToSource.y, scale * vectorToSource.z);
 					}
 					//New position

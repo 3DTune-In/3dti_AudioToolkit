@@ -34,7 +34,7 @@ namespace Binaural
 	CListener::CListener(CCore* _ownerCore, float _listenerHeadRadius)
     :ownerCore{_ownerCore},
      listenerHeadRadius{_listenerHeadRadius},
-	 listenerMinimunDistanceToSource{ MINIMUMDISTANCETOSOURCE },
+	 listenerMinimumDistanceToSource{ MINIMUMDISTANCETOSOURCE },
 	 listenerILDAttenutationDB{ ILDATTENUATION },
 	 enableDirectionality {false, false},	 
 	 anechoicDirectionalityAttenuation{0.0f, 0.0f},	 
@@ -140,10 +140,10 @@ namespace Binaural
 		if (listenerHRTF!=nullptr){ listenerHRTF->CalculateNewHRTFTable(); }		
 	}
 	
-	//Get the minimun distance between the listener and any source
-	float CListener::GetMinimunDistanceToSource() 
+	//Get the minimum distance between the listener and any source
+	float CListener::GetMinimumDistanceToSource() 
 	{
-		return listenerMinimunDistanceToSource;
+		return listenerMinimumDistanceToSource;
 	}
 	
 	//Get CMagnitudes instance

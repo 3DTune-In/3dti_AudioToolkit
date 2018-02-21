@@ -40,7 +40,7 @@ namespace Binaural {
 		t_ILDNearFieldEffect = newTable;
 	}
 
-	void CILD::AddILDSpatialziationTable(T_ILD_HashTable && newTable)
+	void CILD::AddILDSpatializationTable(T_ILD_HashTable && newTable)
 	{
 		t_ILDSpatialization = newTable;
 	}

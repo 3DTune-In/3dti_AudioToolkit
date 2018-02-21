@@ -326,7 +326,7 @@ namespace Common
 			return impulseResponseLength;
 		}
 
-		/** \brief Get data length of a stored subfilter impulse response in time domain (the lenght of one partition, which is the same for every partition)
+		/** \brief Get data length of a stored subfilter impulse response in time domain (the length of one partition, which is the same for every partition)
 		*	\retval dataLength Impulse response partition buffer size (time domain)
 		*	\pre Impulse response length must be setup 
 		*	\sa SetupIFFT_OLA
@@ -336,7 +336,7 @@ namespace Common
 			return impulseResponseBlockLength_time;
 		}
 
-		/** \brief Get data length of stored impulse responses in frequency domain (the lenght of one partition, which is the same for every partition)
+		/** \brief Get data length of stored impulse responses in frequency domain (the length of one partition, which is the same for every partition)
 		*	\retval dataLength Impulse response FFT partition buffer size (frequency domain)
 		*	\pre Impulse response length must be setup 
 		*	\sa SetupIFFT_OLA

@@ -33,15 +33,15 @@ namespace Binaural
 
 	//PUBLIC METHODS ///////////////////////////////////////////////////////////////////////////////////////
 	
-	void CHRTF::BeginSetup(int32_t _HRIRlength)
+	void CHRTF::BeginSetup(int32_t _HRIRLength)
 	{
 		if ((ownerListener != nullptr) && ownerListener->ownerCore!=nullptr)
 		{						
 			//Update parameters			
-			HRIRlength = _HRIRlength;
+			HRIRLength = _HRIRLength;
 			bufferSize = ownerListener->GetCoreAudioState().bufferSize;						
 			resamplingStep = ownerListener->GetHRTFResamplingStep();
-			float partitions = (float)HRIRlength / (float)bufferSize;
+			float partitions = (float)HRIRLength / (float)bufferSize;
 			HRIR_partitioned_NumberOfSubfilters = static_cast<int>(std::ceil(partitions));
 
 			//Clear every table			
@@ -126,7 +126,7 @@ namespace Binaural
 			//Update parameters					
 			bufferSize = ownerListener->GetCoreAudioState().bufferSize;
 			resamplingStep = ownerListener->GetHRTFResamplingStep();			
-			float partitions = (float)HRIRlength / (float)bufferSize;
+			float partitions = (float)HRIRLength / (float)bufferSize;
 			HRIR_partitioned_NumberOfSubfilters = static_cast<int>(std::ceil(partitions));
 
 			//Clear every table		
@@ -154,7 +154,7 @@ namespace Binaural
 		t_HRTF_Resampled_partitioned.clear();
 
 		//Update parameters			
-		HRIRlength = 0;
+		HRIRLength = 0;
 		bufferSize = 0;
 		resamplingStep = 0;
 	}
@@ -575,8 +575,8 @@ namespace Binaural
 
 		for (int q = 0; q < hemisphereParts.size(); q++)
 		{
-			newHRIR[q].leftHRIR.resize(HRIRlength, 0.0f);
-			newHRIR[q].rightHRIR.resize(HRIRlength, 0.0f);
+			newHRIR[q].leftHRIR.resize(HRIRLength, 0.0f);
+			newHRIR[q].rightHRIR.resize(HRIRLength, 0.0f);
 
 			float scaleFactor;
 			if (hemisphereParts[q].size()) 
@@ -597,7 +597,7 @@ namespace Binaural
 				newHRIR[q].rightDelay = (newHRIR[q].rightDelay + itHRIR->second.rightDelay);
 
 				//Get the HRIR
-				for (int i = 0; i < HRIRlength; i++) {
+				for (int i = 0; i < HRIRLength; i++) {
 					newHRIR[q].leftHRIR[i] = (newHRIR[q].leftHRIR[i] + itHRIR->second.leftHRIR[i]);
 					newHRIR[q].rightHRIR[i] = (newHRIR[q].rightHRIR[i] + itHRIR->second.rightHRIR[i]);
 				}
@@ -610,7 +610,7 @@ namespace Binaural
 			totalDelay_left = totalDelay_left + (scaleFactor * newHRIR[q].leftDelay);
 			totalDelay_right = totalDelay_right + (scaleFactor * newHRIR[q].rightDelay);
 			//HRIR
-			for (int i = 0; i < HRIRlength; i++)
+			for (int i = 0; i < HRIRLength; i++)
 			{
 				newHRIR[q].leftHRIR[i] = newHRIR[q].leftHRIR[i] * scaleFactor;
 				newHRIR[q].rightHRIR[i] = newHRIR[q].rightHRIR[i] * scaleFactor;
@@ -625,10 +625,10 @@ namespace Binaural
 		calculatedHRIR.rightDelay = static_cast <unsigned long> (round(scaleFactor_final * totalDelay_right));
 
 		//calculate Final HRIR
-		calculatedHRIR.leftHRIR.resize(HRIRlength, 0.0f);
-		calculatedHRIR.rightHRIR.resize(HRIRlength, 0.0f);
+		calculatedHRIR.leftHRIR.resize(HRIRLength, 0.0f);
+		calculatedHRIR.rightHRIR.resize(HRIRLength, 0.0f);
 
-		for (int i = 0; i < HRIRlength; i++)
+		for (int i = 0; i < HRIRLength; i++)
 		{
 			for (int q = 0; q < hemisphereParts.size(); q++)
 			{
@@ -636,7 +636,7 @@ namespace Binaural
 				calculatedHRIR.rightHRIR[i] = calculatedHRIR.rightHRIR[i] + newHRIR[q].rightHRIR[i];
 			}
 		}
-		for (int i = 0; i < HRIRlength; i++)
+		for (int i = 0; i < HRIRLength; i++)
 		{
 			calculatedHRIR.leftHRIR[i] = calculatedHRIR.leftHRIR[i] * scaleFactor_final;
 			calculatedHRIR.rightHRIR[i] = calculatedHRIR.rightHRIR[i] * scaleFactor_final;
@@ -856,7 +856,7 @@ namespace Binaural
 									newHRIR = it0->second;
 									//END FIXME
 
-									for (int i = 0; i < HRIRlength; i++) {
+									for (int i = 0; i < HRIRLength; i++) {
 										newHRIR.leftHRIR[i] = barycentricCoordinates.alpha * it0->second.leftHRIR[i] + barycentricCoordinates.beta * it1->second.leftHRIR[i] + barycentricCoordinates.gamma * it2->second.leftHRIR[i];
 										newHRIR.rightHRIR[i] = barycentricCoordinates.alpha * it0->second.rightHRIR[i] + barycentricCoordinates.beta * it1->second.rightHRIR[i] + barycentricCoordinates.gamma * it2->second.rightHRIR[i];
 									}
@@ -1175,15 +1175,15 @@ namespace Binaural
 
 			if (it1 != t_HRTF_Resampled_partitioned.end() && it2 != t_HRTF_Resampled_partitioned.end() && it3 != t_HRTF_Resampled_partitioned.end())
 			{
-				int subfilterLenght = HRIR_partitioned_SubfilterLength;
+				int subfilterLength = HRIR_partitioned_SubfilterLength;
 				newHRIR.HRIR_Partitioned.resize(HRIR_partitioned_NumberOfSubfilters);
 
 				if (ear == Common::T_ear::LEFT)
 				{
 					for (int subfilterID = 0; subfilterID < HRIR_partitioned_NumberOfSubfilters; subfilterID++) 
 					{
-						newHRIR.HRIR_Partitioned[subfilterID].resize(subfilterLenght);
-						for (int i = 0; i < subfilterLenght; i++) 
+						newHRIR.HRIR_Partitioned[subfilterID].resize(subfilterLength);
+						for (int i = 0; i < subfilterLength; i++) 
 						{
 							newHRIR.HRIR_Partitioned[subfilterID][i] = barycentricCoordinates.alpha * it1->second.leftHRIR_Partitioned[subfilterID][i] + barycentricCoordinates.beta * it2->second.leftHRIR_Partitioned[subfilterID][i] + barycentricCoordinates.gamma * it3->second.leftHRIR_Partitioned[subfilterID][i];
 						}
@@ -1195,8 +1195,8 @@ namespace Binaural
 				{
 					for (int subfilterID = 0; subfilterID < HRIR_partitioned_NumberOfSubfilters; subfilterID++)
 					{
-						newHRIR.HRIR_Partitioned[subfilterID].resize(subfilterLenght, 0.0f);
-						for (int i = 0; i < subfilterLenght; i++) 
+						newHRIR.HRIR_Partitioned[subfilterID].resize(subfilterLength, 0.0f);
+						for (int i = 0; i < subfilterLength; i++) 
 						{
 							newHRIR.HRIR_Partitioned[subfilterID][i] = barycentricCoordinates.alpha * it1->second.rightHRIR_Partitioned[subfilterID][i] + barycentricCoordinates.beta * it2->second.rightHRIR_Partitioned[subfilterID][i] + barycentricCoordinates.gamma * it3->second.rightHRIR_Partitioned[subfilterID][i];
 						}
@@ -1283,13 +1283,13 @@ namespace Binaural
 		//if (a == b) { // shortcut, handles infinities
 		//	return true;
 		//}
-		//else if (a == 0 || b == 0 || diff < std::numeric_limits<float>::min()) {
+		//else if (a == 0 || b == 0 || diff < std::numberic_limits<float>::min()) {
 		//	// a or b is zero or both are extremely close to it
 		//	// relative error is less meaningful here
-		//	return diff < (epsilon * std::numeric_limits<float>::min());
+		//	return diff < (epsilon * std::numberic_limits<float>::min());
 		//}
 		//else { // use relative error
-		//	return diff / fmin((absA + absB), std::numeric_limits<float>::max()) < epsilon;
+		//	return diff / fmin((absA + absB), std::numberic_limits<float>::max()) < epsilon;
 		//}
 	}
 
