@@ -301,7 +301,7 @@ namespace Binaural
 	}
 
 
-	const oneEarHRIR_Partitioned_struct CHRTF::GetHRIR_partitioned(Common::T_ear ear, float _azimuth, float _elevation, bool runTimeInterpolation) const
+	const oneEarHRIR_Partitioned_struct CHRTF::GetHRIR_partitioned(Common::T_ear ear, float _azimuth, float _elevation, float _azimuthCenter, float _elevationCenter, bool runTimeInterpolation) const
 	{
 		if (ear == Common::T_ear::BOTH || ear == Common::T_ear::NONE)
 		{
@@ -353,8 +353,9 @@ namespace Binaural
 				}
 
 				//Modify delay if customized delay is activate
-				if (enableCustomizedITD) {
-					s_HRIR.delay = GetCustomizedDelay(iazimuth, ielevation, ear);
+				if (enableCustomizedITD) 
+				{
+					s_HRIR.delay = GetCustomizedDelay(_azimuthCenter, _elevationCenter, ear);
 				}
 
 				return s_HRIR;
@@ -384,8 +385,9 @@ namespace Binaural
 						s_HRIR.HRIR_Partitioned = it->second.rightHRIR_Partitioned;
 					}
 					//Modify delay if customized delay is activate
-					if (enableCustomizedITD) {
-						s_HRIR.delay = GetCustomizedDelay(nearestAzimuth, nearestElevation, ear);
+					if (enableCustomizedITD) 
+					{
+						s_HRIR.delay = GetCustomizedDelay(_azimuthCenter, _elevationCenter, ear);
 					}
 					return s_HRIR;
 				}
@@ -398,7 +400,7 @@ namespace Binaural
 		}
 		else
 		{
-			SET_RESULT(RESULT_ERROR_NOTSET, "GetHRIR_partitioned: HRTF Set up in progress return empty");
+			SET_RESULT(RESULT_ERROR_NOTSET, "GetHRIR_partitioned: HRTF Setup in progress return empty");
 			return emptyOneEarHRIR_partitioned;
 		}
 		SET_RESULT(RESULT_WARNING, "GetHRIR_partitioned return empty");
@@ -426,18 +428,7 @@ namespace Binaural
 
 		//Clasify every HRIR of the HRTF into the two hemispheres by their orientations
 		std::vector<orientation> keys_southernHemisphere, keys_northenHemisphere;
-		keys_northenHemisphere.reserve(t_HRTF_DataBase.size());
-		keys_southernHemisphere.reserve(t_HRTF_DataBase.size());
 		
-		for (auto& it : t_HRTF_DataBase)
-		{
-			if (it.first.elevation < 90) { keys_northenHemisphere.push_back(it.first); }
-			else if (it.first.elevation > 270) { keys_southernHemisphere.push_back(it.first); }
-			else {
-				SET_RESULT(RESULT_WARNING, "Elevation value not valid in CalculateHRIR_InPoles");
-			}
-		}
-
 		//	NORTHERN HEMOSPHERE POLES (90 degrees elevation ) ____________________________________________________________________________
 		
 		//If HRIR with orientation (0,90) exist in t_HRTF_DataBase
@@ -448,6 +439,11 @@ namespace Binaural
 		}
 		else
 		{
+			keys_northenHemisphere.reserve(t_HRTF_DataBase.size());
+			for (auto& it : t_HRTF_DataBase)
+			{
+				if (it.first.elevation < 90) { keys_northenHemisphere.push_back(it.first); }
+			}
 			// sort using a custom function object
 			struct {
 				bool operator()(orientation a, orientation b) const
@@ -476,6 +472,11 @@ namespace Binaural
 		}
 		else
 		{
+			keys_southernHemisphere.reserve(t_HRTF_DataBase.size());
+			for (auto& it : t_HRTF_DataBase)
+			{
+				if (it.first.elevation > 270) { keys_southernHemisphere.push_back(it.first); }
+			}
 			//Get a vector of iterators ordered from highest to lowest elevation.		
 			struct {
 				bool operator()(orientation a, orientation b) const

@@ -104,7 +104,7 @@ namespace HAHLSimulation {
 		updateBandGainsIsPending = true;
 
 		// 2.- Get the closest level to the RMS values for each channel
-		float closestLevel_dB = std::numberic_limits<float>::max();
+		float closestLevel_dB = std::numeric_limits<float>::max();
 
 		CEqLevel *closestLevelL = NULL;
 
@@ -123,7 +123,7 @@ namespace HAHLSimulation {
 		if (levelsInterpolation)
 		{
 			// 3.1.- ...If using interpolation of levels, we get the second closest level
-			closestLevel_dB = std::numberic_limits<float>::max();
+			closestLevel_dB = std::numeric_limits<float>::max();
 
 			CEqLevel *secondClosestLevelL = NULL;
 			CEqLevel *secondClosestLevelR = NULL;

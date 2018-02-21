@@ -219,25 +219,27 @@ namespace Binaural
 
 		/** \brief Get interpolated HRIR buffer with Delay, for one ear
 		*	\param [in] ear for which ear we want to get the HRIR 
-		*	\param [in] azimuth azimuth angle in degrees
-		*	\param [in] elevation elevation angle in degrees
+		*	\param [in] _azimuth azimuth angle in degrees
+		*	\param [in] _elevation elevation angle in degrees
 		*	\param [in] runTimeInterpolation switch run-time interpolation
 		*	\retval HRIR interpolated buffer with delay for specified ear
 		*   \eh On error, an error code is reported to the error handler.
 		*       Warnings may be reported to the error handler.
 		*/
-		const oneEarHRIR_struct GetHRIR_frequency(Common::T_ear ear, float azimuth, float elevation, bool runTimeInterpolation) const;
+		const oneEarHRIR_struct GetHRIR_frequency(Common::T_ear ear, float _azimuth, float _elevation, bool runTimeInterpolation) const;
 
 		/** \brief Get interpolated and partitioned HRIR buffer with Delay, for one ear
 		*	\param [in] ear for which ear we want to get the HRIR
-		*	\param [in] azimuth azimuth angle in degrees
-		*	\param [in] elevation elevation angle in degrees
+		*	\param [in] _azimuth azimuth angle in degrees
+		*	\param [in] _elevation elevation angle in degrees
+		*	\param [in] _azimuthCenter azimuth angle from the source and the listener head center in degrees
+		*	\param [in] _elevationCenter elevation angle from the source and the listener head center in degrees
 		*	\param [in] runTimeInterpolation switch run-time interpolation
 		*	\retval HRIR interpolated buffer with delay for specified ear
 		*   \eh On error, an error code is reported to the error handler.
 		*       Warnings may be reported to the error handler.
 		*/
-		const oneEarHRIR_Partitioned_struct GetHRIR_partitioned(Common::T_ear ear, float azimuth, float elevation, bool runTimeInterpolation) const;
+		const oneEarHRIR_Partitioned_struct GetHRIR_partitioned(Common::T_ear ear, float _azimuth, float _elevation, float _azimuthCenter, float _elevationCenter, bool runTimeInterpolation) const;
 
 		/** \brief	Get the number of subfilters (blocks) in which the HRIR has been partitioned
 		*	\retval n Number of HRIR subfilters

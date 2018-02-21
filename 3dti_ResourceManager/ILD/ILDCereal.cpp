@@ -99,7 +99,7 @@ namespace ILD {
 			else if (tableDestiny == T_ILDTable::ILDSpatializationTable) 
 			{
 				//listener->GetILD()->AddILDSpatialziationTable(std::move(ild_data));
-				listener->GetILD()->AddILDSpatialziationTable(std::move(ild_data.table));
+				listener->GetILD()->AddILDSpatializationTable(std::move(ild_data.table));
 			}			
 
 			SET_RESULT(RESULT_OK, "ILD created from 3DTI stream");
