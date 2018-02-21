@@ -257,6 +257,9 @@ namespace Binaural {
 		float rightAzimuth = rightVectorTo.GetAzimuthDegrees();		//Get right azimuth
 		float rightElevation = rightVectorTo.GetElevationDegrees();	//Get right elevation	
 
+		float centerAzimuth =	vectorTo.GetAzimuthDegrees();		//Get azimuth from the head center
+		float centerElevation = vectorTo.GetElevationDegrees();		//Get elevation from the head center
+
 		float angleToForwardAxisRadians = vectorTo.GetAngleToForwardAxisRadians();  //angle that this vector keeps with the forward axis
 
 		// WATCHER 
@@ -279,7 +282,7 @@ namespace Binaural {
 			
 			//Apply Spatialization
 			if (spatializationMode == TSpatializationMode::HighQuality) {				
-				ProcessHRTF(inBuffer, outLeftBuffer, outRightBuffer, leftAzimuth, leftElevation, rightAzimuth, rightElevation);		// Apply HRTF spatialization effect
+				ProcessHRTF(inBuffer, outLeftBuffer, outRightBuffer, leftAzimuth, leftElevation, rightAzimuth, rightElevation, centerAzimuth, centerElevation);		// Apply HRTF spatialization effect
 				ProcessNearFieldEffect(outLeftBuffer, outRightBuffer, distance, interauralAzimuth);									// Apply Near field effects (ILD)		
 			}
 			else if (spatializationMode == TSpatializationMode::HighPerformance)
@@ -321,7 +324,7 @@ namespace Binaural {
 	///PRIVATE METHODS
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	void CSingleSourceDSP::ProcessHRTF(CMonoBuffer<float> &inBuffer, CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer, float leftAzimuth, float leftElevation, float rightAzimuth, float rightElevation)
+	void CSingleSourceDSP::ProcessHRTF(CMonoBuffer<float> &inBuffer, CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer, float leftAzimuth, float leftElevation, float rightAzimuth, float rightElevation, float centerAzimuth, float centerElevation)
 	{
 		ASSERT(ownerCore->GetListener()->GetHRTF()->IsHRTFLoaded(), RESULT_ERROR_NOTSET, "CSingleSourceDSP::ProcessAnechoic: error: HRTF has not been loaded yet.", "");
 		////////////////////////////
@@ -378,11 +381,11 @@ namespace Binaural {
 #else   //USE_FREQUENCY_COVOLUTION_WITHOUT_PARTITIONS_ANECHOIC
 
 			//Get the HRIR, with different orientation for both ears
-			oneEarHRIR_Partitioned_struct leftHRIR_partitioned = ownerCore->GetListener()->GetHRTF()->GetHRIR_partitioned(Common::T_ear::LEFT, leftAzimuth, leftElevation, enableInterpolation);
-			oneEarHRIR_Partitioned_struct rightHRIR_partitioned = ownerCore->GetListener()->GetHRTF()->GetHRIR_partitioned(Common::T_ear::RIGHT, rightAzimuth, rightElevation, enableInterpolation);
+			oneEarHRIR_Partitioned_struct leftHRIR_partitioned = ownerCore->GetListener()->GetHRTF()->GetHRIR_partitioned(Common::T_ear::LEFT, leftAzimuth, leftElevation, centerAzimuth, centerElevation, enableInterpolation);
+			oneEarHRIR_Partitioned_struct rightHRIR_partitioned = ownerCore->GetListener()->GetHRTF()->GetHRIR_partitioned(Common::T_ear::RIGHT, rightAzimuth, rightElevation, centerAzimuth, centerElevation, enableInterpolation);
 
 			//Get delay
-			leftDelay = leftHRIR_partitioned.delay;
+			leftDelay =  leftHRIR_partitioned.delay;
 			rightDelay = rightHRIR_partitioned.delay;
 
 #ifdef USE_PROFILER_SingleSourceDSP

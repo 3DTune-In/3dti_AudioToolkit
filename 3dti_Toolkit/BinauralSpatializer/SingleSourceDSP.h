@@ -268,7 +268,7 @@ namespace Binaural {
 		/////////////
 
 		// Make the spatialization using HRTF convolution
-		void ProcessHRTF(CMonoBuffer<float> &inBuffer, CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer, float leftAzimuth, float leftElevation, float rightAzimuth, float rightElevation);
+		void ProcessHRTF(CMonoBuffer<float> &inBuffer, CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer, float leftAzimuth, float leftElevation, float rightAzimuth, float rightElevation, float _azCenter, float _elCenter);
 		/// Make the spatialization using a ILD aproach				
 		void ProccesILDSpatializationAndAddITD(CMonoBuffer<float> &leftBuffer, CMonoBuffer<float> &rightBuffer, float distance, float interauralAzimuth, float leftAzimuth, float leftElevation, float rightAzimuth, float rightElevation);
 		void ProcessILDSpatialization(CMonoBuffer<float> &leftBuffer, CMonoBuffer<float> &rightBuffer, float distance_m, float azimuth);		
