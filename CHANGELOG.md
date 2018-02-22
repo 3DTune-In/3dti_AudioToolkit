@@ -1,20 +1,30 @@
-
 # Change Log
 All notable changes to the 3DTuneIn Toolkit will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ## [Unreleased]
+
 ### Binaural
 `Changed`
-- Added new parameters to GetHRIR_partitioned to calculate ITD
-  * old method: oneEarHRIR_Partitioned_struct GetHRIR_partitioned(Common::T_ear ear, float _azimuth, float _elevation, bool runTimeInterpolation);
-  * new method: oneEarHRIR_Partitioned_struct GetHRIR_partitioned(Common::T_ear ear, float _azimuth, float _elevation, float _azimuthCenter, float _elevationCenter, bool runTimeInterpolation);
+- Modified GetHRIR_partitioned and ProcessHRTF to calculate a more precise ITD 
 
+- Removed an unnecessary result_warning in CalculateHRIR_InPoles
+
+- Editorial changes in the following methods
+  * old: CBRIR::GetBRIROneSubfilterLeng~~ht~~, CILD::AddILDSpatial~~zi~~ationTable, CListener::GetMinimu~~n~~DistanceToSource
+
+  * new: CBRIR::GetBRIROneSubfilterLeng**th**, CILD::AddILDSpatial**iz**ationTable, CListener::GetMinimu**m**DistanceToSource
+
+  
 ### Common
 `Changed`
-- Annotation 1
-  * Referenced code (class, function,...)
-- Annotation 2
-  * Referenced code (class, function,...)
- 
+- Error handler is now enabled
+
+- Editorial changes in method
+  * old: CBiquadFilter::UpdateAttributesAfterCross~~F~~ading	
+  * new: CBiquadFilter::UpdateAttributesAfterCross**f**ading
+  
+### HAHLSimulation
+`Changed`
+- Fixed ratio calculation in Hearing Loss Simulation function CalculateRatioFromDBHL
