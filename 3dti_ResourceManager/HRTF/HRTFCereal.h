@@ -56,7 +56,7 @@ void serialize(Archive & ar, orientation & ori)
 
 // Serialization function for pairs of HRIRs 
 template <class Archive>
-void serialize(Archive & ar, HRIR_struct & hrir)
+void serialize(Archive & ar, THRIRStruct & hrir)
 {
 	ar(hrir.leftDelay, hrir.rightDelay, hrir.leftHRIR, hrir.rightHRIR); // FIXME: should use stdint types!!
 }
