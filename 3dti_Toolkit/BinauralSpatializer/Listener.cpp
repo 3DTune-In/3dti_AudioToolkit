@@ -50,7 +50,7 @@ namespace Binaural
 // LISTENER METHODS
 		
 	// Get Core AudioState Struct
-	Common::AudioState_Struct CListener::GetCoreAudioState() const
+	Common::TAudioStateStruct CListener::GetCoreAudioState() const
 	{
 		return ownerCore->GetAudioState();
 	}
@@ -80,10 +80,13 @@ namespace Binaural
 		}
 
 		Common::CVector3 earLocalPosition = Common::CVector3::ZERO;
-		if (ear == Common::T_ear::LEFT)
+		if (ear == Common::T_ear::LEFT) {
 			earLocalPosition.SetAxis(RIGHT_AXIS, -listenerHeadRadius);
+		}
 		else
 			earLocalPosition.SetAxis(RIGHT_AXIS, listenerHeadRadius);
+
+		
 		return listenerTransform.GetLocalTranslation(earLocalPosition);
 	}
 

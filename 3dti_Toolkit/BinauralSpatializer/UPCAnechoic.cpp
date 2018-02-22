@@ -79,7 +79,7 @@ namespace Binaural {
 	}//Setup
 	
 	// Make the Uniformed Partitioned Convolution of the input signal
-	void CUPCAnechoic::ProcessUPConvolution(const CMonoBuffer<float>& inBuffer_Time, const oneEarHRIR_Partitioned_struct & IR, CMonoBuffer<float>& outBuffer)
+	void CUPCAnechoic::ProcessUPConvolution(const CMonoBuffer<float>& inBuffer_Time, const TOneEarHRIRPartitionedStruct & IR, CMonoBuffer<float>& outBuffer)
 	{
 		CMonoBuffer<float> sum;
 		sum.resize(impulseResponse_Frequency_Block_Size, 0.0f);
@@ -136,7 +136,7 @@ namespace Binaural {
 	}
 	
 	// Make the Uniformed Partitioned Convolution of the input signal using also last input signal buffers
-	void CUPCAnechoic::ProcessUPConvolutionWithMemory(const CMonoBuffer<float>& inBuffer_Time, const oneEarHRIR_Partitioned_struct & IR, CMonoBuffer<float>& outBuffer)
+	void CUPCAnechoic::ProcessUPConvolutionWithMemory(const CMonoBuffer<float>& inBuffer_Time, const TOneEarHRIRPartitionedStruct & IR, CMonoBuffer<float>& outBuffer)
 	{
 		CMonoBuffer<float> sum;
 		sum.resize(impulseResponse_Frequency_Block_Size, 0.0f);

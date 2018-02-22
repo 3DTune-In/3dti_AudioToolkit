@@ -60,9 +60,9 @@ namespace Binaural {
         CEnvironment(CCore* ownerCore);
 
 		/** \brief Get AudioState of the owner Core of this Environment
-		*	\retval AudioState_Struct current audio state set in core
+		*	\retval TAudioStateStruct current audio state set in core
 		*/
-		Common::AudioState_Struct GetCoreAudioState() const;
+		Common::TAudioStateStruct GetCoreAudioState() const;
 
 		/** \brief Get BRIR of the environment
 		*	\retval BRIR pointer to current BRIR set for this environment

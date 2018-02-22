@@ -54,12 +54,12 @@ namespace Binaural {
 		}
 	}
 	
-	void CBRIR::AddBRIRTable(BRIRTable_type && newTable)
+	void CBRIR::AddBRIRTable(TBRIRTable && newTable)
 	{
 		t_BRIR_DataBase = newTable;
 	}
 
-	const BRIRTable_type & CBRIR::GetRawBRIRTable() const
+	const TBRIRTable & CBRIR::GetRawBRIRTable() const
 	{
 		return t_BRIR_DataBase;
 	}
@@ -68,7 +68,7 @@ namespace Binaural {
 	{
 		if (setupInProgress) 
 		{
-			auto returnValue = t_BRIR_DataBase.emplace(VirtualSpeaker(vsPosition, vsChannel), std::forward<TImpulseResponse>(newBRIR));
+			auto returnValue = t_BRIR_DataBase.emplace(TVirtualSpeaker(vsPosition, vsChannel), std::forward<TImpulseResponse>(newBRIR));
 			//Error handler
 			if (returnValue.second) { /*SET_RESULT(RESULT_OK, "BRIR emplaced into t_BRIR_DataBase succesfully"); */ }
 			else { SET_RESULT(RESULT_WARNING, "Error emplacing BRIR in t_BRIR_DataBase map"); }
@@ -145,7 +145,7 @@ namespace Binaural {
 	const TImpulseResponse_Partitioned & CBRIR::GetBRIR_Partitioned(VirtualSpeakerPosition vsPos, Common::T_ear vsChannel) const
 	{
 		if (!setupInProgress) {
-			auto it = t_BRIR_partitioned.find(VirtualSpeaker(vsPos, vsChannel));
+			auto it = t_BRIR_partitioned.find(TVirtualSpeaker(vsPos, vsChannel));
 			if (it != t_BRIR_partitioned.end())
 			{
 				return it->second;
@@ -165,7 +165,7 @@ namespace Binaural {
 	const TImpulseResponse & CBRIR::GetBRIR(VirtualSpeakerPosition vsPos, Common::T_ear vsChannel) const
 	{
 		if (!setupInProgress) {
-			auto it = t_BRIR_DataBase.find(VirtualSpeaker(vsPos, vsChannel));
+			auto it = t_BRIR_DataBase.find(TVirtualSpeaker(vsPos, vsChannel));
 			if (it != t_BRIR_DataBase.end())
 			{
 				return it->second;
@@ -205,9 +205,9 @@ namespace Binaural {
 	// PRIVATE METHODS
 	
 
-	BRIRTable_type CBRIR::CalculateBRIRFFT_Table() {
+	TBRIRTable CBRIR::CalculateBRIRFFT_Table() {
 
-		BRIRTable_type newBRIR_Table;
+		TBRIRTable newBRIR_Table;
 
 		for (auto it = t_BRIR_DataBase.begin(); it != t_BRIR_DataBase.end(); it++)
 		{
@@ -220,9 +220,9 @@ namespace Binaural {
 		return newBRIR_Table;
 	}
 
-	BRIRTable_Partitioned_type CBRIR::CalculateBRIRFFT_Table_partitioned() {
+	TBRIRTablePartitioned CBRIR::CalculateBRIRFFT_Table_partitioned() {
 
-		BRIRTable_Partitioned_type		newBRIR_Table_Partitioned;
+		TBRIRTablePartitioned		newBRIR_Table_Partitioned;
 
 		for (auto it = t_BRIR_DataBase.begin(); it != t_BRIR_DataBase.end(); it++) 
 		{

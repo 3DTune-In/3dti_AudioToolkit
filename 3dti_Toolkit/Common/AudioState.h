@@ -1,7 +1,7 @@
 /**
-* \struct AudioState_Struct
+* \struct TAudioStateStruct
 *
-* \brief Declaration of AudioState_Struct interface.
+* \brief Declaration of TAudioStateStruct interface.
 * \date	September 2017
 *
 * \authors 3DI-DIANA Research Group (University of Malaga), in alphabetical order: M. Cuevas-Rodriguez, C. Garre,  D. Gonzalez-Toledo, E.J. de la Rubia-Cuestas, L. Molina-Tanco ||
@@ -36,13 +36,13 @@ namespace Common
 {
 	/** \details Simple AudioState struct to centralise sampleRate and bufferSize
 	*/
-	struct AudioState_Struct
+	struct TAudioStateStruct
 	{
 		int sampleRate;	///< sample rate in Hertzs
 		int bufferSize;	///< buffer size (number of samples for each channel)
 
-		AudioState_Struct() :AudioState_Struct{ DEFAULT_SAMPLE_RATE, DEFAULT_BUFFER_SIZE} {}
-		AudioState_Struct(int a, int b) : sampleRate(a), bufferSize(b) {}
+		TAudioStateStruct() :TAudioStateStruct{ DEFAULT_SAMPLE_RATE, DEFAULT_BUFFER_SIZE} {}
+		TAudioStateStruct(int a, int b) : sampleRate(a), bufferSize(b) {}
 	};
 
 }

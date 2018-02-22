@@ -65,7 +65,7 @@ namespace Binaural {
 		*	\param [out] outBuffer FFT of the output signal of 2*B size (complex numbers). After the IIFT is done, only the last B samples are significant
 		*   \eh Nothing is reported to the error handler.
 		*/
-		void ProcessUPConvolution(const CMonoBuffer<float>& inBuffer_Time, const oneEarHRIR_Partitioned_struct & IR, CMonoBuffer<float>& outBuffer);
+		void ProcessUPConvolution(const CMonoBuffer<float>& inBuffer_Time, const TOneEarHRIRPartitionedStruct & IR, CMonoBuffer<float>& outBuffer);
 
 		/** \brief Make the Uniformed Partitioned Convolution of the input signal using also last input signal buffers (method with memory)
 		*   \details This method performs the convolution between the input signal and the partitioned HRIR (the HRIR has been stored for each input signal block) using the UPC* method, returning the FFT of the output.
@@ -75,7 +75,7 @@ namespace Binaural {
 		*	\param [out] outBuffer FFT of the output signal of 2*B size (complex numbers). After the IIFT is done, only the last B samples are significant
 		*   \eh Nothing is reported to the error handler.
 		*/
-		void ProcessUPConvolutionWithMemory(const CMonoBuffer<float>& inBuffer_Time, const oneEarHRIR_Partitioned_struct & IR, CMonoBuffer<float>& outBuffer);
+		void ProcessUPConvolutionWithMemory(const CMonoBuffer<float>& inBuffer_Time, const TOneEarHRIRPartitionedStruct & IR, CMonoBuffer<float>& outBuffer);
 
 	private:
 		// ATTRIBUTES	

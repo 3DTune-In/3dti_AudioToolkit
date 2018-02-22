@@ -29,7 +29,7 @@
 
 namespace Binaural {
 
-	CCore::CCore(Common::AudioState_Struct _audioState, int _HRTF_resamplingStep)
+	CCore::CCore(Common::TAudioStateStruct _audioState, int _HRTF_resamplingStep)
 		:audioState{ _audioState }, HRTF_resamplingStep{ _HRTF_resamplingStep }{
 	}
 
@@ -40,7 +40,7 @@ namespace Binaural {
 	{}
 
 	// Set global audio state parameters
-	void CCore::SetAudioState(Common::AudioState_Struct _audioState)
+	void CCore::SetAudioState(Common::TAudioStateStruct _audioState)
 	{		
 		//Check if the new buffer size is power of two
 		bool powerOfTwo = Common::CFprocessor::CalculateIsPowerOfTwo(_audioState.bufferSize);
@@ -62,7 +62,7 @@ namespace Binaural {
     }
 
 	// Get global audio state parameters
-	Common::AudioState_Struct CCore::GetAudioState() const
+	Common::TAudioStateStruct CCore::GetAudioState() const
 	{
 		// FIXME: How does this depend on Core state?
 		return audioState;
