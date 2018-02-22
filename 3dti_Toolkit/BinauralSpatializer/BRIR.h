@@ -33,15 +33,15 @@
 
 /** \brief Type definition for virtual speakers in BRIR
 */
-struct VirtualSpeaker
+struct TVirtualSpeaker
 {
 	VirtualSpeakerPosition vsPosition;	///< Position of virtual speaker
 	Common::T_ear	vsChannel;			///< Channel (left or right)
 	
-	VirtualSpeaker(VirtualSpeakerPosition _vsPosition, Common::T_ear	_vsChannel) :vsPosition{ _vsPosition }, vsChannel{ _vsChannel } {}
-	VirtualSpeaker() :VirtualSpeaker{ NORTH, Common::T_ear::LEFT } {}
+	TVirtualSpeaker(VirtualSpeakerPosition _vsPosition, Common::T_ear	_vsChannel) :vsPosition{ _vsPosition }, vsChannel{ _vsChannel } {}
+	TVirtualSpeaker() :TVirtualSpeaker{ NORTH, Common::T_ear::LEFT } {}
 	
-	bool operator==(const VirtualSpeaker& oth) const
+	bool operator==(const TVirtualSpeaker& oth) const
 	{
 		return ((this->vsPosition == oth.vsPosition) && (this->vsChannel == oth.vsChannel));
 	}
@@ -51,10 +51,10 @@ namespace std
 {
 	//[TBC]
 	template<>
-	struct hash<VirtualSpeaker>
+	struct hash<TVirtualSpeaker>
 	{
 		// adapted from http://en.cppreference.com/w/cpp/utility/hash
-		size_t operator()(const VirtualSpeaker & key) const
+		size_t operator()(const TVirtualSpeaker & key) const
 		{
 			size_t h1 = std::hash<int32_t>()(key.vsPosition);
 			size_t h2 = std::hash<int32_t>()(key.vsChannel);
@@ -73,11 +73,11 @@ typedef CMonoBuffer<TImpulseResponse> TImpulseResponse_Partitioned;
 
 /** \brief Type definition for the HRTF table
 */
-typedef std::unordered_map<VirtualSpeaker, TImpulseResponse> BRIRTable_type;
+typedef std::unordered_map<TVirtualSpeaker, TImpulseResponse> TBRIRTable;
 
 /** \brief Type definition for the HRTF table
 */
-typedef std::unordered_map<VirtualSpeaker, TImpulseResponse_Partitioned> BRIRTable_Partitioned_type;
+typedef std::unordered_map<TVirtualSpeaker, TImpulseResponse_Partitioned> TBRIRTablePartitioned;
 
 namespace Binaural 
 {
@@ -124,7 +124,7 @@ namespace Binaural
 		*	\param [in] newTable full table with all BRIR data
 		*   \eh Nothing is reported to the error handler.
 		*/
-		void AddBRIRTable(BRIRTable_type && newTable);
+		void AddBRIRTable(TBRIRTable && newTable);
 
 		/** \brief Stop the BRIR configuration and set the ABIR configuration		
 		*   \eh On success, RESULT_OK is reported to the error handler.
@@ -186,12 +186,12 @@ namespace Binaural
 		*	\retval table raw BRIR table
 		*   \eh Nothing is reported to the error handler.
 		*/
-		const BRIRTable_type & GetRawBRIRTable() const;
+		const TBRIRTable & GetRawBRIRTable() const;
 
 		/** \brief Get raw BRIR table partitioned
 		*	\retval table raw BRIR table partitioned
 		*/
-		//const BRIRTable_Partitioned_type & GetRawBRIRTablePartitioned() const;
+		//const TBRIRTablePartitioned & GetRawBRIRTablePartitioned() const;
 
 	private:
 
@@ -200,8 +200,8 @@ namespace Binaural
 		///////////		
 		TImpulseResponse_Partitioned	CalculateBRIRFFT_partitioned(const TImpulseResponse & newData_time);
 		TImpulseResponse				CalculateBRIRFFT(const TImpulseResponse & newData_time);
-		BRIRTable_type					CalculateBRIRFFT_Table();
-		BRIRTable_Partitioned_type		CalculateBRIRFFT_Table_partitioned();
+		TBRIRTable					CalculateBRIRFFT_Table();
+		TBRIRTablePartitioned		CalculateBRIRFFT_Table_partitioned();
 		
 		// Recalculate the BRIR FFT table partitioned or not with a new bufferSize
 		void CalculateNewBRIRTable();
@@ -218,9 +218,9 @@ namespace Binaural
 		int32_t bufferSize;				// Input signal buffer size
 		bool setupInProgress;			// Variable that indicates the BRIR add is in progress
 		bool BRIR_ready;				// Indicate that the BRIR table is ready in order to create the ABIR table
-		BRIRTable_type t_BRIR_DataBase;			// Table to store the BRIR data
-		BRIRTable_type t_BRIRFFT;		// Table to store the BRIR data in frequency domain
-		BRIRTable_Partitioned_type t_BRIR_partitioned; // Table to contain the BRIR data partitioned and in frequency domain
+		TBRIRTable t_BRIR_DataBase;			// Table to store the BRIR data
+		TBRIRTable t_BRIRFFT;		// Table to store the BRIR data in frequency domain
+		TBRIRTablePartitioned t_BRIR_partitioned; // Table to contain the BRIR data partitioned and in frequency domain
 
 		int BRIRsubfilterLength_time;		// BRIR subfilter in time domain buffer size 
 		int BRIRsubfilterLength_frequency;	// BRIR subfilter in frequency domain buffer size 

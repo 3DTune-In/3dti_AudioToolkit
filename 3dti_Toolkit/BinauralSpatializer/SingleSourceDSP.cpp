@@ -381,8 +381,8 @@ namespace Binaural {
 #else   //USE_FREQUENCY_COVOLUTION_WITHOUT_PARTITIONS_ANECHOIC
 
 			//Get the HRIR, with different orientation for both ears
-			oneEarHRIR_Partitioned_struct leftHRIR_partitioned = ownerCore->GetListener()->GetHRTF()->GetHRIR_partitioned(Common::T_ear::LEFT, leftAzimuth, leftElevation, centerAzimuth, centerElevation, enableInterpolation);
-			oneEarHRIR_Partitioned_struct rightHRIR_partitioned = ownerCore->GetListener()->GetHRTF()->GetHRIR_partitioned(Common::T_ear::RIGHT, rightAzimuth, rightElevation, centerAzimuth, centerElevation, enableInterpolation);
+			TOneEarHRIRPartitionedStruct leftHRIR_partitioned = ownerCore->GetListener()->GetHRTF()->GetHRIR_partitioned(Common::T_ear::LEFT, leftAzimuth, leftElevation, centerAzimuth, centerElevation, enableInterpolation);
+			TOneEarHRIRPartitionedStruct rightHRIR_partitioned = ownerCore->GetListener()->GetHRTF()->GetHRIR_partitioned(Common::T_ear::RIGHT, rightAzimuth, rightElevation, centerAzimuth, centerElevation, enableInterpolation);
 
 			//Get delay
 			leftDelay =  leftHRIR_partitioned.delay;

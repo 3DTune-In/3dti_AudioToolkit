@@ -32,7 +32,7 @@
 
 // Serialization function for virtual speakers
 template <class Archive>
-void serialize(Archive & ar, VirtualSpeaker & vs)
+void serialize(Archive & ar, TVirtualSpeaker & vs)
 {
 	ar(vs.vsPosition, vs.vsChannel);
 }
@@ -42,8 +42,8 @@ struct BRIRDetail_struct
 {
 	uint32_t samplingRate;
 	uint32_t irLength;
-	//BRIRTable_Partitioned_type table;
-	BRIRTable_type table;
+	//TBRIRTablePartitioned table;
+	TBRIRTable table;
 };
 
 // Serialization function for BRIR archive

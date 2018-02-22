@@ -183,7 +183,7 @@ namespace HRTF
 			// This outtermost loop iterates over HRIRs
 			for (std::size_t i = 0; i < nMeasurements; i++) // or for( std::size_t i = 0; i < dims[0]; i++ ), should be the same.
 			{
-				HRIR_struct hrir_value;
+				THRIRStruct hrir_value;
 				hrir_value.leftHRIR.resize(nSamples);
 				hrir_value.rightHRIR.resize(nSamples);
 				double azimuth = pos[array2DIndex(i, 0, nMeasurements, dims[1])];

@@ -59,7 +59,7 @@ namespace Binaural {
 	}
 	
 	// Get Core AudioState Struct
-	Common::AudioState_Struct CEnvironment::GetCoreAudioState() const
+	Common::TAudioStateStruct CEnvironment::GetCoreAudioState() const
 	{
 		return ownerCore->GetAudioState();
 	}

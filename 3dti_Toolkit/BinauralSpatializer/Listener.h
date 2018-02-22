@@ -131,7 +131,7 @@ class CHRTF;
 		*	\retval audiostate current audio state set in core	
 		*   \eh Nothing is reported to the error handler.
 		*/	
-		Common::AudioState_Struct GetCoreAudioState() const;
+		Common::TAudioStateStruct GetCoreAudioState() const;
 
 		/** \brief Get the minimum allowed distance between the listener and any source
 		*	\retval distance value in meters that stores the minimum allowed distance between the listener and any source		
