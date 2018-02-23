@@ -19,6 +19,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
   
 ### Common
 `Changed`
+
+-  Minor changes for MacOS compilation of Error Handler
+
 - Error handler is now enabled
 
 - Editorial changes in method

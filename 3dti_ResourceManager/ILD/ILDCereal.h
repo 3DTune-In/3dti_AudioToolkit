@@ -39,7 +39,7 @@
 #endif
 
 #include <BinauralSpatializer/ILD.h>
-#include <BinauralSpatializer/listener.h>
+#include <BinauralSpatializer/Listener.h>
 #include <cereal/archives/portable_binary.hpp>
 #include <cereal/types/unordered_map.hpp>
 

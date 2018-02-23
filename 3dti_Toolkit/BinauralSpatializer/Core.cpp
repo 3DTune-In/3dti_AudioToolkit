@@ -239,7 +239,7 @@ namespace Binaural {
 			}
 		}
 		else
-			SET_RESULT(RESULT_ERROR_OUTOFRANGE, "Wrong value for HRTF resampling step; needs to be >0º and <90º");
+			SET_RESULT(RESULT_ERROR_OUTOFRANGE, "Wrong value for HRTF resampling step; needs to be >0 deg and <90 deg");
 	}
 
 	// Get HRTF resampling step
