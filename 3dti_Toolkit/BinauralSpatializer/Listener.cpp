@@ -90,6 +90,26 @@ namespace Binaural
 		return listenerTransform.GetLocalTranslation(earLocalPosition);
 	}
 
+	// Get local position of one listener ear
+	Common::CVector3 CListener::GetListenerEarLocalPosition(Common::T_ear ear) const
+	{
+		if (ear == Common::T_ear::BOTH || ear == Common::T_ear::NONE)
+		{
+			SET_RESULT(RESULT_ERROR_NOTALLOWED, "Attempt to get listener ear transform for BOTH or NONE ears");
+			return Common::CVector3();
+		}
+
+		Common::CVector3 earLocalPosition = Common::CVector3::ZERO;
+		if (ear == Common::T_ear::LEFT) {
+			earLocalPosition.SetAxis(RIGHT_AXIS, -listenerHeadRadius);
+		}
+		else
+			earLocalPosition.SetAxis(RIGHT_AXIS, listenerHeadRadius);
+
+
+		return earLocalPosition;
+	}
+
 	// Get HRTF for listener		
 	CHRTF* CListener::GetHRTF() const
 	{

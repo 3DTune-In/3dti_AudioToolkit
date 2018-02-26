@@ -66,11 +66,18 @@ class CHRTF;
 		*	\retval transform current listener position and orientation		
 		*   \eh Nothing is reported to the error handler.
 		*/
-		const Common::CTransform GetListenerTransform() const;																		
+		const Common::CTransform GetListenerTransform() const;	
+		
+		/** \brief Get EarPosition local to the listenerr
+		*   \param [in] ear indicates the ear which you want to knowthe position
+		*	\retval ear local position
+		*   \eh Nothing is reported to the error handler.
+		*/
+		Common::CVector3 GetListenerEarLocalPosition(Common::T_ear ear) const;
 
 		/** \brief Get HRTF of listener
 		*	\retval HRTF pointer to current listener HRTF	
-		*   \eh Nothing is reported to the error handler.
+		*   \eh On error, an error code is reported to the error handler.
 		*/	
 		CHRTF* GetHRTF() const;
 
