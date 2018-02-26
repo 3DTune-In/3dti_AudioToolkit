@@ -296,6 +296,8 @@ namespace Binaural {
 		bool IsReverbProcessReady();
 		// sets the ready flag for reverb process to false
 		void SetReverbProcessNotReady();
+		// In orther to obtain the position where the HRIR is needed, this method calculate the projection of each ear in the sphere where the HRTF has been measured
+		const Common::CVector3 CSingleSourceDSP::GetSphereProjectionPosition(Common::CVector3 vectorToEar, Common::CVector3 earLocalPosition, float distance) const;
 
 				
 		///////////////

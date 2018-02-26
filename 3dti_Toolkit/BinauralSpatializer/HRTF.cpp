@@ -33,12 +33,13 @@ namespace Binaural
 
 	//PUBLIC METHODS ///////////////////////////////////////////////////////////////////////////////////////
 	
-	void CHRTF::BeginSetup(int32_t _HRIRLength)
+	void CHRTF::BeginSetup(int32_t _HRIRLength, float _distance)
 	{
 		if ((ownerListener != nullptr) && ownerListener->ownerCore!=nullptr)
 		{						
 			//Update parameters			
 			HRIRLength = _HRIRLength;
+			distanceOfMeasurement = _distance;
 			bufferSize = ownerListener->GetCoreAudioState().bufferSize;						
 			resamplingStep = ownerListener->GetHRTFResamplingStep();
 			float partitions = (float)HRIRLength / (float)bufferSize;
@@ -201,6 +202,12 @@ namespace Binaural
 		}
 		return customizedDelay;
 	}
+
+
+	float CHRTF::GetHRTFDistanceOfMeasurement() {
+		return distanceOfMeasurement;
+	}
+
 
 	/*-----  GET HRIR METHODS  ----------------------------------------------------------------------------------------------------------------------*/
 

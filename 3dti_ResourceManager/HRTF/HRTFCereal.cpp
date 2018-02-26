@@ -44,7 +44,8 @@ namespace HRTF
 			cereal::PortableBinaryInputArchive archive(input3dtiStream);
 			HRTFDetail_struct hrtf;
 			archive(hrtf);
-			listener->GetHRTF()->BeginSetup(hrtf.hrirLength);
+			float distance = 1.95f;  //TODO: read the distance from the 3dti file
+			listener->GetHRTF()->BeginSetup(hrtf.hrirLength, distance);
 			listener->GetHRTF()->AddHRTFTable(std::move(hrtf.table));
 			listener->GetHRTF()->EndSetup();
 			SET_RESULT(RESULT_OK, "HRTF created from 3DTI stream");

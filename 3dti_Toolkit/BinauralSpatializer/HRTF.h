@@ -45,6 +45,10 @@
 #define DEFAULT_RESAMPLING_STEP 5
 #endif
 
+#ifndef DEFAULT_HRTF_MEASURED_DISTANCE
+#define DEFAULT_HRTF_MEASURED_DISTANCE 1.95f
+#endif
+
 #define MAX_DISTANCE_BETWEEN_ELEVATIONS 5
 #define NUMBER_OF_PARTS 4 
 #define AZIMUTH_STEP  15
@@ -154,7 +158,7 @@ namespace Binaural
 		*   \eh Nothing is reported to the error handler.
 		*/
 		CHRTF(CListener* _ownerListener) 	
-			:ownerListener{ _ownerListener }, enableCustomizedITD{ false }, resamplingStep{ DEFAULT_RESAMPLING_STEP }, HRIRLength{ 0 }, HRTFLoaded{ false }, setupInProgress{ false }
+			:ownerListener{ _ownerListener }, enableCustomizedITD{ false }, resamplingStep{ DEFAULT_RESAMPLING_STEP }, HRIRLength{ 0 }, HRTFLoaded{ false }, setupInProgress{ false }, distanceOfMeasurement { DEFAULT_HRTF_MEASURED_DISTANCE }
 		{}
 
 		/** \brief Default Constructor
@@ -162,7 +166,7 @@ namespace Binaural
 		*   \eh Nothing is reported to the error handler.
 		*/
 		CHRTF()
-			:ownerListener{ nullptr }, enableCustomizedITD{ false }, resamplingStep{ DEFAULT_RESAMPLING_STEP }, HRIRLength{ 0 }, HRTFLoaded{ false }, setupInProgress{ false }
+			:ownerListener{ nullptr }, enableCustomizedITD{ false }, resamplingStep{ DEFAULT_RESAMPLING_STEP }, HRIRLength{ 0 }, HRTFLoaded{ false }, setupInProgress{ false }, distanceOfMeasurement{ DEFAULT_HRTF_MEASURED_DISTANCE }
 		{}
 
 		/** \brief Get size of each HRIR buffer
@@ -179,7 +183,7 @@ namespace Binaural
 		*   \eh On success, RESULT_OK is reported to the error handler.
 		*       On error, an error code is reported to the error handler.
 		*/
-		void BeginSetup(int32_t _HRIRLength);
+		void BeginSetup(int32_t _HRIRLength, float _distance);
 		
 		/** \brief Set the full HRIR matrix.
 		*	\param [in] newTable full table with all HRIR data
@@ -274,6 +278,13 @@ namespace Binaural
 		*/
 		const unsigned long GetCustomizedDelay(float _azimuth, float _elevation, Common::T_ear ear)const;
 
+		/** \brief	Get the distance where the HRTF has been measured
+		*   \return distance of the speakers structure to calculate the HRTF
+		*   \eh Nothing is reported to the error handler.
+		*/
+		float GetHRTFDistanceOfMeasurement();
+		
+
 	private:
 		///////////////
 		// ATTRIBUTES
@@ -284,6 +295,7 @@ namespace Binaural
 		//int32_t sampleRate;							// Sample Rate		
 		int32_t HRIR_partitioned_NumberOfSubfilters;	// Number of subfilters (blocks) for the UPC algorithm
 		int32_t HRIR_partitioned_SubfilterLength;		// Size of one HRIR subfilter
+		float distanceOfMeasurement;					//Distance where the HRIR have been measurement
 
 		float sphereBorder;						// Define spheere "sewing"
 		float epsilon_sewing = 0.001f;

@@ -247,18 +247,22 @@ namespace Binaural {
 			Common::CVector3 vectorTo = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(safeSourceTransform);
 			Common::CVector3 leftVectorTo = ownerCore->GetListener()->GetListenerEarTransform(Common::T_ear::LEFT).GetVectorTo(safeSourceTransform);
 			Common::CVector3 rightVectorTo = ownerCore->GetListener()->GetListenerEarTransform(Common::T_ear::RIGHT).GetVectorTo(safeSourceTransform);
+			Common::CVector3 leftVectorTo_sphereProjection =	GetSphereProjectionPosition(leftVectorTo, ownerCore->GetListener()->GetListenerEarLocalPosition(Common::T_ear::LEFT), ownerCore->GetListener()->GetHRTF()->GetHRTFDistanceOfMeasurement());
+			Common::CVector3 rightVectorTo_sphereProjection =	GetSphereProjectionPosition(rightVectorTo, ownerCore->GetListener()->GetListenerEarLocalPosition(Common::T_ear::RIGHT), ownerCore->GetListener()->GetHRTF()->GetHRTFDistanceOfMeasurement());
 
 		float distance = vectorTo.GetDistance();							//Get Distance
 		float interauralAzimuth = vectorTo.GetInterauralAzimuthDegrees();	//Get Interaural Azimuth
 
-		float leftAzimuth = leftVectorTo.GetAzimuthDegrees();		//Get left azimuth
-		float leftElevation = leftVectorTo.GetElevationDegrees();	//Get left elevation
+		float leftAzimuth =		leftVectorTo_sphereProjection.GetAzimuthDegrees();		//Get left azimuth
+		float leftElevation =	leftVectorTo_sphereProjection.GetElevationDegrees();	//Get left elevation
 
-		float rightAzimuth = rightVectorTo.GetAzimuthDegrees();		//Get right azimuth
-		float rightElevation = rightVectorTo.GetElevationDegrees();	//Get right elevation	
+		float rightAzimuth =	rightVectorTo_sphereProjection.GetAzimuthDegrees();		//Get right azimuth
+		float rightElevation = rightVectorTo_sphereProjection.GetElevationDegrees();	//Get right elevation	
 
 		float centerAzimuth =	vectorTo.GetAzimuthDegrees();		//Get azimuth from the head center
 		float centerElevation = vectorTo.GetElevationDegrees();		//Get elevation from the head center
+
+		
 
 		float angleToForwardAxisRadians = vectorTo.GetAngleToForwardAxisRadians();  //angle that this vector keeps with the forward axis
 
@@ -666,10 +670,6 @@ namespace Binaural {
 	///Sets the ready flag for reverb process to false
 	void CSingleSourceDSP::SetReverbProcessNotReady() { readyForReverb = false; }
 
-
-
-	
-
 	void CSingleSourceDSP::ProcessILDSpatialization(CMonoBuffer<float> &leftBuffer, CMonoBuffer<float> &rightBuffer, float distance_m, float azimuth)
 	{
 		if (distance_m > DISTANCE_MODEL_THRESHOLD_NEAR) { distance_m= DISTANCE_MODEL_THRESHOLD_NEAR; }
@@ -703,4 +703,35 @@ namespace Binaural {
 			ILDSpatializationFilters.right.Process(rightBuffer);
 		}
 	}
+
+	// In orther to obtain the position where the HRIR is needed, this method calculate the projection of each ear in the sphere where the HRTF has been measured
+	const Common::CVector3 CSingleSourceDSP::GetSphereProjectionPosition(Common::CVector3 vectorToEar, Common::CVector3 earLocalPosition, float distance) const
+	{
+		//get axis according to the defined convention
+		float leftAxis =	vectorToEar.GetAxis(LEFT_AXIS);
+		float forwardAxis = vectorToEar.GetAxis(FORWARD_AXIS);
+		float upAxis =		vectorToEar.GetAxis(UP_AXIS);
+		// Error handler:
+		if ((leftAxis == 0.0f) && (forwardAxis == 0.0f) && (upAxis == 0.0f)) {
+			ASSERT(false, RESULT_ERROR_DIVBYZERO, "Axes are not correctly set. Please, check axis conventions", "Azimuth computed from vector succesfully");
+		}
+		//Resolve a quadratic equation to get lambda, which is the parameter that define the line between the ear and the sphere, passing by the source
+		// (x_sphere, y_sphere, z_sphere) = earLocalPosition + lambda * vectorToEar 
+		// x_sphere^2 + y_sphere^2 + z_sphere^2 = distance^2
+
+		float a = forwardAxis * forwardAxis + leftAxis * leftAxis + upAxis * upAxis;
+		float b = 2.0f * earLocalPosition.y * leftAxis;
+		float c = earLocalPosition.y * earLocalPosition.y - distance * distance;
+		float lambda = (-b + sqrt(b*b - 4.0f* a*c))* 0.5f * (1 / a);
+
+		Common::CVector3 cartesianposition;
+		
+		cartesianposition.x = lambda * forwardAxis;
+		cartesianposition.y = earLocalPosition.y + lambda * leftAxis;
+		cartesianposition.z = lambda * upAxis;
+
+
+		return cartesianposition;
+	}
+
 }
