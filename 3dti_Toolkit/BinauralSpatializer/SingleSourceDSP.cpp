@@ -382,9 +382,6 @@ namespace Binaural {
 		CMonoBuffer<float> leftChannel_withoutDelay;
 		CMonoBuffer<float> rightChannel_withoutDelay;
 
-		//Store delays
-		int leftDelay;
-		int rightDelay;
 		if ((ownerCore->GetListener()->GetHRTF()->IsHRTFLoaded()) && (inBuffer.size() == ownerCore->GetAudioState().bufferSize))
 		{
 
@@ -422,12 +419,17 @@ namespace Binaural {
 #else   //USE_FREQUENCY_COVOLUTION_WITHOUT_PARTITIONS_ANECHOIC
 
 			//Get the HRIR, with different orientation for both ears
-			TOneEarHRIRPartitionedStruct leftHRIR_partitioned = ownerCore->GetListener()->GetHRTF()->GetHRIR_partitioned(Common::T_ear::LEFT, leftAzimuth, leftElevation, centerAzimuth, centerElevation, enableInterpolation);
-			TOneEarHRIRPartitionedStruct rightHRIR_partitioned = ownerCore->GetListener()->GetHRTF()->GetHRIR_partitioned(Common::T_ear::RIGHT, rightAzimuth, rightElevation, centerAzimuth, centerElevation, enableInterpolation);
+			TOneEarHRIRPartitionedStruct  leftHRIR_partitioned;
+			TOneEarHRIRPartitionedStruct  rightHRIR_partitioned;
+
+			leftHRIR_partitioned.HRIR_Partitioned = ownerCore->GetListener()->GetHRTF()->GetHRIR_partitioned(Common::T_ear::LEFT, leftAzimuth, leftElevation, enableInterpolation);
+			rightHRIR_partitioned.HRIR_Partitioned = ownerCore->GetListener()->GetHRTF()->GetHRIR_partitioned(Common::T_ear::RIGHT, rightAzimuth, rightElevation, enableInterpolation);
 
 			//Get delay
-			leftDelay =  leftHRIR_partitioned.delay;
-			rightDelay = rightHRIR_partitioned.delay;
+			leftHRIR_partitioned.delay = ownerCore->GetListener()->GetHRTF()->GetHRIRDelay(Common::T_ear::LEFT, centerAzimuth, centerElevation, enableInterpolation);
+			rightHRIR_partitioned.delay = ownerCore->GetListener()->GetHRTF()->GetHRIRDelay(Common::T_ear::RIGHT, centerAzimuth, centerElevation, enableInterpolation);
+			cout << "leftHRIR_partitioned.delay= " << leftHRIR_partitioned.delay;
+			cout << "    rightHRIR_partitioned.delay= " << rightHRIR_partitioned.delay << endl;
 
 #ifdef USE_PROFILER_SingleSourceDSP
 			if (enableInterpolation)
@@ -451,8 +453,8 @@ namespace Binaural {
 
 #endif // !USE_FREQUENCY_COVOLUTION_WITHOUT_PARTITIONS_ANECHOIC		
 
-			ProcessAddDelay_ExpansionMethod(leftChannel_withoutDelay, outLeftBuffer, leftChannelDelayBuffer, leftDelay);
-			ProcessAddDelay_ExpansionMethod(rightChannel_withoutDelay, outRightBuffer, rightChannelDelayBuffer, rightDelay);
+			ProcessAddDelay_ExpansionMethod(leftChannel_withoutDelay, outLeftBuffer, leftChannelDelayBuffer, leftHRIR_partitioned.delay);
+			ProcessAddDelay_ExpansionMethod(rightChannel_withoutDelay, outRightBuffer, rightChannelDelayBuffer, rightHRIR_partitioned.delay);
 
 		}
 	}
