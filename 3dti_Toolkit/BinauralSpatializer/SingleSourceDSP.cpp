@@ -428,8 +428,6 @@ namespace Binaural {
 			//Get delay
 			leftHRIR_partitioned.delay = ownerCore->GetListener()->GetHRTF()->GetHRIRDelay(Common::T_ear::LEFT, centerAzimuth, centerElevation, enableInterpolation);
 			rightHRIR_partitioned.delay = ownerCore->GetListener()->GetHRTF()->GetHRIRDelay(Common::T_ear::RIGHT, centerAzimuth, centerElevation, enableInterpolation);
-			cout << "leftHRIR_partitioned.delay= " << leftHRIR_partitioned.delay;
-			cout << "    rightHRIR_partitioned.delay= " << rightHRIR_partitioned.delay << endl;
 
 #ifdef USE_PROFILER_SingleSourceDSP
 			if (enableInterpolation)
