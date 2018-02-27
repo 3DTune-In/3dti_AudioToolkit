@@ -60,6 +60,8 @@ namespace Binaural
 	{
 		listenerTransform = _listenerTransform;
 		
+		ownerCore->CalculateSourceCoordinates();
+
 		// WATCHER
 		WATCH(WV_LISTENER_POSITION, listenerTransform.GetPosition(), Common::CVector3);		
 	}

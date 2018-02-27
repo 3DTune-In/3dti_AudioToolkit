@@ -227,6 +227,14 @@ namespace Binaural {
 		}
 	}
 
+	// Calculate the new coordinates from the source to the listener 
+	void CCore::CalculateSourceCoordinates() {
+		for (auto eachSource : audioSources)
+		{
+			eachSource->CalculateSourceCoordinates();
+		}
+	}
+
 	// Set HRTF resampling step
 	void CCore::SetHRTFResamplingStep(int _HRTF_resamplingStep)
 	{	

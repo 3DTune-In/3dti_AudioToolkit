@@ -261,7 +261,19 @@ namespace Binaural {
 		*   \eh On error, an error code is reported to the error handler.
 		*/
 		void ProcessAnechoic(const CMonoBuffer<float> & inBuffer, CStereoBuffer<float> & outBuffer);
-																
+
+		/** \brief Returns the azimuth of the specified ear.
+		*	\param [in] ear must be Common::T_ear::LEFT or Common::T_ear::RIGHT
+		*   \eh On error, an error code is reported to the error handler.
+		*/
+		float GetEarAzimuth( Common::T_ear ear ) const;
+
+		/** \brief Returns the elevation of the specified ear.
+		*	\param [in] ear must be Common::T_ear::LEFT or Common::T_ear::RIGHT
+		*   \eh On error, an error code is reported to the error handler.
+		*/
+		float GetEarElevation(Common::T_ear ear) const;
+
 	private:	
 		/////////////
 		// METHODS	
@@ -297,8 +309,11 @@ namespace Binaural {
 		// sets the ready flag for reverb process to false
 		void SetReverbProcessNotReady();
 		// In orther to obtain the position where the HRIR is needed, this method calculate the projection of each ear in the sphere where the HRTF has been measured
-		const Common::CVector3 CSingleSourceDSP::GetSphereProjectionPosition(Common::CVector3 vectorToEar, Common::CVector3 earLocalPosition, float distance) const;
+		const Common::CVector3 GetSphereProjectionPosition(Common::CVector3 vectorToEar, Common::CVector3 earLocalPosition, float distance) const;
 
+		// Calculates the values ot attributes related to the relative position between sound source and
+		// the listener.
+		void CalculateSourceCoordinates();
 				
 		///////////////
 		// ATTRIBUTES
@@ -340,6 +355,19 @@ namespace Binaural {
 		
 		TSpatializationMode spatializationMode; //Select the spatialization method
 
+		float leftAzimuth;     // Left ear's azimuth
+		float leftElevation;   // Left ear's elevation
+
+		float rightAzimuth;    // Right ear's azimuth
+		float rightElevation;  // Right ear's elevation
+
+		float centerAzimuth;   // Azimuth from the center of the head
+		float centerElevation; // Elevation from the center of the head 
+
+		float distanceToListener; // Distance to the listener
+		float interauralAzimuth;  // Iteraural azimuth
+
+		Common::CVector3 vectorToListener;  // Vector to the listener
 
 		friend class CEnvironment;		//Friend Class definition
 		friend class CCore;				//Friend Class definition		

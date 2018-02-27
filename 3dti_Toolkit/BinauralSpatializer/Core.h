@@ -160,6 +160,9 @@ private:
 	// Reset the convolution buffer of each source	
 	void ResetConvolutionBuffers();
 
+	// Calculate the new coordinates from the source to the listener
+	void CalculateSourceCoordinates();
+
 	void RemoveAllSources();
 
 	// Reset HRTF and BRIR when buffer size or HRTF resampling step changes	
