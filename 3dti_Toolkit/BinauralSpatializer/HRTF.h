@@ -236,6 +236,15 @@ namespace Binaural
 		*	\param [in] ear for which ear we want to get the HRIR
 		*	\param [in] _azimuth azimuth angle in degrees
 		*	\param [in] _elevation elevation angle in degrees
+		*	\param [in] runTimeInterpolation switch run-time interpolation
+		*	\retval HRIR interpolated buffer with delay for specified ear
+		*   \eh On error, an error code is reported to the error handler.
+		*       Warnings may be reported to the error handler.
+		*/
+		const std::vector<CMonoBuffer<float>> GetHRIR_partitioned(Common::T_ear ear, float _azimuth, float _elevation, bool runTimeInterpolation) const;
+
+		/** \brief Get the HRIR delay, in number of samples, for one ear
+		*	\param [in] ear for which ear we want to get the HRIR
 		*	\param [in] _azimuthCenter azimuth angle from the source and the listener head center in degrees
 		*	\param [in] _elevationCenter elevation angle from the source and the listener head center in degrees
 		*	\param [in] runTimeInterpolation switch run-time interpolation
@@ -243,7 +252,7 @@ namespace Binaural
 		*   \eh On error, an error code is reported to the error handler.
 		*       Warnings may be reported to the error handler.
 		*/
-		const TOneEarHRIRPartitionedStruct GetHRIR_partitioned(Common::T_ear ear, float _azimuth, float _elevation, float _azimuthCenter, float _elevationCenter, bool runTimeInterpolation) const;
+		float GetHRIRDelay(Common::T_ear ear, float _azimuthCenter, float _elevationCenter, bool runTimeInterpolation);
 
 		/** \brief	Get the number of subfilters (blocks) in which the HRIR has been partitioned
 		*	\retval n Number of HRIR subfilters
@@ -369,14 +378,20 @@ namespace Binaural
 		const oneEarHRIR_struct GetHRIR_InterpolationMethod(Common::T_ear ear, int azimuth, int elevation) const;
 
 		//	Calculate from resample table HRIR subfilters using a barycentric interpolation of the three nearest orientation.
-		const TOneEarHRIRPartitionedStruct GetHRIR_partitioned_InterpolationMethod(Common::T_ear ear, float _azimuth, float _elevation) const;
+		const std::vector<CMonoBuffer<float>> GetHRIR_partitioned_InterpolationMethod(Common::T_ear ear, float _azimuth, float _elevation) const;
 
 		//	Calculate HRIR using a barycentric coordinates of the three nearest orientation.
 		const oneEarHRIR_struct CalculateHRIRFromBarycentricCoordinates(Common::T_ear ear, TBarycentricCoordinatesStruct barycentricCoordinates, orientation orientation_pto1, orientation orientation_pto2, orientation orientation_pto3) const;
 
 		//	Calculate HRIR subfilters using a barycentric coordinates of the three nearest orientation.
-		const TOneEarHRIRPartitionedStruct CalculateHRIR_partitioned_FromBarycentricCoordinates(Common::T_ear ear, TBarycentricCoordinatesStruct barycentricCoordinates, orientation orientation_pto1, orientation orientation_pto2, orientation orientation_pto3)const;
+		const std::vector<CMonoBuffer<float>> CalculateHRIR_partitioned_FromBarycentricCoordinates(Common::T_ear ear, TBarycentricCoordinatesStruct barycentricCoordinates, orientation orientation_pto1, orientation orientation_pto2, orientation orientation_pto3)const;
 
+		//	Calculate HRIR DELAY using intepolation of the three nearest orientation, in number of samples
+		const float GetHRIRDelayInterpolationMethod(Common::T_ear ear, float _azimuth, float _elevation) const;
+		
+		//	Calculate HRIR DELAY using a barycentric coordinates of the three nearest orientation, in number of samples
+		const float CalculateHRIRDelayFromBarycentricCoordinates(Common::T_ear ear, TBarycentricCoordinatesStruct barycentricCoordinates, orientation orientation_pto1, orientation orientation_pto2, orientation orientation_pto3)const;
+		
 		//		Calculate and remove the common delay of every HRIR functions of the DataBase Table. Off line Method, called from EndSetUp()
 		void RemoveCommonDelay_HRTFDataBaseTable();
 
