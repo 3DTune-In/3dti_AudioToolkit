@@ -331,8 +331,8 @@ namespace Binaural {
 
 				// Add partial contribution of this source to each B-format channel								
 				w[nSample] += newSample * WScale;
-				w[nSample] += newSample * WScale * sinElevationAbs; // TEST: adding power to W channel to compensate for the lack of Z channel
 				x[nSample] += newSample * cosAcosE;
+				x[nSample] += newSample * sinElevationAbs; // Adding power to X channel to compensate for the lack of Z channel
 				y[nSample] += newSample * sinAcosE;
 			}
 
