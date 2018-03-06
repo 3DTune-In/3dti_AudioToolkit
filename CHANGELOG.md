@@ -13,7 +13,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
   
 - Calculate the azimuth and elevation to get the HRIR in a more precise way (calcutating the intersection between the sphere where the HRTF have been measured and the line that connects the listener's ear to the source). Implemented in the CSingleSourceDSP.
 
-- Modified GetHRIR_partitioned and ProcessHRTF to calculate a more precise ITD 
+- Modified ProcessHRTF to calculate a more precise ITD 
+
+- Modied the return value of the following methods:
+  * change: const **std::vector<CMonoBuffer<float>>** CalculateHRIR_partitioned_FromBarycentricCoordinates(Common::T_ear ear, TBarycentricCoordinatesStruct barycentricCoordinates, orientation orientation_pto1, orientation orientation_pto2, orientation orientation_pto3)const;
+  * change: const **std::vector<CMonoBuffer<float>>** GetHRIR_partitioned_InterpolationMethod(Common::T_ear ear, float _azimuth, float _elevation) const;
 
 - Removed an unnecessary result_warning in CalculateHRIR_InPoles
 
@@ -27,6 +31,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
  
  - New method in the CHRTF to know the Distance where the HRTF has been measured, set in the BeginSetup method
    * new: float GetHRTFDistanceOfMeasurement();
+   
+ - New mechanism to get the interpolated ITD, based on getting the delay of the HRIR from the azimuth and elevation of the listener head center.
+   * new: const float GetHRIRDelayInterpolationMethod(Common::T_ear ear, float _azimuth, float _elevation) const;
+   * new: const float CalculateHRIRDelayFromBarycentricCoordinates(Common::T_ear ear, TBarycentricCoordinatesStruct barycentricCoordinates, orientation orientation_pto1, orientation orientation_pto2, orientation orientation_pto3)const;
  
 ### Common
 `Changed`
