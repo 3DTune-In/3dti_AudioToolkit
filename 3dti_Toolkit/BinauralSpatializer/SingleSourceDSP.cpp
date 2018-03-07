@@ -286,7 +286,7 @@ namespace Binaural {
 				outRightBuffer = inBuffer;			//Copy input to right channels						
 				ProccesILDSpatializationAndAddITD(outLeftBuffer, outRightBuffer, distanceToListener, interauralAzimuth, leftAzimuth, leftElevation, rightAzimuth, rightElevation);	//Apply the ILD spatialization
 			}
-			else if (spatializationMode == TSpatializationMode::None) 
+			else if (spatializationMode == TSpatializationMode::NoSpatialization) 
 			{
 				outLeftBuffer = inBuffer;
 				outRightBuffer = inBuffer;
