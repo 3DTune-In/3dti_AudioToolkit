@@ -32,7 +32,17 @@ The 3DTI Toolkit is a standard C++ library for audio spatialisation and simulati
 ### Toolkit
 **Binaural Spatialiser**
 
-This contains the declaration and definition files which are used for binaural spatialization. The library includes a real-time 3D binaural audio renderer offering full 3D spatialization based on efficient HRTF convolution, including smooth interpolation in between HRIRs, customization of listener head radius and specific simulation of far-distance and near-field effects. In addition, spatial reverberation is simulated in real time, using a uniformly partitioned convolution with BRIRs employing a virtual Ambisonic approach.
+This contains the declaration and definition files which are used for binaural spatialization. The library includes a real-time 3D binaural audio renderer offering full 3D spatialization. The features of the spatializer are listed below:
+
+* HRIR convolution based on a standard uniformly partitioned Overlap-Save algorithms.
+* HRIR barycentric interpolation approach is used among the three closest available HRIRs.
+* The acoustic parallax effect is taken into account; left and right HRIRs are selected independently according to the relative angle between each ear and the sound source.
+* ITD is managed separatly from the HRIR, also calculated with barycentric interpolation or customized (computing them for a specific user-inputted head circumference).
+* ILD simulation, adding an extra ‘shadow’ in the contralateral ear for near-field sound sources, according to the spherical head model.
+* Far-field sources simulation, with a low-pass filter emulating frequency-dependent air absorption.
+* Spatial reverberation is simulated in real time, using a uniformly partitioned convolution with BRIRs employing a virtual Ambisonic approach.
+* The Toolkit supports different sampling rates and can work with different frame size.
+* The Toolkit allows to move not only the sound sources, but also the listener, managing all the required geometric calculations.
 
 **Hearing Loss (HL) and Hearing Aid (HA) Simulator**
 

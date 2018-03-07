@@ -1,56 +1,25 @@
-﻿# 3D-Tune-In AudioToolkit
+# 3D-Tune-In AudioToolkit
 
 ### 3D Audio Spatialiser and Hearing Aid and Hearing Loss Simulation
 
 The 3DTI Toolkit is a standard C++ library for audio spatialisation and simulation using  headphones developed within the 3D Tune-In (3DTI) project (http://www.3d-tune-in.eu), which aims at using 3D sound and simulating hearing loss and hearing aids within virtual environments and games. The Toolkit allows the design and rendering of highly realistic and immersive 3D audio, and the simulation of virtual hearing aid devices and of different typologies of hearing loss.
-
-**The structure of the repository is as follows:**
-```
-3dti_AudioToolkit
-│
-├──3dti_Toolkit
-│   │
-│   ├── BinauralSpatialiser
-│   │
-│   ├── HLHASimulator
-│   │
-│   └── Common
-│   
-├──3dti_ResourceManager
-│   │
-│   ├── HRTF
-│   │
-│   ├── BRIR
-│   │
-│   ├── ILD
-│   │
-│   └── third_party_libraries
-│
-├──resources
-│   │
-│   ├── AudioSamples
-│   │
-│   ├── BRIR
-│   │
-│   ├── HRTF
-│   │
-│   └── ILD
-│   
-└──docs
-    │
-    ├── doxygen
-    │
-    ├── examples
-    │
-    └── images
-```
 
 ## 3dti AudioToolkit Components
 
 ### Toolkit
 **[Binaural Spatialiser](@ref Binaural)**
 
-This contains the declaration and definition files which are used for binaural spatialization. The library includes a real-time 3D binaural audio renderer offering full 3D spatialization based on efficient HRTF convolution, including smooth interpolation in between HRIRs, customization of listener head radius and specific simulation of far-distance and near-field effects. In addition, spatial reverberation is simulated in real time, using a uniformly partitioned convolution with BRIRs employing a virtual Ambisonic approach.
+This contains the declaration and definition files which are used for binaural spatialization. The library includes a real-time 3D binaural audio renderer offering full 3D spatialization. The features of the spatializer are listed below:
+
+* HRIR convolution based on a standard uniformly partitioned Overlap-Save algorithms.
+* HRIR barycentric interpolation approach is used among the three closest available HRIRs.
+* The acoustic parallax effect is taken into account; left and right HRIRs are selected independently according to the relative angle between each ear and the sound source.
+* ITD is managed separatly from the HRIR, also calculated with barycentric interpolation or customized (computing them for a specific user-inputted head circumference).
+* ILD simulation, adding an extra ‘shadow’ in the contralateral ear for near-field sound sources, according to the spherical head model.
+* Far-field sources simulation, with a low-pass filter emulating frequency-dependent air absorption.
+* Spatial reverberation is simulated in real time, using a uniformly partitioned convolution with BRIRs employing a virtual Ambisonic approach.
+* The Toolkit supports different sampling rates and can work with different frame size.
+* The Toolkit allows to move not only the sound sources, but also the listener, managing all the required geometric calculations.
 
 **[Hearing Loss (HL) and Hearing Aid (HA) Simulator](@ref HAHLSimulation)**
 
@@ -81,26 +50,6 @@ This folder contains the source code for the tools implemented for the format co
 - **To manage ILD files:** 3DTI-ILD binary format reader.
 
 
-## Third party libraries
-
-The 3D Tune-In Toolkit has partially integrated the Takuya OOURA General purpose FFT library (http://www.kurims.kyoto-u.ac.jp/~ooura/fft.html)  
-
-The 3D Tune-In Toolkit Resource Management Package uses: 
-* Libsofa (Copyright (c) 2013-2014, UMR STMS 9912-Ircam-Centre Pompidou/CNRS/UPMC. https://github.com/sofacoustics/API_Cpp). 
-
-* Cereal - A C11 library for serialization (Grant, W. Shane and Voorhies, Randolph (2017) http://uscilab.github.io/cereal).  
-
-
-## External content distributed together with this software 
-
-*	HRTF files, corresponding to IRC_1008, IRC_1013, IRC_1022, IRC_1031, IRC_1032, IRC_1048 and IRC_1053, are extracted from the LISTEN database and processed to extract ITD, shortened in different lengths and resampled at different sampling frequencies. 
-
-*	Audio clips “anechoic Guitar” and “Anechoic Speech” are extracted from Music from Archimedes, Bang&Olufsen, 1992. 
-
-
-## Further Reading
-
-For complete documentation on the 3D Tune-In Toolkit, see the doc directory of this distribution.
 
 ## Credits
 
