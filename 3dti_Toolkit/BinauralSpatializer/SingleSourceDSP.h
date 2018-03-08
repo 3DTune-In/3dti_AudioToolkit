@@ -42,7 +42,7 @@ namespace Binaural {
 	/** Type definition for Spatialization Modes
 	*/
 	enum TSpatializationMode {
-		None = 0,					///<    No spatialization
+		NoSpatialization,					///<    No spatialization
 		HighPerformance,			///<	Spatialize using the high performance method
 		HighQuality					///<	Spatialize using the high quality method
 	};
