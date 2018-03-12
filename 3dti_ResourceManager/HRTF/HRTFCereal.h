@@ -68,15 +68,15 @@ struct HRTFDetail_struct
 	//uint32_t elevationStep;
 	uint32_t samplingRate;
 	uint32_t hrirLength;
+	float distanceOfMeasurement;
 	T_HRTFTable table;
 };
 
 // Serialization function for HRIR archive
 template <class Archive>
 void serialize(Archive & ar, HRTFDetail_struct & h)
-{
-	//ar(h.azimuthStep, h.elevationStep, h.hrirLength, h.table);
-	ar(h.samplingRate, h.hrirLength, h.table);
+{	
+	ar(h.samplingRate, h.hrirLength, h.distanceOfMeasurement, h.table);
 }
 
 namespace HRTF {		
