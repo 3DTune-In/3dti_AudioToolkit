@@ -32,7 +32,7 @@
 
 // Serialization function for virtual speakers
 template <class Archive>
-void serialize(Archive & ar, VirtualSpeaker & vs)
+void serialize(Archive & ar, TVirtualSpeaker & vs)
 {
 	ar(vs.vsPosition, vs.vsChannel);
 }
@@ -42,8 +42,8 @@ struct BRIRDetail_struct
 {
 	uint32_t samplingRate;
 	uint32_t irLength;
-	//BRIRTable_Partitioned_type table;
-	BRIRTable_type table;
+	//TBRIRTablePartitioned table;
+	TBRIRTable table;
 };
 
 // Serialization function for BRIR archive
@@ -71,12 +71,6 @@ namespace BRIR {
 	*/
 	bool CreateFrom3dti(const std::string & input3dti, shared_ptr<Binaural::CEnvironment> environment);			
 
-	/** \brief Loads the data in input3dtiStream as BRIR in environment.
-	*	\param [in] stream that contains the data to be loaded
-	*	\param [in] environment in which the data will be loaded.
-	*   \eh On error, an error code is reported to the error handler.
-	*   \retval Returns true on success. False otherwise
-	*/
 	bool CreateFrom3dtiStream(std::istream& input3dtiStream, shared_ptr<Binaural::CEnvironment> environment);
 }
 

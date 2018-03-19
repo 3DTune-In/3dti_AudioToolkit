@@ -79,7 +79,7 @@ namespace HAHLSimulation {
 		*	\retval n number of bands in the equalizer.
 		*   \eh Nothing is reported to the error handler.
 		*/
-		int GetNumBands() { return bandsFrequencies_Hz.size(); }
+		int GetNumBands() { return bandFrequencies_Hz.size(); }
 
 		/** \brief Returns a reference to the expander object of one band.
 		*	\param [in] bandIndex band index for which the expander will be returned
@@ -116,8 +116,8 @@ namespace HAHLSimulation {
 		float CalculateAttenuationFactor(float attenuation);
 
 		vector<Common::CDynamicExpanderMono*> bandExpanders;	// Dynamic expanders for each band		
-		vector<float> bandsFrequencies_Hz;				// Center frequencies for each equalizer band, in Hertzs	
-		vector<float> bandsGains_dB;					// Gains for each equalizer band, in decibels
+		vector<float> bandFrequencies_Hz;				// Center frequencies for each equalizer band, in Hertzs	
+		vector<float> bandGains_dB;					// Gains for each equalizer band, in decibels
 		Common::CFiltersBank filterBank;				// Filter Bank to proccess the data	
 
 		vector<float> bandAttenuations;					// Attenuation applied after expander for each band

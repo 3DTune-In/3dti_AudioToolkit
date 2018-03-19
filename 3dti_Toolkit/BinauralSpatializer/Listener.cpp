@@ -34,7 +34,7 @@ namespace Binaural
 	CListener::CListener(CCore* _ownerCore, float _listenerHeadRadius)
     :ownerCore{_ownerCore},
      listenerHeadRadius{_listenerHeadRadius},
-	 listenerMinimunDistanceToSource{ MINIMUMDISTANCETOSOURCE },
+	 listenerMinimumDistanceToSource{ MINIMUMDISTANCETOSOURCE },
 	 listenerILDAttenutationDB{ ILDATTENUATION },
 	 enableDirectionality {false, false},	 
 	 anechoicDirectionalityAttenuation{0.0f, 0.0f},	 
@@ -50,7 +50,7 @@ namespace Binaural
 // LISTENER METHODS
 		
 	// Get Core AudioState Struct
-	Common::AudioState_Struct CListener::GetCoreAudioState() const
+	Common::TAudioStateStruct CListener::GetCoreAudioState() const
 	{
 		return ownerCore->GetAudioState();
 	}
@@ -60,6 +60,8 @@ namespace Binaural
 	{
 		listenerTransform = _listenerTransform;
 		
+		ownerCore->CalculateSourceCoordinates();
+
 		// WATCHER
 		WATCH(WV_LISTENER_POSITION, listenerTransform.GetPosition(), Common::CVector3);		
 	}
@@ -80,11 +82,34 @@ namespace Binaural
 		}
 
 		Common::CVector3 earLocalPosition = Common::CVector3::ZERO;
-		if (ear == Common::T_ear::LEFT)
+		if (ear == Common::T_ear::LEFT) {
 			earLocalPosition.SetAxis(RIGHT_AXIS, -listenerHeadRadius);
+		}
 		else
 			earLocalPosition.SetAxis(RIGHT_AXIS, listenerHeadRadius);
+
+		
 		return listenerTransform.GetLocalTranslation(earLocalPosition);
+	}
+
+	// Get local position of one listener ear
+	Common::CVector3 CListener::GetListenerEarLocalPosition(Common::T_ear ear) const
+	{
+		if (ear == Common::T_ear::BOTH || ear == Common::T_ear::NONE)
+		{
+			SET_RESULT(RESULT_ERROR_NOTALLOWED, "Attempt to get listener ear transform for BOTH or NONE ears");
+			return Common::CVector3();
+		}
+
+		Common::CVector3 earLocalPosition = Common::CVector3::ZERO;
+		if (ear == Common::T_ear::LEFT) {
+			earLocalPosition.SetAxis(RIGHT_AXIS, -listenerHeadRadius);
+		}
+		else
+			earLocalPosition.SetAxis(RIGHT_AXIS, listenerHeadRadius);
+
+
+		return earLocalPosition;
 	}
 
 	// Get HRTF for listener		
@@ -140,10 +165,10 @@ namespace Binaural
 		if (listenerHRTF!=nullptr){ listenerHRTF->CalculateNewHRTFTable(); }		
 	}
 	
-	//Get the minimun distance between the listener and any source
-	float CListener::GetMinimunDistanceToSource() 
+	//Get the minimum distance between the listener and any source
+	float CListener::GetMinimumDistanceToSource() 
 	{
-		return listenerMinimunDistanceToSource;
+		return listenerMinimumDistanceToSource;
 	}
 	
 	//Get CMagnitudes instance

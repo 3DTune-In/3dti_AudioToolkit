@@ -56,7 +56,7 @@ void serialize(Archive & ar, orientation & ori)
 
 // Serialization function for pairs of HRIRs 
 template <class Archive>
-void serialize(Archive & ar, HRIR_struct & hrir)
+void serialize(Archive & ar, THRIRStruct & hrir)
 {
 	ar(hrir.leftDelay, hrir.rightDelay, hrir.leftHRIR, hrir.rightHRIR); // FIXME: should use stdint types!!
 }
@@ -68,23 +68,33 @@ struct HRTFDetail_struct
 	//uint32_t elevationStep;
 	uint32_t samplingRate;
 	uint32_t hrirLength;
+	float distanceOfMeasurement;
 	T_HRTFTable table;
 };
 
 // Serialization function for HRIR archive
 template <class Archive>
 void serialize(Archive & ar, HRTFDetail_struct & h)
-{
-	//ar(h.azimuthStep, h.elevationStep, h.hrirLength, h.table);
-	ar(h.samplingRate, h.hrirLength, h.table);
+{	
+	ar(h.samplingRate, h.hrirLength, h.distanceOfMeasurement, h.table);
 }
 
 namespace HRTF {		
 	
-	int GetSampleRateFrom3dti(const std::string & input3dti);	///< Get sample rate from HRTF 3dti file
+	/** \brief Returns the sample rate in the 3dti file whose path is input3dti
+	*	\param [in] path of the 3dti file whose sampling rate will be returned
+	*   \eh On error, an error code is reported to the error handler.
+	*	\retval the sample rate of the file whose path is input3dti */
+	int GetSampleRateFrom3dti(const std::string & input3dti);	
 
-	bool CreateFrom3dti(const std::string & input3dti, shared_ptr<Binaural::CListener> listener);			///< Load HRTF head from 3dti file. 
-	bool CreateFrom3dtiStream(std::istream& input3dtiStream, shared_ptr<Binaural::CListener> listener);	///< Load HRTF head from a stream opened from a 3dti file
+	/** \brief Load HRTF head from 3dti file. 
+	*	\param [in] path of the 3dti file
+	*	\param [out] listener affected by the hrtf
+	*   \eh On error, an error code is reported to the error handler. */
+	bool CreateFrom3dti(const std::string & input3dti, shared_ptr<Binaural::CListener> listener);
+	
+	// Load HRTF head from a stream opened from a 3dti file
+	bool CreateFrom3dtiStream(std::istream& input3dtiStream, shared_ptr<Binaural::CListener> listener);	
 
 #if defined(PLATFORM_ANDROID)
 	//Binaural::CHRTF CreateFrom3dtiWithAndroidActivity(const std::string input3dti, ANativeActivity* activity, int bufferSize, int sampleRate);	///< Create head from 3dti file in Android platform	

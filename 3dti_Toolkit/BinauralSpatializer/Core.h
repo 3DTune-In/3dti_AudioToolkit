@@ -55,7 +55,7 @@ public:
 	*	\param [in] _HRTF_resamplingStep HRTF resampling step, in degrees
 	*   \eh Nothing is reported to the error handler.
 	*/
-	CCore(Common::AudioState_Struct _audioState, int _HRTF_resamplingStep);	
+	CCore(Common::TAudioStateStruct _audioState, int _HRTF_resamplingStep);	
 
 	/** \brief Default constructor 
 	*	\details By default, sets sampling frequency to 44100Hz, buffer size to 512, and HRTF resampling step to 5 degrees. 
@@ -67,13 +67,13 @@ public:
 	*	\retval audioState currently set audio state
 	*   \eh Nothing is reported to the error handler.
 	*/
-	Common::AudioState_Struct GetAudioState() const;
+	Common::TAudioStateStruct GetAudioState() const;
 
 	/** \brief Set global audio state
 	*	\param [in] _audioState audio state to set
 	*   \eh Nothing is reported to the error handler.
 	*/
-	void SetAudioState(Common::AudioState_Struct _audioState);
+	void SetAudioState(Common::TAudioStateStruct _audioState);
 
 	/** \brief Set HRTF resampling step
 	*	\param [in] _HRTF_resamplingStep new HRTF resampling step, in degrees
@@ -160,6 +160,9 @@ private:
 	// Reset the convolution buffer of each source	
 	void ResetConvolutionBuffers();
 
+	// Calculate the new coordinates from the source to the listener
+	void CalculateSourceCoordinates();
+
 	void RemoveAllSources();
 
 	// Reset HRTF and BRIR when buffer size or HRTF resampling step changes	
@@ -175,7 +178,7 @@ private:
     vector<shared_ptr<CEnvironment>> environments;		// Environment attributes 															
 	vector<shared_ptr<CSingleSourceDSP>> audioSources;	// List of audio sources 
 	
-	Common::AudioState_Struct audioState;				// Global audio state
+	Common::TAudioStateStruct audioState;				// Global audio state
 	Common::CMagnitudes magnitudes;						// Physical magnitudes
 	int HRTF_resamplingStep;							// HRTF resampling step in degrees, in order to interpolate the HRTF table from database	
 		

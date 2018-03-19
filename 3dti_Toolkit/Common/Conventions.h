@@ -70,6 +70,7 @@ typedef int TCircularMotion;	///< Type definition for defining spherical motion
 #define UP_AXIS AXIS_Z			        ///< In the test app Z is the UP direction
 #define RIGHT_AXIS AXIS_MINUS_Y			///< In the test app -Y is the RIGHT direction
 #define FORWARD_AXIS AXIS_X		        ///< In the test app X is the FORWARD direction
+#define LEFT_AXIS AXIS_Y		        ///< In the test app Y is the LEFT direction
 
 #elif defined(_3DTI_AXIS_CONVENTION_UNITY)
 	#define UP_AXIS AXIS_Y					///< In Unity 5.x, Y is the UP direction

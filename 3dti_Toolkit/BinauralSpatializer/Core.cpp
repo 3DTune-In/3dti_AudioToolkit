@@ -29,7 +29,7 @@
 
 namespace Binaural {
 
-	CCore::CCore(Common::AudioState_Struct _audioState, int _HRTF_resamplingStep)
+	CCore::CCore(Common::TAudioStateStruct _audioState, int _HRTF_resamplingStep)
 		:audioState{ _audioState }, HRTF_resamplingStep{ _HRTF_resamplingStep }{
 	}
 
@@ -40,7 +40,7 @@ namespace Binaural {
 	{}
 
 	// Set global audio state parameters
-	void CCore::SetAudioState(Common::AudioState_Struct _audioState)
+	void CCore::SetAudioState(Common::TAudioStateStruct _audioState)
 	{		
 		//Check if the new buffer size is power of two
 		bool powerOfTwo = Common::CFprocessor::CalculateIsPowerOfTwo(_audioState.bufferSize);
@@ -62,7 +62,7 @@ namespace Binaural {
     }
 
 	// Get global audio state parameters
-	Common::AudioState_Struct CCore::GetAudioState() const
+	Common::TAudioStateStruct CCore::GetAudioState() const
 	{
 		// FIXME: How does this depend on Core state?
 		return audioState;
@@ -227,6 +227,14 @@ namespace Binaural {
 		}
 	}
 
+	// Calculate the new coordinates from the source to the listener 
+	void CCore::CalculateSourceCoordinates() {
+		for (auto eachSource : audioSources)
+		{
+			eachSource->CalculateSourceCoordinates();
+		}
+	}
+
 	// Set HRTF resampling step
 	void CCore::SetHRTFResamplingStep(int _HRTF_resamplingStep)
 	{	
@@ -239,7 +247,7 @@ namespace Binaural {
 			}
 		}
 		else
-			SET_RESULT(RESULT_ERROR_OUTOFRANGE, "Wrong value for HRTF resampling step; needs to be >0º and <90º");
+			SET_RESULT(RESULT_ERROR_OUTOFRANGE, "Wrong value for HRTF resampling step; needs to be >0 deg and <90 deg");
 	}
 
 	// Get HRTF resampling step

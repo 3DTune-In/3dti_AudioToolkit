@@ -55,7 +55,7 @@ namespace HAHLSimulation {
 
 		updateBandGainsIsPending = false;
 
-		bandsFrequencies_Hz.clear();
+		bandFrequencies_Hz.clear();
 		levels.clear();
 
 		float f = iniFreq_Hz;
@@ -63,7 +63,7 @@ namespace HAHLSimulation {
 
 		for (int c = 0; c < bandsNumber; c++)
 		{
-			bandsFrequencies_Hz.push_back(f);
+			bandFrequencies_Hz.push_back(f);
 
 			filterBank.AddFilter()->Setup(samplingRate, f, Q_BPF, Common::T_filterType::BANDPASS);
 
@@ -262,12 +262,12 @@ namespace HAHLSimulation {
 	//--------------------------------------------------------------
 	float CDynamicEqualizer::GetBandFrequency(int bandIndex)
 	{
-		if (bandIndex < 0 || bandIndex >= bandsFrequencies_Hz.size())
+		if (bandIndex < 0 || bandIndex >= bandFrequencies_Hz.size())
 		{
 			SET_RESULT(RESULT_ERROR_INVALID_PARAM, "bad index");
 			return 0;
 		}
-		return bandsFrequencies_Hz[bandIndex];
+		return bandFrequencies_Hz[bandIndex];
 	}
 
 	//////////////////////////////////////////////

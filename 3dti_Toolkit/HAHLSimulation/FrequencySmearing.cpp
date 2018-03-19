@@ -58,7 +58,7 @@ namespace HAHLSimulation {
 
 			bufferSize = _bufferSize;					//Store the new buffer size
 			samplingRate = _samplingRate;				//Store the new sampling rate
-			oneSampleBandwidth = (samplingRate / ((float)bufferSize * 2.0f));
+			oneSampleBandwidth = (samplingRate / ((float)bufferSize * 4.0f));
 
 			downwardSmearingBufferSize = DEFAULT_SMEARING_SECTION_SIZE;
 			upwardSmearingBufferSize = DEFAULT_SMEARING_SECTION_SIZE;			

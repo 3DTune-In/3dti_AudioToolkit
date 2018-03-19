@@ -35,6 +35,8 @@ using namespace std;
 /** \brief If SWITCH_ON_3DTI_ERRORHANDLER is undefined, the error handler is completely disabled, causing 0 overhead
 */
 
+#define SWITCH_ON_3DTI_ERRORHANDLER
+
 #ifdef _3DTI_ANDROID_ERRORHANDLER
 
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "3DTI_CORE", __VA_ARGS__))
@@ -173,7 +175,7 @@ struct TResultStruct
 	string description;		///< Description of result
 	string suggestion;		///< Suggestion for fixing error or further information about result
 	string filename;		///< File from which result was reported
-	int linenumber;			///< Line numer at which result was reported (within filename file)
+	int linenumber;			///< Line number at which result was reported (within filename file)
 };
 
 /** \brief Stream output of \link TResultStruct \endlink

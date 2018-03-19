@@ -59,7 +59,7 @@ namespace Binaural {
 	}
 	
 	// Get Core AudioState Struct
-	Common::AudioState_Struct CEnvironment::GetCoreAudioState() const
+	Common::TAudioStateStruct CEnvironment::GetCoreAudioState() const
 	{
 		return ownerCore->GetAudioState();
 	}
@@ -170,18 +170,18 @@ namespace Binaural {
 		
 		for (int i=0; i < environmentBRIR->GetBRIRNumberOfSubfilters(); i++) 
 		{
-			newAIR_W_left[i].resize(environmentBRIR->GetBRIROneSubfilterLenght(), 0.0f);
-			newAIR_X_left[i].resize(environmentBRIR->GetBRIROneSubfilterLenght(), 0.0f);
-			newAIR_Y_left[i].resize(environmentBRIR->GetBRIROneSubfilterLenght(), 0.0f);
-			newAIR_W_right[i].resize(environmentBRIR->GetBRIROneSubfilterLenght(), 0.0f);
-			newAIR_X_right[i].resize(environmentBRIR->GetBRIROneSubfilterLenght(), 0.0f);
-			newAIR_Y_right[i].resize(environmentBRIR->GetBRIROneSubfilterLenght(), 0.0f);
+			newAIR_W_left[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+			newAIR_X_left[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+			newAIR_Y_left[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+			newAIR_W_right[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+			newAIR_X_right[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+			newAIR_Y_right[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
 		}
 
 		//3. AIR codification from BRIR
 		for (int i = 0; i < environmentBRIR->GetBRIRNumberOfSubfilters(); i++) 
 		{
-			for (int j = 0; j < environmentBRIR->GetBRIROneSubfilterLenght(); j++) 
+			for (int j = 0; j < environmentBRIR->GetBRIROneSubfilterLength(); j++) 
 			{
 				newAIR_W_left[i][j] = 0.707107f * (northLeft[i][j] + southLeft[i][j] + eastLeft[i][j] + westLeft[i][j]);
 				newAIR_X_left[i][j] = northLeft[i][j] - southLeft[i][j];
@@ -331,8 +331,8 @@ namespace Binaural {
 
 				// Add partial contribution of this source to each B-format channel								
 				w[nSample] += newSample * WScale;
-				w[nSample] += newSample * WScale * sinElevationAbs; // TEST: adding power to W channel to compensate for the lack of Z channel
 				x[nSample] += newSample * cosAcosE;
+				x[nSample] += newSample * sinElevationAbs; // Adding power to X channel to compensate for the lack of Z channel
 				y[nSample] += newSample * sinAcosE;
 			}
 

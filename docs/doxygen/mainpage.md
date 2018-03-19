@@ -1,36 +1,13 @@
-# 3dti AudioToolkit
+# 3D-Tune-In AudioToolkit
 
 ### 3D Audio Spatialiser and Hearing Aid and Hearing Loss Simulation
 
 The 3DTI Toolkit is a standard C++ library for audio spatialisation and simulation using  headphones developed within the 3D Tune-In (3DTI) project (http://www.3d-tune-in.eu), which aims at using 3D sound and simulating hearing loss and hearing aids within virtual environments and games. The Toolkit allows the design and rendering of highly realistic and immersive 3D audio, and the simulation of virtual hearing aid devices and of different typologies of hearing loss.
 
-**The structure of the repository is as follows:**
-```
-3dti_AudioToolkit
-├── 3dti_Toolkit
-│   ├── BinauralSpatialiser
-│   ├── HLHASimulator
-│   ├── Common
-├── 3dti_ResourceManager
-│   ├── HRTF
-│   ├── BRIR
-│   ├── ILD
-│   └── third_party_libraries
-├── resources
-│   ├── AudioSamples
-│   ├── BRIR
-│   ├── HRTF
-│   └── ILD
-└── docs
-    ├── doxygen
-    ├── examples
-    └── images
-```
-
 ## 3dti AudioToolkit Components
 
 ### Toolkit
-**Binaural Spatialiser**
+**[Binaural Spatialiser](@ref Binaural)**
 
 This contains the declaration and definition files which are used for binaural spatialization. The library includes a real-time 3D binaural audio renderer offering full 3D spatialization. The features of the spatializer are listed below:
 
@@ -44,7 +21,7 @@ This contains the declaration and definition files which are used for binaural s
 * The Toolkit supports different sampling rates and can work with different frame size.
 * The Toolkit allows to move not only the sound sources, but also the listener, managing all the required geometric calculations.
 
-**Hearing Loss (HL) and Hearing Aid (HA) Simulator**
+**[Hearing Loss (HL) and Hearing Aid (HA) Simulator](@ref HAHLSimulation)**
 
 This contains the declaration and definition files which are used for hearing loss and hearing aid simulation. Hearing loss classes implement the process of hearing loss simulation, through the following components:  
 
@@ -73,32 +50,14 @@ This folder contains the source code for the tools implemented for the format co
 - **To manage ILD files:** 3DTI-ILD binary format reader.
 
 
-## Third party libraries
-
-The 3D Tune-In Toolkit has partially integrated the Takuya OOURA General purpose FFT library (http://www.kurims.kyoto-u.ac.jp/~ooura/fft.html)  
-
-The 3D Tune-In Toolkit Resource Management Package uses: 
-* Libsofa (Copyright (c) 2013-2014, UMR STMS 9912-Ircam-Centre Pompidou/CNRS/UPMC. https://github.com/sofacoustics/API_Cpp). 
-
-* Cereal - A C11 library for serialization (Grant, W. Shane and Voorhies, Randolph (2017) http://uscilab.github.io/cereal).  
-
-
-## External content distributed together with this software 
-
-*	HRTF files, corresponding to IRC_1008, IRC_1013, IRC_1022, IRC_1031, IRC_1032, IRC_1048 and IRC_1053, are extracted from the LISTEN database and processed to extract ITD, shortened in different lengths and resampled at different sampling frequencies. 
-
-*	Audio clips “anechoic Guitar” and “Anechoic Speech” are extracted from Music from Archimedes, Bang&Olufsen, 1992. 
-
-
-## Further Reading
-
-For complete documentation on the 3D Tune-In Toolkit, see the doc directory of this distribution.
 
 ## Credits
 
 This software was developed by a team coordinated by 
--	Arcadio Reyes-Lecuona ([University of Malaga](https://www.uma.es/)). Contact: areyes@uma.es  
--	Lorenzo Picinali ([Imperial College London](https://www.imperial.ac.uk/)). Contact: l.picinali@imperial.ac.uk 
+
+-	Arcadio Reyes-Lecuona ([University of Malaga](https://www.uma.es/)). Contact: <areyes@uma.es>
+ 
+-	Lorenzo Picinali ([Imperial College London](https://www.imperial.ac.uk/)).Contact: <l.picinali@imperial.ac.uk>
 
 The members of the development team are (in alphabetical order):
 - [Maria Cuevas-Rodriguez](https://github.com/mariacuevas) (University of Malaga)
@@ -119,14 +78,14 @@ As copyright owners, University of Malaga and Imperial College London can licens
 - GPL v3, a popular open-source license with strong copyleft conditions (the default license)
 - Commercial or closed-source licenses
 
-If you license the 3D Tune-In Toolkit or the 3D Tune-In Resource Management Package under GPL v3, there is no license fee or signed license agreement: you just need to comply with the GPL v3 terms and conditions. See [3DTI_AUDIOTOOLKIT_LICENSE](3DTI_AUDIOTOOLKIT_LICENSE) and [LICENSE](LICENSE) for further information.
+If you license the 3D Tune-In Toolkit or the 3D Tune-In Resource Management Package under GPL v3, there is no license fee or signed license agreement: you just need to comply with the GPL v3 terms and conditions. See [3DTI_AUDIOTOOLKIT_LICENSE](3DTI_AUDIOTOOLKIT_LICENSE.html) and [LICENSE](LICENSE.html) for further information.
 
-If you purchase a commercial or closed-source license for the 3D Tune-In Toolkit and the 3D Tune-In Resource Management Package, you must comply with the terms and conditions listed in the associated license agreement; the GPL v3 terms and conditions do not apply. For more information about the commercial license, contact Arcadio Reyes-Lecuona (areyes@uma.es) or Lorenzo Picinali (l.picinali@imperial.ac.uk).
+If you purchase a commercial or closed-source license for the 3D Tune-In Toolkit and the 3D Tune-In Resource Management Package, you must comply with the terms and conditions listed in the associated license agreement; the GPL v3 terms and conditions do not apply. For more information about the commercial license, contact Arcadio Reyes-Lecuona (<areyes@uma.es>) or Lorenzo Picinali (<l.picinali@imperial.ac.uk>).
 
 The 3D Tune-In Toolkit and the 3D Tune-In Resource Management Package software themself remain the same: the only difference between an open-source 3D Tune-In Toolkit and a commercial 3D Tune-In Toolkit are the license terms. That is also the case of the 3D Tune-In Resource Management Package.
 
 ## Acknowledgements 
 
-![European Union](docs/images/EU_flag.png "European Union") This project has received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No 644051. 
+![](EU_Flag.png) This project has received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No 644051. 
 
 We would like to acknowledge Dr. Brian FG Katz and his team for their contributions in the field of sound spatialization, which were used as the basis for part of this software.

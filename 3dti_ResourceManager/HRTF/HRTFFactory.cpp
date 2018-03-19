@@ -102,7 +102,7 @@ namespace HRTF
 
 	//////////////////////////////////////////////////////////////////////
 
-	bool CreateFromSofa(const std::string & sofafile, shared_ptr<Binaural::CListener> listener) 
+	bool CreateFromSofa(const std::string & sofafile, shared_ptr<Binaural::CListener> listener)
 	{
 		if (LoadHRTFTableFromSOFA(sofafile, listener))
 		{
@@ -178,12 +178,13 @@ namespace HRTF
 
 			// Prepare HRTF
 			const unsigned int nSamples = (unsigned int)hrir.GetNumDataSamples();   // For example: 512 samples.			
-			listener->GetHRTF()->BeginSetup(nSamples);
+			double distance = pos[array2DIndex(0, 2, nMeasurements, dims[1])];		//We consider that every HRIR are meased at the same distance, so we get the firts one
+			listener->GetHRTF()->BeginSetup(nSamples, distance);
 
 			// This outtermost loop iterates over HRIRs
 			for (std::size_t i = 0; i < nMeasurements; i++) // or for( std::size_t i = 0; i < dims[0]; i++ ), should be the same.
 			{
-				HRIR_struct hrir_value;
+				THRIRStruct hrir_value;
 				hrir_value.leftHRIR.resize(nSamples);
 				hrir_value.rightHRIR.resize(nSamples);
 				double azimuth = pos[array2DIndex(i, 0, nMeasurements, dims[1])];

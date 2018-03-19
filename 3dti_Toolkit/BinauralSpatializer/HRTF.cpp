@@ -30,18 +30,18 @@
 
 namespace Binaural
 {
-
 	//PUBLIC METHODS ///////////////////////////////////////////////////////////////////////////////////////
 	
-	void CHRTF::BeginSetup(int32_t _HRIRlength)
+	void CHRTF::BeginSetup(int32_t _HRIRLength, float _distance)
 	{
 		if ((ownerListener != nullptr) && ownerListener->ownerCore!=nullptr)
 		{						
 			//Update parameters			
-			HRIRlength = _HRIRlength;
+			HRIRLength = _HRIRLength;
+			distanceOfMeasurement = _distance;
 			bufferSize = ownerListener->GetCoreAudioState().bufferSize;						
 			resamplingStep = ownerListener->GetHRTFResamplingStep();
-			float partitions = (float)HRIRlength / (float)bufferSize;
+			float partitions = (float)HRIRLength / (float)bufferSize;
 			HRIR_partitioned_NumberOfSubfilters = static_cast<int>(std::ceil(partitions));
 
 			//Clear every table			
@@ -63,13 +63,13 @@ namespace Binaural
 		}		
 	}
 	
-	void CHRTF::AddHRIR (float azimuth, float elevation, HRIR_struct && newHRIR)
+	void CHRTF::AddHRIR (float azimuth, float elevation, THRIRStruct && newHRIR)
 	{
 		if (setupInProgress) {
 			int iAzimuth = static_cast<int> (round(azimuth));
 			int iElevation = static_cast<int> (round(elevation));
 
-			auto returnValue = t_HRTF_DataBase.emplace(orientation(iAzimuth, iElevation), std::forward<HRIR_struct>(newHRIR));
+			auto returnValue = t_HRTF_DataBase.emplace(orientation(iAzimuth, iElevation), std::forward<THRIRStruct>(newHRIR));
 			//Error handler
 			if (returnValue.second) { /*SET_RESULT(RESULT_OK, "HRIR emplaced into t_HRTF_DataBase succesfully"); */ }
 			else { SET_RESULT(RESULT_WARNING, "Error emplacing HRIR in t_HRTF_DataBase map"); }
@@ -126,7 +126,7 @@ namespace Binaural
 			//Update parameters					
 			bufferSize = ownerListener->GetCoreAudioState().bufferSize;
 			resamplingStep = ownerListener->GetHRTFResamplingStep();			
-			float partitions = (float)HRIRlength / (float)bufferSize;
+			float partitions = (float)HRIRLength / (float)bufferSize;
 			HRIR_partitioned_NumberOfSubfilters = static_cast<int>(std::ceil(partitions));
 
 			//Clear every table		
@@ -154,7 +154,7 @@ namespace Binaural
 		t_HRTF_Resampled_partitioned.clear();
 
 		//Update parameters			
-		HRIRlength = 0;
+		HRIRLength = 0;
 		bufferSize = 0;
 		resamplingStep = 0;
 	}
@@ -201,6 +201,12 @@ namespace Binaural
 		}
 		return customizedDelay;
 	}
+
+
+	float CHRTF::GetHRTFDistanceOfMeasurement() {
+		return distanceOfMeasurement;
+	}
+
 
 	/*-----  GET HRIR METHODS  ----------------------------------------------------------------------------------------------------------------------*/
 
@@ -301,15 +307,14 @@ namespace Binaural
 	}
 
 
-	const oneEarHRIR_Partitioned_struct CHRTF::GetHRIR_partitioned(Common::T_ear ear, float _azimuth, float _elevation, bool runTimeInterpolation) const
+	const std::vector<CMonoBuffer<float>> CHRTF::GetHRIR_partitioned(Common::T_ear ear, float _azimuth, float _elevation, bool runTimeInterpolation) const
 	{
 		if (ear == Common::T_ear::BOTH || ear == Common::T_ear::NONE)
 		{
 			SET_RESULT(RESULT_ERROR_NOTALLOWED, "Attempt to get HRIR for a wrong ear (BOTH or NONE)");
-			return emptyOneEarHRIR_partitioned;
 		}
 
-		oneEarHRIR_Partitioned_struct s_HRIR;		
+		std::vector<CMonoBuffer<float>> newHRIR;
 
 		if (!setupInProgress)
 		{
@@ -330,34 +335,26 @@ namespace Binaural
 					{
 						if (ear == Common::T_ear::LEFT)
 						{
-							s_HRIR.delay = it->second.leftDelay;
-							s_HRIR.HRIR_Partitioned = it->second.leftHRIR_Partitioned;
+							newHRIR = it->second.leftHRIR_Partitioned;
 						}
 						else
 						{
-							s_HRIR.delay = it->second.rightDelay;
-							s_HRIR.HRIR_Partitioned = it->second.rightHRIR_Partitioned;
+							newHRIR = it->second.rightHRIR_Partitioned;
 						}
 					}
 					else
 					{
 						SET_RESULT(RESULT_WARNING, "Orientations in GetHRIR_partitioned() not found");
-						return emptyOneEarHRIR_partitioned;
 					}
 				}
 
 				else
 				{
 					//Run time interpolation ON
-					s_HRIR = GetHRIR_partitioned_InterpolationMethod(ear, _azimuth, _elevation);
+					newHRIR = GetHRIR_partitioned_InterpolationMethod(ear, _azimuth, _elevation);
 				}
 
-				//Modify delay if customized delay is activate
-				if (enableCustomizedITD) {
-					s_HRIR.delay = GetCustomizedDelay(iazimuth, ielevation, ear);
-				}
-
-				return s_HRIR;
+				return newHRIR;
 			}
 			else
 			{
@@ -375,34 +372,123 @@ namespace Binaural
 				{
 					if (ear == Common::T_ear::LEFT)
 					{
-						s_HRIR.delay = it->second.leftDelay;
-						s_HRIR.HRIR_Partitioned = it->second.leftHRIR_Partitioned;
+						newHRIR = it->second.leftHRIR_Partitioned;
 					}
 					else
 					{
-						s_HRIR.delay = it->second.rightDelay;
-						s_HRIR.HRIR_Partitioned = it->second.rightHRIR_Partitioned;
+						newHRIR = it->second.rightHRIR_Partitioned;
 					}
-					//Modify delay if customized delay is activate
-					if (enableCustomizedITD) {
-						s_HRIR.delay = GetCustomizedDelay(nearestAzimuth, nearestElevation, ear);
-					}
-					return s_HRIR;
 				}
 				else
 				{
 					SET_RESULT(RESULT_ERROR_NOTSET, "GetHRIR_partitioned: HRIR not found");
-					return emptyOneEarHRIR_partitioned;
 				}
 			}
 		}
 		else
 		{
-			SET_RESULT(RESULT_ERROR_NOTSET, "GetHRIR_partitioned: HRTF Set up in progress return empty");
-			return emptyOneEarHRIR_partitioned;
+			SET_RESULT(RESULT_ERROR_NOTSET, "GetHRIR_partitioned: HRTF Setup in progress return empty");
 		}
 		SET_RESULT(RESULT_WARNING, "GetHRIR_partitioned return empty");
-		return emptyOneEarHRIR_partitioned;
+
+	}//END GetHRIR_partitioned
+
+	float CHRTF::GetHRIRDelay(Common::T_ear ear, float _azimuthCenter, float _elevationCenter, bool runTimeInterpolation)
+	{
+		float HRIR_delay = 0.0f;
+
+		if (ear == Common::T_ear::BOTH || ear == Common::T_ear::NONE)
+		{
+			SET_RESULT(RESULT_ERROR_NOTALLOWED, "GetHRIRDelay: Attempt to get the delay of the HRIR for a wrong ear (BOTH or NONE)");
+		}
+
+		if (!setupInProgress)
+		{
+			//Modify delay if customized delay is activate
+			if (enableCustomizedITD)
+			{
+				HRIR_delay = GetCustomizedDelay(_azimuthCenter, _elevationCenter, ear);
+			}
+			else
+			{
+				if (runTimeInterpolation)
+				{
+					if (AreSame(_azimuthCenter, sphereBorder, epsilon_sewing)) { _azimuthCenter = 0.0f; }
+					if (AreSame(_elevationCenter, sphereBorder, epsilon_sewing)) { _elevationCenter = 0.0f; }
+
+					//If we are in the sphere poles, do not perform the interpolation (the HRIR value for this orientations have been calculated with a different method in the resampled methods, because our barycentric interpolation method doesn't work in the poles)
+					int iazimuth = static_cast<int>(round(_azimuthCenter));
+					int ielevation = static_cast<int>(round(_elevationCenter));
+					if ((ielevation == 90) || (ielevation == 270))
+					{
+						//In the sphere poles the azimuth is always 0 degrees
+						iazimuth = 0.0f;
+						auto it = t_HRTF_Resampled_partitioned.find(orientation(iazimuth, ielevation));
+						if (it != t_HRTF_Resampled_partitioned.end())
+						{
+							if (ear == Common::T_ear::LEFT)
+							{
+								HRIR_delay = it->second.leftDelay;
+							}
+							else
+							{
+								HRIR_delay = it->second.rightDelay;
+							}
+						}
+						else
+						{
+							SET_RESULT(RESULT_WARNING, "Orientations in GetHRIRDelay() not found");
+						}
+					}
+
+					else
+					{
+						//Run time interpolation ON
+						HRIR_delay = GetHRIRDelayInterpolationMethod(ear, _azimuthCenter, _elevationCenter);
+					}
+
+					return HRIR_delay;
+
+				}
+				else
+				{
+					//Run time interpolation OFF
+					int nearestAzimuth = static_cast<int>(round(_azimuthCenter / resamplingStep) * resamplingStep);
+					int nearestElevation = static_cast<int>(round(_elevationCenter / resamplingStep) * resamplingStep);
+					// HRTF table does not contain data for azimuth = 360, which has the same values as azimuth = 0, for every elevation
+					if (nearestAzimuth == 360) { nearestAzimuth = 0; }
+					if (nearestElevation == 360) { nearestElevation = 0; }
+					// When elevation is 90 or 270 degrees, the HRIR value is the same one for every azimuth
+					if ((nearestElevation == 90) || (nearestElevation == 270)) { nearestAzimuth = 0; }
+
+					auto it = t_HRTF_Resampled_partitioned.find(orientation(nearestAzimuth, nearestElevation));
+					if (it != t_HRTF_Resampled_partitioned.end())
+					{
+						if (ear == Common::T_ear::LEFT)
+						{
+							HRIR_delay = it->second.leftDelay;
+						}
+						else
+						{
+							HRIR_delay = it->second.rightDelay;
+						}
+
+						return HRIR_delay;
+					}
+					else
+					{
+						SET_RESULT(RESULT_ERROR_NOTSET, "GetHRIRDelay: HRIR not found");
+					}
+				}
+			}
+		}
+		else
+		{
+			SET_RESULT(RESULT_ERROR_NOTSET, "GetHRIRDelay: HRTF Setup in progress return empty");
+		}
+		
+		SET_RESULT(RESULT_WARNING, "GetHRIRDelay return delay=0");
+		return HRIR_delay;
 	}//END GetHRIR_partitioned
 
 	bool CHRTF::IsHRTFLoaded() 
@@ -420,24 +506,13 @@ namespace Binaural
 
 	void CHRTF::CalculateHRIR_InPoles()
 	{
-		HRIR_struct precalculatedHRIR_270, precalculatedHRIR_90;	
+		THRIRStruct precalculatedHRIR_270, precalculatedHRIR_90;	
 		int azimuthStep = AZIMUTH_STEP;
 		bool found = false; 
 
 		//Clasify every HRIR of the HRTF into the two hemispheres by their orientations
 		std::vector<orientation> keys_southernHemisphere, keys_northenHemisphere;
-		keys_northenHemisphere.reserve(t_HRTF_DataBase.size());
-		keys_southernHemisphere.reserve(t_HRTF_DataBase.size());
 		
-		for (auto& it : t_HRTF_DataBase)
-		{
-			if (it.first.elevation < 90) { keys_northenHemisphere.push_back(it.first); }
-			else if (it.first.elevation > 270) { keys_southernHemisphere.push_back(it.first); }
-			else {
-				SET_RESULT(RESULT_WARNING, "Elevation value not valid in CalculateHRIR_InPoles");
-			}
-		}
-
 		//	NORTHERN HEMOSPHERE POLES (90 degrees elevation ) ____________________________________________________________________________
 		
 		//If HRIR with orientation (0,90) exist in t_HRTF_DataBase
@@ -448,6 +523,11 @@ namespace Binaural
 		}
 		else
 		{
+			keys_northenHemisphere.reserve(t_HRTF_DataBase.size());
+			for (auto& it : t_HRTF_DataBase)
+			{
+				if (it.first.elevation < 90) { keys_northenHemisphere.push_back(it.first); }
+			}
 			// sort using a custom function object
 			struct {
 				bool operator()(orientation a, orientation b) const
@@ -476,6 +556,11 @@ namespace Binaural
 		}
 		else
 		{
+			keys_southernHemisphere.reserve(t_HRTF_DataBase.size());
+			for (auto& it : t_HRTF_DataBase)
+			{
+				if (it.first.elevation > 270) { keys_southernHemisphere.push_back(it.first); }
+			}
 			//Get a vector of iterators ordered from highest to lowest elevation.		
 			struct {
 				bool operator()(orientation a, orientation b) const
@@ -510,9 +595,9 @@ namespace Binaural
 		}
 	}
 
-	HRIR_struct CHRTF::CalculateHRIR_InOneHemispherePole(vector<orientation> keys_hemisphere)
+	THRIRStruct CHRTF::CalculateHRIR_InOneHemispherePole(vector<orientation> keys_hemisphere)
 	{
-		HRIR_struct calculatedHRIR;
+		THRIRStruct calculatedHRIR;
 		std::vector < vector <orientation>> hemisphereParts;
 		hemisphereParts.resize(NUMBER_OF_PARTS);
 		int border = std::ceil(360.0f / NUMBER_OF_PARTS);
@@ -571,13 +656,13 @@ namespace Binaural
 		float totalDelay_left = 0.0f;
 		float totalDelay_right = 0.0f;
 
-		std::vector< HRIR_struct> newHRIR;
+		std::vector< THRIRStruct> newHRIR;
 		newHRIR.resize(hemisphereParts.size());
 
 		for (int q = 0; q < hemisphereParts.size(); q++)
 		{
-			newHRIR[q].leftHRIR.resize(HRIRlength, 0.0f);
-			newHRIR[q].rightHRIR.resize(HRIRlength, 0.0f);
+			newHRIR[q].leftHRIR.resize(HRIRLength, 0.0f);
+			newHRIR[q].rightHRIR.resize(HRIRLength, 0.0f);
 
 			float scaleFactor;
 			if (hemisphereParts[q].size()) 
@@ -598,7 +683,7 @@ namespace Binaural
 				newHRIR[q].rightDelay = (newHRIR[q].rightDelay + itHRIR->second.rightDelay);
 
 				//Get the HRIR
-				for (int i = 0; i < HRIRlength; i++) {
+				for (int i = 0; i < HRIRLength; i++) {
 					newHRIR[q].leftHRIR[i] = (newHRIR[q].leftHRIR[i] + itHRIR->second.leftHRIR[i]);
 					newHRIR[q].rightHRIR[i] = (newHRIR[q].rightHRIR[i] + itHRIR->second.rightHRIR[i]);
 				}
@@ -611,7 +696,7 @@ namespace Binaural
 			totalDelay_left = totalDelay_left + (scaleFactor * newHRIR[q].leftDelay);
 			totalDelay_right = totalDelay_right + (scaleFactor * newHRIR[q].rightDelay);
 			//HRIR
-			for (int i = 0; i < HRIRlength; i++)
+			for (int i = 0; i < HRIRLength; i++)
 			{
 				newHRIR[q].leftHRIR[i] = newHRIR[q].leftHRIR[i] * scaleFactor;
 				newHRIR[q].rightHRIR[i] = newHRIR[q].rightHRIR[i] * scaleFactor;
@@ -626,10 +711,10 @@ namespace Binaural
 		calculatedHRIR.rightDelay = static_cast <unsigned long> (round(scaleFactor_final * totalDelay_right));
 
 		//calculate Final HRIR
-		calculatedHRIR.leftHRIR.resize(HRIRlength, 0.0f);
-		calculatedHRIR.rightHRIR.resize(HRIRlength, 0.0f);
+		calculatedHRIR.leftHRIR.resize(HRIRLength, 0.0f);
+		calculatedHRIR.rightHRIR.resize(HRIRLength, 0.0f);
 
-		for (int i = 0; i < HRIRlength; i++)
+		for (int i = 0; i < HRIRLength; i++)
 		{
 			for (int q = 0; q < hemisphereParts.size(); q++)
 			{
@@ -637,7 +722,7 @@ namespace Binaural
 				calculatedHRIR.rightHRIR[i] = calculatedHRIR.rightHRIR[i] + newHRIR[q].rightHRIR[i];
 			}
 		}
-		for (int i = 0; i < HRIRlength; i++)
+		for (int i = 0; i < HRIRLength; i++)
 		{
 			calculatedHRIR.leftHRIR[i] = calculatedHRIR.leftHRIR[i] * scaleFactor_final;
 			calculatedHRIR.rightHRIR[i] = calculatedHRIR.rightHRIR[i] * scaleFactor_final;
@@ -648,7 +733,7 @@ namespace Binaural
 
 	void CHRTF::CalculateResampled_HRTFTable(int resamplingStep)
 	{
-		HRIR_struct interpolatedHRIR;
+		THRIRStruct interpolatedHRIR;
 
 		//Resample Interpolation Algorithm
 		for (int newAzimuth = 0; newAzimuth < 360; newAzimuth = newAzimuth + resamplingStep)
@@ -661,20 +746,20 @@ namespace Binaural
 
 		#ifdef USE_FREQUENCY_COVOLUTION_WITHOUT_PARTITIONS_ANECHOIC
 					//Fill out interpolated frequency table. IR in frequency domain
-					HRIR_struct temp;
+					THRIRStruct temp;
 					Common::CFprocessor::GetFFT(it->second.leftHRIR, temp.leftHRIR, bufferSize);
 					Common::CFprocessor::GetFFT(it->second.rightHRIR, temp.rightHRIR, bufferSize);
 					temp.leftDelay = it->second.leftDelay;
 					temp.rightDelay = it->second.rightDelay;
-					auto returnValue2 = t_HRTF_Resampled_frequency.emplace(orientation(newAzimuth, newElevation), std::forward<HRIR_struct>(temp));
+					auto returnValue2 = t_HRTF_Resampled_frequency.emplace(orientation(newAzimuth, newElevation), std::forward<THRIRStruct>(temp));
 					//Error handler
 					if (returnValue2.second) { /*SET_RESULT(RESULT_OK, "HRIR emplaced into t_HRTF_Resampled_frequency successfully");*/ }
 					else { SET_RESULT(RESULT_WARNING, "Error emplacing HRIR into t_HRTF_Resampled_frequency table"); }
 		#else
 					//Fill out HRTF partitioned table.IR in frequency domain
-					HRIR_Partitioned_struct newHRIR_partitioned;
+					THRIRPartitionedStruct newHRIR_partitioned;
 					newHRIR_partitioned = SplitAndGetFFT_HRTFData(it->second);
-					auto returnValue3 = t_HRTF_Resampled_partitioned.emplace(orientation(newAzimuth, newElevation), std::forward<HRIR_Partitioned_struct>(newHRIR_partitioned));
+					auto returnValue3 = t_HRTF_Resampled_partitioned.emplace(orientation(newAzimuth, newElevation), std::forward<THRIRPartitionedStruct>(newHRIR_partitioned));
 					//Error handler
 					if (returnValue3.second) { /*SET_RESULT(RESULT_OK, "HRIR emplaced into t_HRTF_Resampled_partitioned successfully");*/ }
 					else { SET_RESULT(RESULT_WARNING, "Error emplacing HRIR into t_HRTF_Resampled_partitioned table"); }
@@ -689,22 +774,22 @@ namespace Binaural
 
 		#ifdef USE_FREQUENCY_COVOLUTION_WITHOUT_PARTITIONS_ANECHOIC
 					//Fill out interpolated frequency table. IR in frequency domain
-					HRIR_struct newHRIR;
+					THRIRStruct newHRIR;
 					Common::CFprocessor::GetFFT(interpolatedHRIR.leftHRIR, newHRIR.leftHRIR, bufferSize);
 					Common::CFprocessor::GetFFT(interpolatedHRIR.rightHRIR, newHRIR.rightHRIR, bufferSize);
 					newHRIR.leftDelay = interpolatedHRIR.leftDelay;
 					newHRIR.rightDelay = interpolatedHRIR.rightDelay;
 
-					auto returnValue2 = t_HRTF_Resampled_frequency.emplace(orientation(newAzimuth, newElevation), std::forward<HRIR_struct>(newHRIR));
+					auto returnValue2 = t_HRTF_Resampled_frequency.emplace(orientation(newAzimuth, newElevation), std::forward<THRIRStruct>(newHRIR));
 					//Error handler
 					if (returnValue2.second) { /*SET_RESULT(RESULT_OK, "HRIR emplaced into t_HRTF_Resampled_frequency successfully");*/ }
 					else { SET_RESULT(RESULT_WARNING, "Error emplacing HRIR into t_HRTF_Resampled_frequency table"); }
 
 		#else
 					//Fill out HRTF partitioned table.IR in frequency domain
-					HRIR_Partitioned_struct newHRIR_partitioned;
+					THRIRPartitionedStruct newHRIR_partitioned;
 					newHRIR_partitioned = SplitAndGetFFT_HRTFData(interpolatedHRIR);
-					auto returnValue1 = t_HRTF_Resampled_partitioned.emplace(orientation(newAzimuth, newElevation), std::forward<HRIR_Partitioned_struct>(newHRIR_partitioned));
+					auto returnValue1 = t_HRTF_Resampled_partitioned.emplace(orientation(newAzimuth, newElevation), std::forward<THRIRPartitionedStruct>(newHRIR_partitioned));
 					//Error handler
 					if (returnValue1.second) { /*SET_RESULT(RESULT_OK, "HRIR emplaced into t_HRTF_Resampled_partitioned successfully");*/ }
 					else { SET_RESULT(RESULT_WARNING, "Error emplacing HRIR into t_HRTF_Resampled_partitioned table"); }
@@ -720,20 +805,20 @@ namespace Binaural
 		#ifdef USE_FREQUENCY_COVOLUTION_WITHOUT_PARTITIONS_ANECHOIC
 
 					//Fill out interpolated frequency table. IR in frequency domain
-					HRIR_struct temp;
+					THRIRStruct temp;
 					Common::CFprocessor::GetFFT(it2->second.leftHRIR, temp.leftHRIR, bufferSize);
 					Common::CFprocessor::GetFFT(it2->second.rightHRIR, temp.rightHRIR, bufferSize);
 					temp.leftDelay = it2->second.leftDelay;
 					temp.rightDelay = it2->second.rightDelay;
-					auto returnValue = t_HRTF_Resampled_frequency.emplace(orientation(newAzimuth, newElevation), std::forward<HRIR_struct>(temp));
+					auto returnValue = t_HRTF_Resampled_frequency.emplace(orientation(newAzimuth, newElevation), std::forward<THRIRStruct>(temp));
 					//Error handler
 					if (returnValue.second) { /*SET_RESULT(RESULT_OK, "HRIR emplaced into t_HRTF_Resampled_frequency successfully");*/ }
 					else { SET_RESULT(RESULT_WARNING, "Error emplacing HRIR into t_HRTF_Resampled_frequency table"); }
 		#else
 					//Fill out HRTF partitioned table.IR in frequency domain
-					HRIR_Partitioned_struct newHRIR_partitioned;
+					THRIRPartitionedStruct newHRIR_partitioned;
 					newHRIR_partitioned = SplitAndGetFFT_HRTFData(it2->second);
-					auto returnValue3 = t_HRTF_Resampled_partitioned.emplace(orientation(newAzimuth, newElevation), std::forward<HRIR_Partitioned_struct>(newHRIR_partitioned));
+					auto returnValue3 = t_HRTF_Resampled_partitioned.emplace(orientation(newAzimuth, newElevation), std::forward<THRIRPartitionedStruct>(newHRIR_partitioned));
 					//Error handler
 					if (returnValue3.second) { /*SET_RESULT(RESULT_OK, "HRIR emplaced into t_HRTF_Resampled_partitioned successfully");*/ }
 					else { SET_RESULT(RESULT_WARNING, "Error emplacing HRIR into t_HRTF_Resampled_partitioned table"); }
@@ -745,20 +830,20 @@ namespace Binaural
 					interpolatedHRIR = CalculateHRIR_offlineMethod(newAzimuth, newElevation);
 		#ifdef USE_FREQUENCY_COVOLUTION_WITHOUT_PARTITIONS_ANECHOIC
 					//Fill out interpolated frequency table. IR in frequency domain
-					HRIR_struct newHRIR;
+					THRIRStruct newHRIR;
 					Common::CFprocessor::GetFFT(interpolatedHRIR.leftHRIR, newHRIR.leftHRIR, bufferSize);
 					Common::CFprocessor::GetFFT(interpolatedHRIR.rightHRIR, newHRIR.rightHRIR, bufferSize);
 					newHRIR.leftDelay = interpolatedHRIR.leftDelay;
 					newHRIR.rightDelay = interpolatedHRIR.rightDelay;
-					auto returnValue = t_HRTF_Resampled_frequency.emplace(orientation(newAzimuth, newElevation), std::forward<HRIR_struct>(newHRIR));
+					auto returnValue = t_HRTF_Resampled_frequency.emplace(orientation(newAzimuth, newElevation), std::forward<THRIRStruct>(newHRIR));
 					//Error handler
 					if (returnValue.second) { /*SET_RESULT(RESULT_OK, "HRIR emplaced into t_HRTF_Resampled_frequency successfully");*/ }
 					else { SET_RESULT(RESULT_WARNING, "Error emplacing HRIR into t_HRTF_Resampled_frequency table"); }
 		#else
 					//Fill out HRTF partitioned table.IR in frequency domain
-					HRIR_Partitioned_struct newHRIR_partitioned;
+					THRIRPartitionedStruct newHRIR_partitioned;
 					newHRIR_partitioned = SplitAndGetFFT_HRTFData(interpolatedHRIR);
-					auto returnValue1 = t_HRTF_Resampled_partitioned.emplace(orientation(newAzimuth, newElevation), std::forward<HRIR_Partitioned_struct>(newHRIR_partitioned));
+					auto returnValue1 = t_HRTF_Resampled_partitioned.emplace(orientation(newAzimuth, newElevation), std::forward<THRIRPartitionedStruct>(newHRIR_partitioned));
 					//Error handler
 					if (returnValue1.second) { /*SET_RESULT(RESULT_OK, "HRIR emplaced into t_HRTF_Resampled_partitioned successfully");*/ }
 					else { SET_RESULT(RESULT_WARNING, "Error emplacing HRIR into t_HRTF_Resampled_partitioned table"); }
@@ -769,13 +854,13 @@ namespace Binaural
 		//SET_RESULT(RESULT_OK, "CalculateResampled_HRTFTable has finished succesfully");
 	}
 
-	HRIR_Partitioned_struct CHRTF::SplitAndGetFFT_HRTFData(const HRIR_struct & newData_time)
+	THRIRPartitionedStruct CHRTF::SplitAndGetFFT_HRTFData(const THRIRStruct & newData_time)
 	{
 		int blockSize = bufferSize;
 		int numberOfBlocks = HRIR_partitioned_NumberOfSubfilters;
 		int data_time_size = newData_time.leftHRIR.size();
 
-		HRIR_Partitioned_struct new_DataFFT_Partitioned;
+		THRIRPartitionedStruct new_DataFFT_Partitioned;
 		new_DataFFT_Partitioned.leftHRIR_Partitioned.reserve(numberOfBlocks);
 		new_DataFFT_Partitioned.rightHRIR_Partitioned.reserve(numberOfBlocks);
 		//Index to go throught the AIR values in time domain
@@ -809,15 +894,15 @@ namespace Binaural
 		return new_DataFFT_Partitioned;
 		}
 
-	HRIR_struct CHRTF::CalculateHRIR_offlineMethod(int newAzimuth, int newElevation) 
+	THRIRStruct CHRTF::CalculateHRIR_offlineMethod(int newAzimuth, int newElevation) 
 	{
-		HRIR_struct newHRIR;	
+		THRIRStruct newHRIR;	
 		// Get a list sorted by distances to the orientation of interest
 		std::list<T_PairDistanceOrientation> sortedList = GetSortedDistancesList(newAzimuth, newElevation);
 
 		if (sortedList.size() != 0) {
 			// Obtain  the valid Barycentric coordinates:
-			barycentricCoordinates_struct barycentricCoordinates;
+			TBarycentricCoordinatesStruct barycentricCoordinates;
 			std::vector<orientation> mygroup(sortedList.size());
 			auto it = sortedList.begin();
 			for (int copy = 0; copy < sortedList.size(); copy++) {
@@ -857,7 +942,7 @@ namespace Binaural
 									newHRIR = it0->second;
 									//END FIXME
 
-									for (int i = 0; i < HRIRlength; i++) {
+									for (int i = 0; i < HRIRLength; i++) {
 										newHRIR.leftHRIR[i] = barycentricCoordinates.alpha * it0->second.leftHRIR[i] + barycentricCoordinates.beta * it1->second.leftHRIR[i] + barycentricCoordinates.gamma * it2->second.leftHRIR[i];
 										newHRIR.rightHRIR[i] = barycentricCoordinates.alpha * it0->second.rightHRIR[i] + barycentricCoordinates.beta * it1->second.rightHRIR[i] + barycentricCoordinates.gamma * it2->second.rightHRIR[i];
 									}
@@ -939,10 +1024,10 @@ namespace Binaural
 		return sortedList;
 	}
 
-	const barycentricCoordinates_struct CHRTF::GetBarycentricCoordinates(float x, float y, float x1, float y1, float x2, float y2, float x3, float y3)const
+	const TBarycentricCoordinatesStruct CHRTF::GetBarycentricCoordinates(float x, float y, float x1, float y1, float x2, float y2, float x3, float y3)const
 	{
 		// Obtain Barycentric coordinates:
-		barycentricCoordinates_struct barycentricCoordinates;
+		TBarycentricCoordinatesStruct barycentricCoordinates;
 
 		float denominator = (y2 - y3)*(x1 - x3) + (x3 - x2)*(y1 - y3);
 
@@ -993,7 +1078,7 @@ namespace Binaural
 	const oneEarHRIR_struct CHRTF::GetHRIR_InterpolationMethod(Common::T_ear ear, int azimuth, int elevation) const
 	{
 		oneEarHRIR_struct newHRIR;
-		barycentricCoordinates_struct barycentricCoordinates;
+		TBarycentricCoordinatesStruct barycentricCoordinates;
 		orientation orientation_ptoA, orientation_ptoB, orientation_ptoC, orientation_ptoD, orientation_ptoP;
 
 		//Calculate the quadrant points A, B, C and D and the middle quadrant point P
@@ -1044,10 +1129,10 @@ namespace Binaural
 		return newHRIR;
 	}
 
-	const oneEarHRIR_Partitioned_struct CHRTF::GetHRIR_partitioned_InterpolationMethod(Common::T_ear ear, float _azimuth, float _elevation) const
+	const std::vector<CMonoBuffer<float>> CHRTF::GetHRIR_partitioned_InterpolationMethod(Common::T_ear ear, float _azimuth, float _elevation) const
 	{
-		oneEarHRIR_Partitioned_struct newHRIR;
-		barycentricCoordinates_struct barycentricCoordinates;
+		std::vector<CMonoBuffer<float>> newHRIR;
+		TBarycentricCoordinatesStruct barycentricCoordinates;
 		orientation orientation_ptoA, orientation_ptoB, orientation_ptoC, orientation_ptoD, orientation_ptoP;
 
 		//Calculate the quadrant points A, B, C and D and the middle quadrant point P
@@ -1097,7 +1182,7 @@ namespace Binaural
 		return newHRIR;
 		}
 
-	const oneEarHRIR_struct CHRTF::CalculateHRIRFromBarycentricCoordinates(Common::T_ear ear, barycentricCoordinates_struct barycentricCoordinates, orientation orientation_pto1, orientation orientation_pto2, orientation orientation_pto3)const
+	const oneEarHRIR_struct CHRTF::CalculateHRIRFromBarycentricCoordinates(Common::T_ear ear, TBarycentricCoordinatesStruct barycentricCoordinates, orientation orientation_pto1, orientation orientation_pto2, orientation orientation_pto3)const
 	{
 		oneEarHRIR_struct newHRIR;
 		//HRIR size will be differente for HRTF in time domain and in frequency domain
@@ -1155,9 +1240,9 @@ namespace Binaural
 		return newHRIR;
 	}
 
-	const oneEarHRIR_Partitioned_struct CHRTF::CalculateHRIR_partitioned_FromBarycentricCoordinates(Common::T_ear ear, barycentricCoordinates_struct barycentricCoordinates, orientation orientation_pto1, orientation orientation_pto2, orientation orientation_pto3)const
+	const std::vector<CMonoBuffer<float>> CHRTF::CalculateHRIR_partitioned_FromBarycentricCoordinates(Common::T_ear ear, TBarycentricCoordinatesStruct barycentricCoordinates, orientation orientation_pto1, orientation orientation_pto2, orientation orientation_pto3)const
 	{
-		oneEarHRIR_Partitioned_struct newHRIR;
+		std::vector<CMonoBuffer<float>> newHRIR;
 
 		if (barycentricCoordinates.alpha >= 0.0f && barycentricCoordinates.beta >= 0.0f && barycentricCoordinates.gamma >= 0.0f)
 		{
@@ -1176,56 +1261,154 @@ namespace Binaural
 
 			if (it1 != t_HRTF_Resampled_partitioned.end() && it2 != t_HRTF_Resampled_partitioned.end() && it3 != t_HRTF_Resampled_partitioned.end())
 			{
-				int subfilterLenght = HRIR_partitioned_SubfilterLength;
-				newHRIR.HRIR_Partitioned.resize(HRIR_partitioned_NumberOfSubfilters);
+				int subfilterLength = HRIR_partitioned_SubfilterLength;
+				newHRIR.resize(HRIR_partitioned_NumberOfSubfilters);
 
 				if (ear == Common::T_ear::LEFT)
 				{
 					for (int subfilterID = 0; subfilterID < HRIR_partitioned_NumberOfSubfilters; subfilterID++) 
 					{
-						newHRIR.HRIR_Partitioned[subfilterID].resize(subfilterLenght);
-						for (int i = 0; i < subfilterLenght; i++) 
+						newHRIR[subfilterID].resize(subfilterLength);
+						for (int i = 0; i < subfilterLength; i++) 
 						{
-							newHRIR.HRIR_Partitioned[subfilterID][i] = barycentricCoordinates.alpha * it1->second.leftHRIR_Partitioned[subfilterID][i] + barycentricCoordinates.beta * it2->second.leftHRIR_Partitioned[subfilterID][i] + barycentricCoordinates.gamma * it3->second.leftHRIR_Partitioned[subfilterID][i];
+							newHRIR[subfilterID][i] = barycentricCoordinates.alpha * it1->second.leftHRIR_Partitioned[subfilterID][i] + barycentricCoordinates.beta * it2->second.leftHRIR_Partitioned[subfilterID][i] + barycentricCoordinates.gamma * it3->second.leftHRIR_Partitioned[subfilterID][i];
 						}
 					}
-					newHRIR.delay = static_cast <unsigned long> (round(barycentricCoordinates.alpha * it1->second.leftDelay + barycentricCoordinates.beta * it2->second.leftDelay + barycentricCoordinates.gamma * it3->second.leftDelay));
 				}
 
 				else if (ear == Common::T_ear::RIGHT)
 				{
 					for (int subfilterID = 0; subfilterID < HRIR_partitioned_NumberOfSubfilters; subfilterID++)
 					{
-						newHRIR.HRIR_Partitioned[subfilterID].resize(subfilterLenght, 0.0f);
-						for (int i = 0; i < subfilterLenght; i++) 
+						newHRIR[subfilterID].resize(subfilterLength, 0.0f);
+						for (int i = 0; i < subfilterLength; i++) 
 						{
-							newHRIR.HRIR_Partitioned[subfilterID][i] = barycentricCoordinates.alpha * it1->second.rightHRIR_Partitioned[subfilterID][i] + barycentricCoordinates.beta * it2->second.rightHRIR_Partitioned[subfilterID][i] + barycentricCoordinates.gamma * it3->second.rightHRIR_Partitioned[subfilterID][i];
+							newHRIR[subfilterID][i] = barycentricCoordinates.alpha * it1->second.rightHRIR_Partitioned[subfilterID][i] + barycentricCoordinates.beta * it2->second.rightHRIR_Partitioned[subfilterID][i] + barycentricCoordinates.gamma * it3->second.rightHRIR_Partitioned[subfilterID][i];
 						}
 					}
-
-					newHRIR.delay = static_cast <unsigned long> (round(barycentricCoordinates.alpha * it1->second.rightDelay + barycentricCoordinates.beta * it2->second.rightDelay + barycentricCoordinates.gamma * it3->second.rightDelay));
 				}
 
 				else {
 					SET_RESULT(RESULT_WARNING, "Ear Type for calculating HRIR from Barycentric Coordinates is not valid");
-					cout << "e";
 				}
 
 				//SET_RESULT(RESULT_OK, "CalculateHRIRFromBarycentricCoordinates completed succesfully");
 			}
 			else {
 				SET_RESULT(RESULT_WARNING, "Orientations in CalculateHRIR_partitioned_FromBarycentricCoordinates not found");
-				cout << "e";
 			}
 		}
 		else {
 			SET_RESULT(RESULT_WARNING, "No Barycentric coordinates Triangle in CalculateHRIR_partitioned_FromBarycentricCoordinates");
-			cout << "e";
 		}
 
 		return newHRIR;
 	}
 	
+	const float CHRTF::GetHRIRDelayInterpolationMethod(Common::T_ear ear, float _azimuth, float _elevation) const
+	{
+		float newHRIRDelay;
+		TBarycentricCoordinatesStruct barycentricCoordinates;
+		orientation orientation_ptoA, orientation_ptoB, orientation_ptoC, orientation_ptoD, orientation_ptoP;
+
+		//Calculate the quadrant points A, B, C and D and the middle quadrant point P
+		orientation_ptoC.azimuth = trunc(_azimuth / resamplingStep) * resamplingStep;
+		orientation_ptoC.elevation = trunc(_elevation / resamplingStep)*resamplingStep;
+		orientation_ptoA.azimuth = orientation_ptoC.azimuth;
+		orientation_ptoA.elevation = orientation_ptoC.elevation + resamplingStep;
+		orientation_ptoB.azimuth = orientation_ptoC.azimuth + resamplingStep;
+		orientation_ptoB.elevation = orientation_ptoC.elevation + resamplingStep;
+		orientation_ptoD.azimuth = orientation_ptoC.azimuth + resamplingStep;
+		orientation_ptoD.elevation = orientation_ptoC.elevation;
+		orientation_ptoP.azimuth = orientation_ptoC.azimuth + (resamplingStep * 0.5f);
+		float azimuth_ptoP = orientation_ptoC.azimuth + (resamplingStep * 0.5f);
+		float elevation_ptoP = orientation_ptoC.elevation + (resamplingStep * 0.5f);
+
+		//Depend on the quadrant where the point of interest is situated obtain the Barycentric coordinates and the HRIR of the orientation of interest (azimuth, elevation)
+		if (_azimuth >= azimuth_ptoP)
+		{
+			if (_elevation >= elevation_ptoP)
+			{
+				//Second quadrant
+				barycentricCoordinates = GetBarycentricCoordinates(_azimuth, _elevation, orientation_ptoA.azimuth, orientation_ptoA.elevation, orientation_ptoB.azimuth, orientation_ptoB.elevation, orientation_ptoD.azimuth, orientation_ptoD.elevation);
+				newHRIRDelay = CalculateHRIRDelayFromBarycentricCoordinates(ear, barycentricCoordinates, orientation_ptoA, orientation_ptoB, orientation_ptoD);
+			}
+			else if (_elevation < elevation_ptoP)
+			{
+				//Forth quadrant
+				barycentricCoordinates = GetBarycentricCoordinates(_azimuth, _elevation, orientation_ptoB.azimuth, orientation_ptoB.elevation, orientation_ptoC.azimuth, orientation_ptoC.elevation, orientation_ptoD.azimuth, orientation_ptoD.elevation);
+				newHRIRDelay = CalculateHRIRDelayFromBarycentricCoordinates(ear, barycentricCoordinates, orientation_ptoB, orientation_ptoC, orientation_ptoD);
+			}
+		}
+		else if (_azimuth < azimuth_ptoP)
+		{
+			if (_elevation >= elevation_ptoP)
+			{
+				//First quadrant
+				barycentricCoordinates = GetBarycentricCoordinates(_azimuth, _elevation, orientation_ptoA.azimuth, orientation_ptoA.elevation, orientation_ptoB.azimuth, orientation_ptoB.elevation, orientation_ptoC.azimuth, orientation_ptoC.elevation);
+				newHRIRDelay = CalculateHRIRDelayFromBarycentricCoordinates(ear, barycentricCoordinates, orientation_ptoA, orientation_ptoB, orientation_ptoC);
+			}
+			else if (_elevation < elevation_ptoP) {
+				//Third quadrant
+				barycentricCoordinates = GetBarycentricCoordinates(_azimuth, _elevation, orientation_ptoA.azimuth, orientation_ptoA.elevation, orientation_ptoC.azimuth, orientation_ptoC.elevation, orientation_ptoD.azimuth, orientation_ptoD.elevation);
+				newHRIRDelay = CalculateHRIRDelayFromBarycentricCoordinates(ear, barycentricCoordinates, orientation_ptoA, orientation_ptoC, orientation_ptoD);
+			}
+		}
+		//SET_RESULT(RESULT_OK, "GetHRIR_partitioned_InterpolationMethod completed succesfully");
+		return newHRIRDelay;
+	}
+	
+	const float CHRTF::CalculateHRIRDelayFromBarycentricCoordinates(Common::T_ear ear, TBarycentricCoordinatesStruct barycentricCoordinates, orientation orientation_pto1, orientation orientation_pto2, orientation orientation_pto3)const
+	{
+		float newHRIRDelay=0.0f;
+
+		if (barycentricCoordinates.alpha >= 0.0f && barycentricCoordinates.beta >= 0.0f && barycentricCoordinates.gamma >= 0.0f)
+		{
+			// HRTF table does not contain data for azimuth = 360, which has the same values as azimuth = 0, for every elevation
+			if (orientation_pto1.azimuth == 360) { orientation_pto1.azimuth = 0; }
+			if (orientation_pto2.azimuth == 360) { orientation_pto2.azimuth = 0; }
+			if (orientation_pto3.azimuth == 360) { orientation_pto3.azimuth = 0; }
+			if (orientation_pto1.elevation == 360) { orientation_pto1.elevation = 0; }
+			if (orientation_pto2.elevation == 360) { orientation_pto2.elevation = 0; }
+			if (orientation_pto3.elevation == 360) { orientation_pto3.elevation = 0; }
+
+			// Find the HRIR for the given orientations
+			auto it1 = t_HRTF_Resampled_partitioned.find(orientation(orientation_pto1.azimuth, orientation_pto1.elevation));
+			auto it2 = t_HRTF_Resampled_partitioned.find(orientation(orientation_pto2.azimuth, orientation_pto2.elevation));
+			auto it3 = t_HRTF_Resampled_partitioned.find(orientation(orientation_pto3.azimuth, orientation_pto3.elevation));
+
+			if (it1 != t_HRTF_Resampled_partitioned.end() && it2 != t_HRTF_Resampled_partitioned.end() && it3 != t_HRTF_Resampled_partitioned.end())
+			{
+
+				if (ear == Common::T_ear::LEFT)
+				{
+					newHRIRDelay = static_cast <unsigned long> (round(barycentricCoordinates.alpha * it1->second.leftDelay + barycentricCoordinates.beta * it2->second.leftDelay + barycentricCoordinates.gamma * it3->second.leftDelay));
+				}
+
+				else if (ear == Common::T_ear::RIGHT)
+				{
+					newHRIRDelay = static_cast <unsigned long> (round(barycentricCoordinates.alpha * it1->second.rightDelay + barycentricCoordinates.beta * it2->second.rightDelay + barycentricCoordinates.gamma * it3->second.rightDelay));
+				}
+
+				else {
+					SET_RESULT(RESULT_WARNING, "Ear Type for calculating HRIR Delay from Barycentric Coordinates is not valid");
+				}
+
+				//SET_RESULT(RESULT_OK, "CalculateHRIRFromBarycentricCoordinates completed succesfully");
+			}
+			else {
+				SET_RESULT(RESULT_WARNING, "Orientations in CalculateHRIRDelayFromBarycentricCoordinates not found");
+			}
+		}
+		else {
+			SET_RESULT(RESULT_WARNING, "No Barycentric coordinates Triangle in CalculateHRIRDelayFromBarycentricCoordinates");
+		}
+
+		return newHRIRDelay;
+	}
+
+	
+
 	
 	//   ITD Methods    
 	
@@ -1284,13 +1467,13 @@ namespace Binaural
 		//if (a == b) { // shortcut, handles infinities
 		//	return true;
 		//}
-		//else if (a == 0 || b == 0 || diff < std::numeric_limits<float>::min()) {
+		//else if (a == 0 || b == 0 || diff < std::numberic_limits<float>::min()) {
 		//	// a or b is zero or both are extremely close to it
 		//	// relative error is less meaningful here
-		//	return diff < (epsilon * std::numeric_limits<float>::min());
+		//	return diff < (epsilon * std::numberic_limits<float>::min());
 		//}
 		//else { // use relative error
-		//	return diff / fmin((absA + absB), std::numeric_limits<float>::max()) < epsilon;
+		//	return diff / fmin((absA + absB), std::numberic_limits<float>::max()) < epsilon;
 		//}
 	}
 

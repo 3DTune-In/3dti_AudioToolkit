@@ -109,7 +109,7 @@ namespace Binaural {
 		*	\param [in] newTable data for hash table
 		*   \eh Nothing is reported to the error handler.
 		*/
-		void AddILDSpatialziationTable(T_ILD_HashTable && newTable);
+		void AddILDSpatializationTable(T_ILD_HashTable && newTable);
 
 		/** \brief Get the internal hash table used for computing ILD Near Field Effect
 		*	\retval hashTable data from the hash table

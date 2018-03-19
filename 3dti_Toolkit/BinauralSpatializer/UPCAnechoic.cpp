@@ -79,7 +79,7 @@ namespace Binaural {
 	}//Setup
 	
 	// Make the Uniformed Partitioned Convolution of the input signal
-	void CUPCAnechoic::ProcessUPConvolution(const CMonoBuffer<float>& inBuffer_Time, const oneEarHRIR_Partitioned_struct & IR, CMonoBuffer<float>& outBuffer)
+	void CUPCAnechoic::ProcessUPConvolution(const CMonoBuffer<float>& inBuffer_Time, const TOneEarHRIRPartitionedStruct & IR, CMonoBuffer<float>& outBuffer)
 	{
 		CMonoBuffer<float> sum;
 		sum.resize(impulseResponse_Frequency_Block_Size, 0.0f);
@@ -88,7 +88,7 @@ namespace Binaural {
 
 		if (inBuffer_Time.size() == inputSize) {
 
-			//Step 1- extend the input time signal buffer in order to have double lenght
+			//Step 1- extend the input time signal buffer in order to have double length
 			std::vector<float> inBuffer_Time_dobleSize;
 			inBuffer_Time_dobleSize.reserve(inputSize * 2);
 			inBuffer_Time_dobleSize.insert(inBuffer_Time_dobleSize.begin(), storageInput_buffer.begin(), storageInput_buffer.end());
@@ -136,7 +136,7 @@ namespace Binaural {
 	}
 	
 	// Make the Uniformed Partitioned Convolution of the input signal using also last input signal buffers
-	void CUPCAnechoic::ProcessUPConvolutionWithMemory(const CMonoBuffer<float>& inBuffer_Time, const oneEarHRIR_Partitioned_struct & IR, CMonoBuffer<float>& outBuffer)
+	void CUPCAnechoic::ProcessUPConvolutionWithMemory(const CMonoBuffer<float>& inBuffer_Time, const TOneEarHRIRPartitionedStruct & IR, CMonoBuffer<float>& outBuffer)
 	{
 		CMonoBuffer<float> sum;
 		sum.resize(impulseResponse_Frequency_Block_Size, 0.0f);
@@ -148,7 +148,7 @@ namespace Binaural {
 		{
 			if (inBuffer_Time.size() == inputSize && IR.HRIR_Partitioned.size() != 0)
 			{
-				//Step 1- extend the input time signal buffer in order to have double lenght
+				//Step 1- extend the input time signal buffer in order to have double length
 				std::vector<float> inBuffer_Time_dobleSize;
 				inBuffer_Time_dobleSize.reserve(inputSize * 2);
 				inBuffer_Time_dobleSize.insert(inBuffer_Time_dobleSize.begin(), storageInput_buffer.begin(), storageInput_buffer.end());

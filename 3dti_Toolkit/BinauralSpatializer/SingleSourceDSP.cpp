@@ -72,6 +72,18 @@ namespace Binaural {
 		enableReverb = true;
 		readyForAnechoic = false;
 		readyForReverb = false;
+
+		leftAzimuth = 0;
+		leftElevation = 0;
+
+		rightAzimuth = 0;
+		rightElevation = 0;
+
+		centerAzimuth = 0;
+		centerElevation = 0;
+
+		distanceToListener = 0;
+		interauralAzimuth = 0;
 		
 		nearFieldEffectFilters.left.AddFilter();		//Initialize the filter to ILD simulation 
 		nearFieldEffectFilters.left.AddFilter();		//Initialize the filter to ILD simulation
@@ -106,6 +118,9 @@ namespace Binaural {
 	void CSingleSourceDSP::SetSourceTransform(Common::CTransform newTransform)
 	{	
 		sourceTransform = newTransform;
+
+		CalculateSourceCoordinates();
+
 		//sourceTransform = CalculateTransformPositionWithRestrictions(newTransform);
 	}
 	// Get source transform (position and orientation)
@@ -240,24 +255,7 @@ namespace Binaural {
 			PROFILER3DTI.RelativeSampleStart(dsSSDSPTransform);
 		#endif
 
-		// Keep source outside listener head
-			Common::CTransform safeSourceTransform = CalculateTransformPositionWithRestrictions(sourceTransform);
-
-		//Get azimuth and elevation between listener and source
-			Common::CVector3 vectorTo = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(safeSourceTransform);
-			Common::CVector3 leftVectorTo = ownerCore->GetListener()->GetListenerEarTransform(Common::T_ear::LEFT).GetVectorTo(safeSourceTransform);
-			Common::CVector3 rightVectorTo = ownerCore->GetListener()->GetListenerEarTransform(Common::T_ear::RIGHT).GetVectorTo(safeSourceTransform);
-
-		float distance = vectorTo.GetDistance();							//Get Distance
-		float interauralAzimuth = vectorTo.GetInterauralAzimuthDegrees();	//Get Interaural Azimuth
-
-		float leftAzimuth = leftVectorTo.GetAzimuthDegrees();		//Get left azimuth
-		float leftElevation = leftVectorTo.GetElevationDegrees();	//Get left elevation
-
-		float rightAzimuth = rightVectorTo.GetAzimuthDegrees();		//Get right azimuth
-		float rightElevation = rightVectorTo.GetElevationDegrees();	//Get right elevation	
-
-		float angleToForwardAxisRadians = vectorTo.GetAngleToForwardAxisRadians();  //angle that this vector keeps with the forward axis
+		float angleToForwardAxisRadians = vectorToListener.GetAngleToForwardAxisRadians();  //angle that this vector keeps with the forward axis
 
 		// WATCHER 
 		WATCH(TWatcherVariable::WV_ANECHOIC_AZIMUTH_LEFT, leftAzimuth, float);
@@ -272,24 +270,23 @@ namespace Binaural {
 			CMonoBuffer<float> inBuffer = _inBuffer; //We have to copy input buffer to a new buffer because the distance effects methods work changing the input buffer				
 			
 			// Apply Far distance effect
-			if (IsFarDistanceEffectEnabled()) {	ProcessFarDistanceEffect(inBuffer, distance); }			
+			if (IsFarDistanceEffectEnabled()) {	ProcessFarDistanceEffect(inBuffer, distanceToListener); }			
 			
 			// Apply distance attenuation
-			if (IsDistanceAttenuationEnabledAnechoic()) {ProcessDistanceAttenuationAnechoic(inBuffer, ownerCore->GetAudioState().bufferSize, ownerCore->GetAudioState().sampleRate, distance);}					
+			if (IsDistanceAttenuationEnabledAnechoic()){ ProcessDistanceAttenuationAnechoic(inBuffer, ownerCore->GetAudioState().bufferSize, ownerCore->GetAudioState().sampleRate, distanceToListener );}
 			
 			//Apply Spatialization
-			if (spatializationMode == TSpatializationMode::HighQuality) {				
-				ProcessHRTF(inBuffer, outLeftBuffer, outRightBuffer, leftAzimuth, leftElevation, rightAzimuth, rightElevation);		// Apply HRTF spatialization effect
-				ProcessNearFieldEffect(outLeftBuffer, outRightBuffer, distance, interauralAzimuth);									// Apply Near field effects (ILD)		
+			if( spatializationMode == TSpatializationMode::HighQuality ) {
+				ProcessHRTF(inBuffer, outLeftBuffer, outRightBuffer, leftAzimuth, leftElevation, rightAzimuth, rightElevation, centerAzimuth, centerElevation);		// Apply HRTF spatialization effect
+				ProcessNearFieldEffect(outLeftBuffer, outRightBuffer, distanceToListener, interauralAzimuth );									// Apply Near field effects (ILD)		
 			}
 			else if (spatializationMode == TSpatializationMode::HighPerformance)
 			{
-				
 				outLeftBuffer = inBuffer;			//Copy input to left channel
 				outRightBuffer = inBuffer;			//Copy input to right channels						
-				ProccesILDSpatializationAndAddITD(outLeftBuffer, outRightBuffer, distance, interauralAzimuth, leftAzimuth, leftElevation, rightAzimuth, rightElevation);	//Apply the ILD spatialization
+				ProccesILDSpatializationAndAddITD(outLeftBuffer, outRightBuffer, distanceToListener, interauralAzimuth, leftAzimuth, leftElevation, rightAzimuth, rightElevation);	//Apply the ILD spatialization
 			}
-			else if (spatializationMode == TSpatializationMode::None) 
+			else if (spatializationMode == TSpatializationMode::NoSpatialization) 
 			{
 				outLeftBuffer = inBuffer;
 				outRightBuffer = inBuffer;
@@ -316,12 +313,59 @@ namespace Binaural {
 		outBuffer.Interlace(outLeftBuffer, outRightBuffer);
 	}
 
+	// Calculates the values returned by GetEarAzimuth and GetEarElevation
+	void CSingleSourceDSP::CalculateSourceCoordinates()
+	{
+		// Keep source outside listener head
+		Common::CTransform safeSourceTransform = CalculateTransformPositionWithRestrictions(sourceTransform);
+
+		//Get azimuth and elevation between listener and source
+		vectorToListener = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(safeSourceTransform);
+		Common::CVector3 leftVectorTo = ownerCore->GetListener()->GetListenerEarTransform(Common::T_ear::LEFT).GetVectorTo(safeSourceTransform);
+		Common::CVector3 rightVectorTo = ownerCore->GetListener()->GetListenerEarTransform(Common::T_ear::RIGHT).GetVectorTo(safeSourceTransform);
+		Common::CVector3 leftVectorTo_sphereProjection =	GetSphereProjectionPosition(leftVectorTo, ownerCore->GetListener()->GetListenerEarLocalPosition(Common::T_ear::LEFT), ownerCore->GetListener()->GetHRTF()->GetHRTFDistanceOfMeasurement());
+		Common::CVector3 rightVectorTo_sphereProjection =	GetSphereProjectionPosition(rightVectorTo, ownerCore->GetListener()->GetListenerEarLocalPosition(Common::T_ear::RIGHT), ownerCore->GetListener()->GetHRTF()->GetHRTFDistanceOfMeasurement());
+
+		leftAzimuth =		leftVectorTo_sphereProjection.GetAzimuthDegrees();		//Get left azimuth
+		leftElevation =	leftVectorTo_sphereProjection.GetElevationDegrees();	//Get left elevation
+
+		rightAzimuth =	rightVectorTo_sphereProjection.GetAzimuthDegrees();		//Get right azimuth
+		rightElevation = rightVectorTo_sphereProjection.GetElevationDegrees();	//Get right elevation	
+
+		distanceToListener = vectorToListener.GetDistance();							//Get Distance
+		interauralAzimuth = vectorToListener.GetInterauralAzimuthDegrees();	//Get Interaural Azimuth
+
+		centerAzimuth = vectorToListener.GetAzimuthDegrees();		//Get azimuth from the head center
+		centerElevation = vectorToListener.GetElevationDegrees();		//Get elevation from the head center
+	}
+
+	// Returns the azimuth of the specified ear.
+	float CSingleSourceDSP::GetEarAzimuth( Common::T_ear ear ) const
+	{
+		if (ear == Common::T_ear::LEFT)
+			return leftAzimuth;
+		else if ( ear == Common::T_ear::RIGHT )
+			return rightAzimuth;
+		else
+			SET_RESULT(RESULT_ERROR_INVALID_PARAM, "Call to CSingleSourceDSP::GetEarAzimuth with invalid param" );
+	}
+
+	// Returns the elevation of the specified ear
+	float CSingleSourceDSP::GetEarElevation(Common::T_ear ear) const
+	{
+		if (ear == Common::T_ear::LEFT)
+			return leftElevation;
+		else if (ear == Common::T_ear::RIGHT)
+			return rightElevation;
+		else
+			SET_RESULT( RESULT_ERROR_INVALID_PARAM, "Call to CSingleSourceDSP::GetEarAzimuth with invalid param" );
+	}
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	///PRIVATE METHODS
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	void CSingleSourceDSP::ProcessHRTF(CMonoBuffer<float> &inBuffer, CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer, float leftAzimuth, float leftElevation, float rightAzimuth, float rightElevation)
+	void CSingleSourceDSP::ProcessHRTF(CMonoBuffer<float> &inBuffer, CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer, float leftAzimuth, float leftElevation, float rightAzimuth, float rightElevation, float centerAzimuth, float centerElevation)
 	{
 		ASSERT(ownerCore->GetListener()->GetHRTF()->IsHRTFLoaded(), RESULT_ERROR_NOTSET, "CSingleSourceDSP::ProcessAnechoic: error: HRTF has not been loaded yet.", "");
 		////////////////////////////
@@ -338,9 +382,6 @@ namespace Binaural {
 		CMonoBuffer<float> leftChannel_withoutDelay;
 		CMonoBuffer<float> rightChannel_withoutDelay;
 
-		//Store delays
-		int leftDelay;
-		int rightDelay;
 		if ((ownerCore->GetListener()->GetHRTF()->IsHRTFLoaded()) && (inBuffer.size() == ownerCore->GetAudioState().bufferSize))
 		{
 
@@ -378,12 +419,15 @@ namespace Binaural {
 #else   //USE_FREQUENCY_COVOLUTION_WITHOUT_PARTITIONS_ANECHOIC
 
 			//Get the HRIR, with different orientation for both ears
-			oneEarHRIR_Partitioned_struct leftHRIR_partitioned = ownerCore->GetListener()->GetHRTF()->GetHRIR_partitioned(Common::T_ear::LEFT, leftAzimuth, leftElevation, enableInterpolation);
-			oneEarHRIR_Partitioned_struct rightHRIR_partitioned = ownerCore->GetListener()->GetHRTF()->GetHRIR_partitioned(Common::T_ear::RIGHT, rightAzimuth, rightElevation, enableInterpolation);
+			TOneEarHRIRPartitionedStruct  leftHRIR_partitioned;
+			TOneEarHRIRPartitionedStruct  rightHRIR_partitioned;
+
+			leftHRIR_partitioned.HRIR_Partitioned = ownerCore->GetListener()->GetHRTF()->GetHRIR_partitioned(Common::T_ear::LEFT, leftAzimuth, leftElevation, enableInterpolation);
+			rightHRIR_partitioned.HRIR_Partitioned = ownerCore->GetListener()->GetHRTF()->GetHRIR_partitioned(Common::T_ear::RIGHT, rightAzimuth, rightElevation, enableInterpolation);
 
 			//Get delay
-			leftDelay = leftHRIR_partitioned.delay;
-			rightDelay = rightHRIR_partitioned.delay;
+			leftHRIR_partitioned.delay = ownerCore->GetListener()->GetHRTF()->GetHRIRDelay(Common::T_ear::LEFT, centerAzimuth, centerElevation, enableInterpolation);
+			rightHRIR_partitioned.delay = ownerCore->GetListener()->GetHRTF()->GetHRIRDelay(Common::T_ear::RIGHT, centerAzimuth, centerElevation, enableInterpolation);
 
 #ifdef USE_PROFILER_SingleSourceDSP
 			if (enableInterpolation)
@@ -407,8 +451,8 @@ namespace Binaural {
 
 #endif // !USE_FREQUENCY_COVOLUTION_WITHOUT_PARTITIONS_ANECHOIC		
 
-			ProcessAddDelay_ExpansionMethod(leftChannel_withoutDelay, outLeftBuffer, leftChannelDelayBuffer, leftDelay);
-			ProcessAddDelay_ExpansionMethod(rightChannel_withoutDelay, outRightBuffer, rightChannelDelayBuffer, rightDelay);
+			ProcessAddDelay_ExpansionMethod(leftChannel_withoutDelay, outLeftBuffer, leftChannelDelayBuffer, leftHRIR_partitioned.delay);
+			ProcessAddDelay_ExpansionMethod(rightChannel_withoutDelay, outRightBuffer, rightChannelDelayBuffer, rightHRIR_partitioned.delay);
 
 		}
 	}
@@ -617,27 +661,27 @@ namespace Binaural {
 	///Calculate a new source transform position taking into account the restrictions, source that can not be inside of the listener head
 	Common::CTransform CSingleSourceDSP::CalculateTransformPositionWithRestrictions(Common::CTransform sourceTransform)
 	{		
-		float sourceMinimunDistance = 0.1f;		//Default value, just in case
+		float sourceMinimumDistance = 0.1f;		//Default value, just in case
 		if (ownerCore!=nullptr){
 			if (ownerCore->GetListener() != nullptr) {
 				
-				//Get the minimun distance possible
-				sourceMinimunDistance = ownerCore->GetListener()->GetMinimunDistanceToSource();			
+				//Get the minimum distance possible
+				sourceMinimumDistance = ownerCore->GetListener()->GetMinimumDistanceToSource();			
 				//Get distance between listener and source						
 				Common::CVector3 vectorToSource = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(sourceTransform);
 				float sourceDistance = vectorToSource.GetDistance();	// OPTIMIZATION: we could use GetSqrDistance instead
 				//Check if the distance is less than the minumun
-				if (sourceDistance < sourceMinimunDistance)
+				if (sourceDistance < sourceMinimumDistance)
 				{
 					//How to project a point on to a sphere
-					//Let p be the point (source position), s the sphere's centre (listener position) and r the radius (minimun distance)
+					//Let p be the point (source position), s the sphere's centre (listener position) and r the radius (minimum distance)
 					//then x = s + r*(p-s)/(norm(p-s)) where x is the point projected (new source position)									
 					//Get s (listner position)
 					Common::CTransform listernerTransform = ownerCore->GetListener()->GetListenerTransform();
 					Common::CVector3 listenerPosition = listernerTransform.GetPosition();
 					if (sourceDistance != 0.0f) {
 						//Get projectionVector vector			
-						float scale = sourceMinimunDistance / sourceDistance;
+						float scale = sourceMinimumDistance / sourceDistance;
 						lastSourceProjectionVector = Common::CVector3(scale * vectorToSource.x, scale * vectorToSource.y, scale * vectorToSource.z);
 					}
 					//New position
@@ -662,10 +706,6 @@ namespace Binaural {
 	bool CSingleSourceDSP::IsReverbProcessReady() { return readyForReverb; }
 	///Sets the ready flag for reverb process to false
 	void CSingleSourceDSP::SetReverbProcessNotReady() { readyForReverb = false; }
-
-
-
-	
 
 	void CSingleSourceDSP::ProcessILDSpatialization(CMonoBuffer<float> &leftBuffer, CMonoBuffer<float> &rightBuffer, float distance_m, float azimuth)
 	{
@@ -700,4 +740,37 @@ namespace Binaural {
 			ILDSpatializationFilters.right.Process(rightBuffer);
 		}
 	}
+
+	// In orther to obtain the position where the HRIR is needed, this method calculate the projection of each ear in the sphere where the HRTF has been measured
+	const Common::CVector3 CSingleSourceDSP::GetSphereProjectionPosition(Common::CVector3 vectorToEar, Common::CVector3 earLocalPosition, float distance) const
+	{
+		//get axis according to the defined convention
+		float leftAxis =	vectorToEar.GetAxis(LEFT_AXIS);
+		float forwardAxis = vectorToEar.GetAxis(FORWARD_AXIS);
+		float upAxis =		vectorToEar.GetAxis(UP_AXIS);
+		// Error handler:
+		if ((leftAxis == 0.0f) && (forwardAxis == 0.0f) && (upAxis == 0.0f)) {
+			ASSERT(false, RESULT_ERROR_DIVBYZERO, "Axes are not correctly set. Please, check axis conventions", "Azimuth computed from vector succesfully");
+		}
+		//Resolve a quadratic equation to get lambda, which is the parameter that define the line between the ear and the sphere, passing by the source
+		// (x_sphere, y_sphere, z_sphere) = earLocalPosition + lambda * vectorToEar 
+		// x_sphere^2 + y_sphere^2 + z_sphere^2 = distance^2
+
+		float a = forwardAxis * forwardAxis + leftAxis * leftAxis + upAxis * upAxis;
+		float b = 2.0f * earLocalPosition.y * leftAxis;
+		float c = earLocalPosition.y * earLocalPosition.y - distance * distance;
+		float lambda = (-b + sqrt(b*b - 4.0f* a*c))* 0.5f * (1 / a);
+
+		Common::CVector3 cartesianposition;
+		
+		cartesianposition.x = lambda * forwardAxis;
+		cartesianposition.y = earLocalPosition.y + lambda * leftAxis;
+		cartesianposition.z = lambda * upAxis;
+
+		return cartesianposition;
+	}
+
 }
+
+
+

@@ -45,6 +45,10 @@
 #define DEFAULT_RESAMPLING_STEP 5
 #endif
 
+#ifndef DEFAULT_HRTF_MEASURED_DISTANCE
+#define DEFAULT_HRTF_MEASURED_DISTANCE 1.95f
+#endif
+
 #define MAX_DISTANCE_BETWEEN_ELEVATIONS 5
 #define NUMBER_OF_PARTS 4 
 #define AZIMUTH_STEP  15
@@ -70,7 +74,7 @@ struct orientation
 
 /** \brief Type definition for a left-right pair of impulse response with the ITD removed and stored in a specific struct field
 */
-struct HRIR_struct {
+struct THRIRStruct {
 	uint64_t leftDelay;				///< Left delay, in number of samples
 	uint64_t rightDelay;			///< Right delay, in number of samples
 	CMonoBuffer<float> leftHRIR;	///< Left impulse response data
@@ -79,7 +83,7 @@ struct HRIR_struct {
 
 /** \brief Type definition for a left-right pair of impulse response subfilter set with the ITD removed and stored in a specific struct field
 */
-struct HRIR_Partitioned_struct {
+struct THRIRPartitionedStruct {
 	uint64_t leftDelay;				///< Left delay, in number of samples
 	uint64_t rightDelay;			///< Right delay, in number of samples
 	std::vector<CMonoBuffer<float>> leftHRIR_Partitioned;	///< Left partitioned impulse response data
@@ -95,14 +99,14 @@ struct oneEarHRIR_struct {
 
 /** \brief Type definition for an impulse response subfilter set with the ITD removed and stored in a specific struct field
 */
-struct oneEarHRIR_Partitioned_struct {
+struct TOneEarHRIRPartitionedStruct {
 	std::vector<CMonoBuffer<float>> HRIR_Partitioned;	///< Partitioned impulse response data
 	uint64_t delay;				///< Delay, in number of samples
 };
 
 /**	\brief Type definition for barycentric coordinates
 */
-struct barycentricCoordinates_struct {
+struct TBarycentricCoordinatesStruct {
 	float alpha;	///< Coordinate alpha
 	float beta;		///< Coordinate beta
 	float gamma;	///< Coordinate gamma
@@ -127,11 +131,11 @@ namespace std
 
 /** \brief Type definition for the HRTF table
 */
-typedef std::unordered_map<orientation, HRIR_struct> T_HRTFTable;
+typedef std::unordered_map<orientation, THRIRStruct> T_HRTFTable;
 
 /** \brief Type definition for the HRTF partitioned table used when UPConvolution is activated
 */
-typedef std::unordered_map<orientation, HRIR_Partitioned_struct> T_HRTFPartitionedTable;
+typedef std::unordered_map<orientation, THRIRPartitionedStruct> T_HRTFPartitionedTable;
 
 /** \brief Type definition for a distance-orientation pair
 */
@@ -154,7 +158,7 @@ namespace Binaural
 		*   \eh Nothing is reported to the error handler.
 		*/
 		CHRTF(CListener* _ownerListener) 	
-			:ownerListener{ _ownerListener }, enableCustomizedITD{ false }, resamplingStep{ DEFAULT_RESAMPLING_STEP }, HRIRlength{ 0 }, HRTFLoaded{ false }, setupInProgress{ false }
+			:ownerListener{ _ownerListener }, enableCustomizedITD{ false }, resamplingStep{ DEFAULT_RESAMPLING_STEP }, HRIRLength{ 0 }, HRTFLoaded{ false }, setupInProgress{ false }, distanceOfMeasurement { DEFAULT_HRTF_MEASURED_DISTANCE }
 		{}
 
 		/** \brief Default Constructor
@@ -162,7 +166,7 @@ namespace Binaural
 		*   \eh Nothing is reported to the error handler.
 		*/
 		CHRTF()
-			:ownerListener{ nullptr }, enableCustomizedITD{ false }, resamplingStep{ DEFAULT_RESAMPLING_STEP }, HRIRlength{ 0 }, HRTFLoaded{ false }, setupInProgress{ false }
+			:ownerListener{ nullptr }, enableCustomizedITD{ false }, resamplingStep{ DEFAULT_RESAMPLING_STEP }, HRIRLength{ 0 }, HRTFLoaded{ false }, setupInProgress{ false }, distanceOfMeasurement{ DEFAULT_HRTF_MEASURED_DISTANCE }
 		{}
 
 		/** \brief Get size of each HRIR buffer
@@ -171,15 +175,15 @@ namespace Binaural
 		*/
 		int32_t GetHRIRLength() const
 		{
-			return HRIRlength;
+			return HRIRLength;
 		}
 
 		/** \brief Start a new HRTF configuration
-		*	\param [in] _HRIRlength buffer size of the HRIR to be added		
+		*	\param [in] _HRIRLength buffer size of the HRIR to be added		
 		*   \eh On success, RESULT_OK is reported to the error handler.
 		*       On error, an error code is reported to the error handler.
 		*/
-		void BeginSetup(int32_t _HRIRlength);
+		void BeginSetup(int32_t _HRIRLength, float _distance);
 		
 		/** \brief Set the full HRIR matrix.
 		*	\param [in] newTable full table with all HRIR data
@@ -193,7 +197,7 @@ namespace Binaural
 		*	\param [in] newHRIR HRIR data for both ears
 		*   \eh Warnings may be reported to the error handler.
 		*/
-		void AddHRIR(float azimuth, float elevation, HRIR_struct && newHRIR);
+		void AddHRIR(float azimuth, float elevation, THRIRStruct && newHRIR);
 
 		/** \brief Stop the HRTF configuration		
 		*   \eh On success, RESULT_OK is reported to the error handler.
@@ -219,25 +223,36 @@ namespace Binaural
 
 		/** \brief Get interpolated HRIR buffer with Delay, for one ear
 		*	\param [in] ear for which ear we want to get the HRIR 
-		*	\param [in] azimuth azimuth angle in degrees
-		*	\param [in] elevation elevation angle in degrees
+		*	\param [in] _azimuth azimuth angle in degrees
+		*	\param [in] _elevation elevation angle in degrees
 		*	\param [in] runTimeInterpolation switch run-time interpolation
 		*	\retval HRIR interpolated buffer with delay for specified ear
 		*   \eh On error, an error code is reported to the error handler.
 		*       Warnings may be reported to the error handler.
 		*/
-		const oneEarHRIR_struct GetHRIR_frequency(Common::T_ear ear, float azimuth, float elevation, bool runTimeInterpolation) const;
+		const oneEarHRIR_struct GetHRIR_frequency(Common::T_ear ear, float _azimuth, float _elevation, bool runTimeInterpolation) const;
 
 		/** \brief Get interpolated and partitioned HRIR buffer with Delay, for one ear
 		*	\param [in] ear for which ear we want to get the HRIR
-		*	\param [in] azimuth azimuth angle in degrees
-		*	\param [in] elevation elevation angle in degrees
+		*	\param [in] _azimuth azimuth angle in degrees
+		*	\param [in] _elevation elevation angle in degrees
 		*	\param [in] runTimeInterpolation switch run-time interpolation
 		*	\retval HRIR interpolated buffer with delay for specified ear
 		*   \eh On error, an error code is reported to the error handler.
 		*       Warnings may be reported to the error handler.
 		*/
-		const oneEarHRIR_Partitioned_struct GetHRIR_partitioned(Common::T_ear ear, float azimuth, float elevation, bool runTimeInterpolation) const;
+		const std::vector<CMonoBuffer<float>> GetHRIR_partitioned(Common::T_ear ear, float _azimuth, float _elevation, bool runTimeInterpolation) const;
+
+		/** \brief Get the HRIR delay, in number of samples, for one ear
+		*	\param [in] ear for which ear we want to get the HRIR
+		*	\param [in] _azimuthCenter azimuth angle from the source and the listener head center in degrees
+		*	\param [in] _elevationCenter elevation angle from the source and the listener head center in degrees
+		*	\param [in] runTimeInterpolation switch run-time interpolation
+		*	\retval HRIR interpolated buffer with delay for specified ear
+		*   \eh On error, an error code is reported to the error handler.
+		*       Warnings may be reported to the error handler.
+		*/
+		float GetHRIRDelay(Common::T_ear ear, float _azimuthCenter, float _elevationCenter, bool runTimeInterpolation);
 
 		/** \brief	Get the number of subfilters (blocks) in which the HRIR has been partitioned
 		*	\retval n Number of HRIR subfilters
@@ -272,16 +287,24 @@ namespace Binaural
 		*/
 		const unsigned long GetCustomizedDelay(float _azimuth, float _elevation, Common::T_ear ear)const;
 
+		/** \brief	Get the distance where the HRTF has been measured
+		*   \return distance of the speakers structure to calculate the HRTF
+		*   \eh Nothing is reported to the error handler.
+		*/
+		float GetHRTFDistanceOfMeasurement();
+		
+
 	private:
 		///////////////
 		// ATTRIBUTES
 		///////////////
 		CListener* ownerListener;						// owner Listener
-		int32_t HRIRlength;								// HRIR vector length
+		int32_t HRIRLength;								// HRIR vector length
 		int32_t bufferSize;								// Input signal buffer size
 		//int32_t sampleRate;							// Sample Rate		
 		int32_t HRIR_partitioned_NumberOfSubfilters;	// Number of subfilters (blocks) for the UPC algorithm
 		int32_t HRIR_partitioned_SubfilterLength;		// Size of one HRIR subfilter
+		float distanceOfMeasurement;					//Distance where the HRIR have been measurement
 
 		float sphereBorder;						// Define spheere "sewing"
 		float epsilon_sewing = 0.001f;
@@ -300,11 +323,11 @@ namespace Binaural
 		T_HRTFPartitionedTable	t_HRTF_Resampled_partitioned;
 
 		// Empty object to return in some methods
-		HRIR_struct						emptyHRIR;
-		HRIR_Partitioned_struct			emptyHRIR_partitioned;
+		THRIRStruct						emptyHRIR;
+		THRIRPartitionedStruct			emptyHRIR_partitioned;
 		CMonoBuffer<float>				emptyMonoBuffer;
 		oneEarHRIR_struct				emptyOneEarHRIR;
-		oneEarHRIR_Partitioned_struct	emptyOneEarHRIR_partitioned;
+		TOneEarHRIRPartitionedStruct	emptyOneEarHRIR_partitioned;
 
 		/////////////
 		// METHODS
@@ -315,7 +338,7 @@ namespace Binaural
 
 		//	Calculate the HRIR in the pole of one of the hemispheres
 		//param hemisphereParts	vector of the HRTF orientations of the hemisphere
-		HRIR_struct CalculateHRIR_InOneHemispherePole(vector<orientation> hemisphereParts);
+		THRIRStruct CalculateHRIR_InOneHemispherePole(vector<orientation> hemisphereParts);
 
 		//	Calculate the resample matrix using the Barycentric interpolation Method (copy the HRIR function of the nearest orientation)
 		//param resamplingStep	HRTF resample matrix step for both azimuth and elevation
@@ -323,7 +346,7 @@ namespace Binaural
 
 		//	Split the input HRIR data in subfilters and get the FFT to apply the UPC algorithm
 		//param	newData_time	HRIR value in time domain
-		HRIR_Partitioned_struct SplitAndGetFFT_HRTFData(const HRIR_struct & newData_time);
+		THRIRPartitionedStruct SplitAndGetFFT_HRTFData(const THRIRStruct & newData_time);
 
 		//		Calculate the distance between two points [(azimuth1, elevation1) and (azimuth2, elevation2)] using the Haversine formula
 		//return	float	the distance value
@@ -332,10 +355,10 @@ namespace Binaural
 		//	Calculate the HRIR of a specific orientation (newazimuth, newelevation) using the Barycentric interpolation Method
 		//param newAzimuth		azimuth of the orientation of interest (the one whose HRIR will be calculated)
 		//param newElevation	elevation of the orientation of interest (the one whose HRIR will be calculated)
-		HRIR_struct CalculateHRIR_offlineMethod(int newAzimuth, int newElevation);
+		THRIRStruct CalculateHRIR_offlineMethod(int newAzimuth, int newElevation);
 
 		//		Calculate the barycentric coordinates of three vertex [(x1,y1), (x2,y2), (x3,y3)] and the orientation of interest (x,y)
-		const barycentricCoordinates_struct GetBarycentricCoordinates(float newAzimuth, float newElevation, float x1, float y1, float x2, float y2, float x3, float y3) const;
+		const TBarycentricCoordinatesStruct GetBarycentricCoordinates(float newAzimuth, float newElevation, float x1, float y1, float x2, float y2, float x3, float y3) const;
 
 		//		Transform the orientation in order to move the orientation of interest to 180 degrees
 		//returnval	float	transformed azimuth
@@ -355,14 +378,20 @@ namespace Binaural
 		const oneEarHRIR_struct GetHRIR_InterpolationMethod(Common::T_ear ear, int azimuth, int elevation) const;
 
 		//	Calculate from resample table HRIR subfilters using a barycentric interpolation of the three nearest orientation.
-		const oneEarHRIR_Partitioned_struct GetHRIR_partitioned_InterpolationMethod(Common::T_ear ear, float _azimuth, float _elevation) const;
+		const std::vector<CMonoBuffer<float>> GetHRIR_partitioned_InterpolationMethod(Common::T_ear ear, float _azimuth, float _elevation) const;
 
 		//	Calculate HRIR using a barycentric coordinates of the three nearest orientation.
-		const oneEarHRIR_struct CalculateHRIRFromBarycentricCoordinates(Common::T_ear ear, barycentricCoordinates_struct barycentricCoordinates, orientation orientation_pto1, orientation orientation_pto2, orientation orientation_pto3) const;
+		const oneEarHRIR_struct CalculateHRIRFromBarycentricCoordinates(Common::T_ear ear, TBarycentricCoordinatesStruct barycentricCoordinates, orientation orientation_pto1, orientation orientation_pto2, orientation orientation_pto3) const;
 
 		//	Calculate HRIR subfilters using a barycentric coordinates of the three nearest orientation.
-		const oneEarHRIR_Partitioned_struct CalculateHRIR_partitioned_FromBarycentricCoordinates(Common::T_ear ear, barycentricCoordinates_struct barycentricCoordinates, orientation orientation_pto1, orientation orientation_pto2, orientation orientation_pto3)const;
+		const std::vector<CMonoBuffer<float>> CalculateHRIR_partitioned_FromBarycentricCoordinates(Common::T_ear ear, TBarycentricCoordinatesStruct barycentricCoordinates, orientation orientation_pto1, orientation orientation_pto2, orientation orientation_pto3)const;
 
+		//	Calculate HRIR DELAY using intepolation of the three nearest orientation, in number of samples
+		const float GetHRIRDelayInterpolationMethod(Common::T_ear ear, float _azimuth, float _elevation) const;
+		
+		//	Calculate HRIR DELAY using a barycentric coordinates of the three nearest orientation, in number of samples
+		const float CalculateHRIRDelayFromBarycentricCoordinates(Common::T_ear ear, TBarycentricCoordinatesStruct barycentricCoordinates, orientation orientation_pto1, orientation orientation_pto2, orientation orientation_pto3)const;
+		
 		//		Calculate and remove the common delay of every HRIR functions of the DataBase Table. Off line Method, called from EndSetUp()
 		void RemoveCommonDelay_HRTFDataBaseTable();
 

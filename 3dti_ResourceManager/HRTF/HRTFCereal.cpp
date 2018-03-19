@@ -43,8 +43,8 @@ namespace HRTF
 		{
 			cereal::PortableBinaryInputArchive archive(input3dtiStream);
 			HRTFDetail_struct hrtf;
-			archive(hrtf);
-			listener->GetHRTF()->BeginSetup(hrtf.hrirLength);
+			archive(hrtf);								
+			listener->GetHRTF()->BeginSetup(hrtf.hrirLength, hrtf.distanceOfMeasurement);
 			listener->GetHRTF()->AddHRTFTable(std::move(hrtf.table));
 			listener->GetHRTF()->EndSetup();
 			SET_RESULT(RESULT_OK, "HRTF created from 3DTI stream");
@@ -75,45 +75,7 @@ namespace HRTF
 //////////////////////////////////////////////////////
 
 #if defined (PLATFORM_ANDROID)
-	//Binaural::CHRTF CreateFrom3dtiWithAndroidActivity(const std::string input3dti, ANativeActivity* activity, int bufferSize, int sampleRate)
-	//{
-	//	// TO DO: Use error handler to set result
-
-	//	// Get access to environment and asset manager
-	//	JNIEnv* env = activity->env;
-	//	AAssetManager* assetManager = activity->assetManager;
-	//	
-	//	// Open asset
-	//	AAsset* asset = AAssetManager_open(assetManager, input3dti.c_str(), AASSET_MODE_STREAMING); 
-	//	if (asset == NULL)
-	//	{
-	//		DEBUG_ANDROID("Asset %s not found!", input3dti.c_str());
-	//		return CHRTF();
-	//	}
-	//	
-	//	// Write asset to file, so that we can reuse existing code
-	//	std::string dataPath(activity->internalDataPath);			
-	//	std::string fileWithPath = dataPath + input3dti;	// Without adding this path, we would receive a read-only error when trying to open the out file
-	//	char buf[BUFSIZ];
-	//	int nb_read = 0;
-	//	FILE* out = fopen(fileWithPath.c_str(), "wb");
-	//	if (out == NULL)
-	//	{			
-	//		DEBUG_ANDROID("Error opening file to write asset: %s", strerror(errno));			
-	//		return CHRTF();
-	//	}
-	//	while ((nb_read = AAsset_read(asset, buf, BUFSIZ)) > 0)
-	//	{			
-	//		fwrite(buf, sizeof(char), nb_read, out);
-	//	}			
-	//	fclose(out);
-	//	AAsset_close(asset);
-	//	
-	//	// Now, read HRTF from that file		
-	//	return CreateFrom3dti(fileWithPath, bufferSize, sampleRate);
-	//}
-
-	void CreateFrom3dtiWithAndroidActivity(const std::string input3dti, ANativeActivity* activity, shared_ptr<Binaural::CListener> listener)
+		void CreateFrom3dtiWithAndroidActivity(const std::string input3dti, ANativeActivity* activity, shared_ptr<Binaural::CListener> listener)
 	{
 		// TO DO: Use error handler to set result
 

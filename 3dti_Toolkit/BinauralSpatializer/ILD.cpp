@@ -40,7 +40,7 @@ namespace Binaural {
 		t_ILDNearFieldEffect = newTable;
 	}
 
-	void CILD::AddILDSpatialziationTable(T_ILD_HashTable && newTable)
+	void CILD::AddILDSpatializationTable(T_ILD_HashTable && newTable)
 	{
 		t_ILDSpatialization = newTable;
 	}
@@ -55,7 +55,7 @@ namespace Binaural {
 		}
 
 		ASSERT(distance_m > 0, RESULT_ERROR_OUTOFRANGE, "Distance must be greater than zero when processing ILD", "");
-		ASSERT(azimuth >= -90.0 && azimuth <= 90, RESULT_ERROR_OUTOFRANGE, "Azimuth must be between -90º and 90º when processing ILD", "");
+		ASSERT(azimuth >= -90.0 && azimuth <= 90, RESULT_ERROR_OUTOFRANGE, "Azimuth must be between -90 deg and 90 deg when processing ILD", "");
 		ASSERT(ILDNearFieldEffectTable_AzimuthStep > 0 && ILDNearFieldEffectTable_DistanceStep > 0, RESULT_ERROR_INVALID_PARAM, "Step values of ILD hash table are not valid", "");		
 
 		float distance_mm = distance_m * 1000.0f;
@@ -93,7 +93,7 @@ namespace Binaural {
 		}
 
 		ASSERT(distance_m > 0, RESULT_ERROR_OUTOFRANGE, "Distance must be greater than zero when processing ILD", "");
-		ASSERT(azimuth >= -90.0 && azimuth <= 90, RESULT_ERROR_OUTOFRANGE, "Azimuth must be between -90º and 90º when processing ILD", "");
+		ASSERT(azimuth >= -90.0 && azimuth <= 90, RESULT_ERROR_OUTOFRANGE, "Azimuth must be between -90 deg and 90 deg when processing ILD", "");
 		ASSERT(ILDSpatializationTable_AzimuthStep > 0 && ILDSpatializationTable_DistanceStep > 0, RESULT_ERROR_INVALID_PARAM, "Step values of ILD hash table are not valid", "");
 
 		float distance_mm = distance_m * 1000.0f;
