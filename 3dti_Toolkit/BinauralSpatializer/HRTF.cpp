@@ -390,7 +390,7 @@ namespace Binaural
 			SET_RESULT(RESULT_ERROR_NOTSET, "GetHRIR_partitioned: HRTF Setup in progress return empty");
 		}
 		SET_RESULT(RESULT_WARNING, "GetHRIR_partitioned return empty");
-
+        return *new std::vector<CMonoBuffer<float>>();
 	}//END GetHRIR_partitioned
 
 	float CHRTF::GetHRIRDelay(Common::T_ear ear, float _azimuthCenter, float _elevationCenter, bool runTimeInterpolation)
