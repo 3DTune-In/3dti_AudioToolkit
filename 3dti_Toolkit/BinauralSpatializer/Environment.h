@@ -41,6 +41,7 @@ enum VirtualSpeakerPosition {
 	WEST,					///<	SPK2 (west)
 };
 
+enum ReverberationOrder { ADIM, BIDIM, TRIDIM };
 
 namespace Binaural {
 
@@ -148,6 +149,8 @@ namespace Binaural {
 		int HADirectionality_LeftChannel_version;			//HA Directionality left version
 		int HADirectionality_RightChannel_version;			//HA Directionality right version
                 
+		ReverberationOrder reverberationOrder = ReverberationOrder::BIDIM;
+
         friend class CCore;									//Friend class definition
 		friend class CBRIR;
 };
