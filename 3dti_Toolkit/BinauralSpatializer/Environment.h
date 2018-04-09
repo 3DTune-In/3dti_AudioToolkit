@@ -39,6 +39,8 @@ enum VirtualSpeakerPosition {
 	SOUTH,					///<	SPK3 (south)
 	EAST,					///<	SPK4 (east)
 	WEST,					///<	SPK2 (west)
+	ZENIT,					///<	SPK  (zenit)
+	NADIR					///<	SPK  (nadir)
 };
 
 enum ReverberationOrder { ADIM, BIDIM, TRIDIM };

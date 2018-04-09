@@ -95,7 +95,13 @@ namespace Binaural {
 					yRight_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
 				}
 				else {
-					reverberationOrder = ReverberationOrder::BIDIM;
+					if (reverberationOrder == ReverberationOrder::TRIDIM){
+					
+					} 
+					else
+					{
+					
+					}
 					ResetReverbBuffers();
 				}
 #endif
@@ -133,7 +139,11 @@ namespace Binaural {
 					yRight_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
 				}
 				else {
-					reverberationOrder = ReverberationOrder::BIDIM;
+					if (reverberationOrder == ReverberationOrder::TRIDIM){
+
+					} else {
+
+					}
 				}
 	#endif
 			}
@@ -216,7 +226,13 @@ namespace Binaural {
 			environmentABIR.AddImpulseResponse(TBFormatChannel::Y, Common::T_ear::RIGHT, std::move(newAIR_Y_right));
 		}
 		else {
-			reverberationOrder = ReverberationOrder::BIDIM;
+			if (reverberationOrder == ReverberationOrder::TRIDIM){
+
+			} 
+			else
+			{
+
+			}
 		}
 	}
 
@@ -269,7 +285,13 @@ namespace Binaural {
 			environmentABIR.AddImpulseResponse(TBFormatChannel::Y, Common::T_ear::RIGHT, std::move(newAIR_Y_right));
 		}
 		else {
-			reverberationOrder = ReverberationOrder::BIDIM;
+			if (reverberationOrder == ReverberationOrder::TRIDIM){
+
+			}
+			else
+			{
+
+			}
 		}
 	}
 	
@@ -512,7 +534,13 @@ namespace Binaural {
 	} 
 	else
 	{
-				reverberationOrder = ReverberationOrder::BIDIM;
+				if (reverberationOrder == ReverberationOrder::TRIDIM){
+				
+				}
+				else 
+				{
+
+				}
 				ProcessVirtualAmbisonicReverb(outBufferLeft, outBufferRight);
 			}
 		
@@ -582,7 +610,13 @@ namespace Binaural {
 #endif
 		}
 		else {
-			reverberationOrder = ReverberationOrder::BIDIM;
+			if (reverberationOrder == ReverberationOrder::TRIDIM){
+			
+			}
+			else
+			{
+
+			}
 		}
 		// Build Stereo buffer
 		output.FromTwoMonosToStereo(leftOutputBuffer, rightOutputBuffer);		

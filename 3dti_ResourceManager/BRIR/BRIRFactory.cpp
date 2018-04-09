@@ -299,7 +299,16 @@ namespace BRIR
 					environment->GetBRIR()->AddBRIR(VirtualSpeakerPosition::EAST, Common::T_ear::LEFT, std::move(leftBRIRChannel));
 					environment->GetBRIR()->AddBRIR(VirtualSpeakerPosition::EAST, Common::T_ear::RIGHT, std::move(rightBRIRChannel));
 				}
-				// TO DO: consider elevations. Read zenith and nadir speakers
+				if (AnglesAreCloseInDegrees(elevation, 90.0f))
+				{
+					environment->GetBRIR()->AddBRIR(VirtualSpeakerPosition::ZENIT, Common::T_ear::LEFT, std::move(leftBRIRChannel));
+					environment->GetBRIR()->AddBRIR(VirtualSpeakerPosition::ZENIT, Common::T_ear::RIGHT, std::move(rightBRIRChannel));
+				}
+				if (AnglesAreCloseInDegrees(elevation, -90.0f))
+				{
+					environment->GetBRIR()->AddBRIR(VirtualSpeakerPosition::NADIR, Common::T_ear::LEFT, std::move(leftBRIRChannel));
+					environment->GetBRIR()->AddBRIR(VirtualSpeakerPosition::NADIR, Common::T_ear::RIGHT, std::move(rightBRIRChannel));
+				}
 			}
 			return true;
 		}
