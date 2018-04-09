@@ -192,6 +192,8 @@ namespace Binaural
 		*	\retval table raw BRIR table partitioned
 		*/
 		//const TBRIRTablePartitioned & GetRawBRIRTablePartitioned() const;
+		
+		bool IsIREmpty(const TImpulseResponse_Partitioned& in);
 
 	private:
 

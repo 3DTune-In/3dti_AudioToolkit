@@ -146,6 +146,10 @@ namespace Binaural {
 		BRIRLength_frequency = 0;
 		bufferSize = 0;
 	}
+	bool CBRIR::IsIREmpty(const TImpulseResponse_Partitioned& in) {
+		
+		return in == emptyBRIR_partitioned;
+	}
 
 	const TImpulseResponse_Partitioned & CBRIR::GetBRIR_Partitioned(VirtualSpeakerPosition vsPos, Common::T_ear vsChannel) const
 	{
