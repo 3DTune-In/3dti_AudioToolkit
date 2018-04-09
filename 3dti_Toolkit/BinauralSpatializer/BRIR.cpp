@@ -64,17 +64,22 @@ namespace Binaural {
 		return t_BRIR_DataBase;
 	}
 			
-	void CBRIR::AddBRIR(VirtualSpeakerPosition vsPosition, Common::T_ear vsChannel, TImpulseResponse && newBRIR)
+	bool CBRIR::AddBRIR(VirtualSpeakerPosition vsPosition, Common::T_ear vsChannel, TImpulseResponse && newBRIR)
 	{
 		if (setupInProgress) 
 		{
 			auto returnValue = t_BRIR_DataBase.emplace(TVirtualSpeaker(vsPosition, vsChannel), std::forward<TImpulseResponse>(newBRIR));
 			//Error handler
-			if (returnValue.second) { /*SET_RESULT(RESULT_OK, "BRIR emplaced into t_BRIR_DataBase succesfully"); */ }
-			else { SET_RESULT(RESULT_WARNING, "Error emplacing BRIR in t_BRIR_DataBase map"); }
+			if (returnValue.second) { /*SET_RESULT(RESULT_OK, "BRIR emplaced into t_BRIR_DataBase succesfully"); */
+				return true;
+			}
+			else { SET_RESULT(RESULT_WARNING, "Error emplacing BRIR in t_BRIR_DataBase map");
+			return false;
+			}
 		}
 		else {
 			SET_RESULT(RESULT_ERROR_NOTSET, "AddBRIR: It is not possible to Add a BRIR. Try to call BeginSetUp before addind a BRIR");
+			return false;
 		}
 	}
 

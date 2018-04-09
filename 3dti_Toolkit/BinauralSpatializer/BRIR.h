@@ -118,7 +118,7 @@ namespace Binaural
 		*   \eh On error, an error code is reported to the error handler.
 		        Warnings may be reported to the error handler
 		*/
-		void AddBRIR(VirtualSpeakerPosition vsPosition, Common::T_ear vsChannel, TImpulseResponse && newBRIR);
+		bool AddBRIR(VirtualSpeakerPosition vsPosition, Common::T_ear vsChannel, TImpulseResponse && newBRIR);
 		
 		/** \brief Set the full BRIR matrix.
 		*	\param [in] newTable full table with all BRIR data
