@@ -144,9 +144,12 @@ namespace Binaural {
 		Common::CUPCEnvironment wLeft_UPConvolution;		//Buffers to perform Uniformly Partitioned Convolution
 		Common::CUPCEnvironment xLeft_UPConvolution;		//Buffers to perform Uniformly Partitioned Convolution
 		Common::CUPCEnvironment yLeft_UPConvolution;		//Buffers to perform Uniformly Partitioned Convolution
+		Common::CUPCEnvironment zLeft_UPConvolution;		//Buffers to perform Uniformly Partitioned Convolution
 		Common::CUPCEnvironment wRight_UPConvolution;		//Buffers to perform Uniformly Partitioned Convolution
 		Common::CUPCEnvironment xRight_UPConvolution;		//Buffers to perform Uniformly Partitioned Convolution
 		Common::CUPCEnvironment yRight_UPConvolution;		//Buffers to perform Uniformly Partitioned Convolution
+		Common::CUPCEnvironment zRight_UPConvolution;		//Buffers to perform Uniformly Partitioned Convolution
+
 #endif
 		int HADirectionality_LeftChannel_version;			//HA Directionality left version
 		int HADirectionality_RightChannel_version;			//HA Directionality right version
