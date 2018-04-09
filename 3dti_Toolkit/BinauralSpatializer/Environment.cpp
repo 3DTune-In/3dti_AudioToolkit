@@ -83,14 +83,21 @@ namespace Binaural {
 				//WARNING: This setup is valid because it is assumed that BRIRLength = AIRLength
 				outputLeft.Setup(bufferLength, BRIRLength);
 				outputRight.Setup(bufferLength, BRIRLength);
-#else				
-				//Prepare output buffers to perform UP convolutions in ProcessVirtualAmbisonicReverb
-				wLeft_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
-				wRight_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
-				xLeft_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
-				xRight_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
-				yLeft_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
-				yRight_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
+#else						
+				if (reverberationOrder == ReverberationOrder::BIDIM) {
+
+					//Prepare output buffers to perform UP convolutions in ProcessVirtualAmbisonicReverb
+					wLeft_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
+					wRight_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
+					xLeft_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
+					xRight_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
+					yLeft_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
+					yRight_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
+				}
+				else {
+					reverberationOrder = ReverberationOrder::BIDIM;
+					ResetReverbBuffers();
+				}
 #endif
 			}	
 		}
@@ -115,13 +122,19 @@ namespace Binaural {
 	#else
 				//Configure AIR values (partitions and FFTs)
 				CalculateABIRPartitioned();
-				//Prepare output buffers to perform UP convolutions in ProcessVirtualAmbisonicReverb
-				wLeft_UPConvolution.Setup	(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
-				wRight_UPConvolution.Setup	(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
-				xLeft_UPConvolution.Setup	(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
-				xRight_UPConvolution.Setup	(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
-				yLeft_UPConvolution.Setup	(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
-				yRight_UPConvolution.Setup	(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
+				if (reverberationOrder == ReverberationOrder::BIDIM) {
+
+					//Prepare output buffers to perform UP convolutions in ProcessVirtualAmbisonicReverb
+					wLeft_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
+					wRight_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
+					xLeft_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
+					xRight_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
+					yLeft_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
+					yRight_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
+				}
+				else {
+					reverberationOrder = ReverberationOrder::BIDIM;
+				}
 	#endif
 			}
 			// TODO if (GET_LAST_RESULT() != OK) { RAISE_NOT_INITIALISED_ERROR(...); }
@@ -131,102 +144,109 @@ namespace Binaural {
 	void CEnvironment::CalculateABIRPartitioned()
 	{
 		environmentABIR.Setup(ownerCore->GetAudioState().bufferSize, environmentBRIR->GetBRIRLength());
+		if (reverberationOrder == ReverberationOrder::BIDIM) {
 
-		//1. Get BRIR values for each channel
-		TImpulseResponse_Partitioned northLeft =	environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NORTH, Common::T_ear::LEFT);
-		TImpulseResponse_Partitioned southLeft =	environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::SOUTH, Common::T_ear::LEFT);
-		TImpulseResponse_Partitioned eastLeft =		environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::EAST,	Common::T_ear::LEFT);
-		TImpulseResponse_Partitioned westLeft =		environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::WEST,	Common::T_ear::LEFT);
-		TImpulseResponse_Partitioned northRight =	environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NORTH,	Common::T_ear::RIGHT);
-		TImpulseResponse_Partitioned southRight =	environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::SOUTH,	Common::T_ear::RIGHT);
-		TImpulseResponse_Partitioned eastRight =	environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::EAST,	Common::T_ear::RIGHT);
-		TImpulseResponse_Partitioned westRight =	environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::WEST,	Common::T_ear::RIGHT);
+			//1. Get BRIR values for each channel
+			TImpulseResponse_Partitioned northLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NORTH, Common::T_ear::LEFT);
+			TImpulseResponse_Partitioned southLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::SOUTH, Common::T_ear::LEFT);
+			TImpulseResponse_Partitioned eastLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::EAST, Common::T_ear::LEFT);
+			TImpulseResponse_Partitioned westLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::WEST, Common::T_ear::LEFT);
+			TImpulseResponse_Partitioned northRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NORTH, Common::T_ear::RIGHT);
+			TImpulseResponse_Partitioned southRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::SOUTH, Common::T_ear::RIGHT);
+			TImpulseResponse_Partitioned eastRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::EAST, Common::T_ear::RIGHT);
+			TImpulseResponse_Partitioned westRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::WEST, Common::T_ear::RIGHT);
 
-		long s = northLeft.size();
+			long s = northLeft.size();
 
-		if ( s                 == 0 ||
-			 northLeft .size() != s ||
-			 southLeft .size() != s ||
-			 eastLeft  .size() != s ||
-			 westLeft  .size() != s ||
-			 northRight.size() != s ||
-			 southRight.size() != s ||
-			 eastRight .size() != s ||
-			 westRight .size() != s )
-		{
-			SET_RESULT( RESULT_ERROR_BADSIZE, "Buffers should be the same and not zero" );
-			return;
-		}
-		
-		//2. Init AIR buffers
-		TImpulseResponse_Partitioned newAIR_W_left, newAIR_X_left, newAIR_Y_left;
-		TImpulseResponse_Partitioned newAIR_W_right, newAIR_X_right, newAIR_Y_right;
-		newAIR_W_left.resize(environmentBRIR->GetBRIRNumberOfSubfilters());
-		newAIR_X_left.resize(environmentBRIR->GetBRIRNumberOfSubfilters());
-		newAIR_Y_left.resize(environmentBRIR->GetBRIRNumberOfSubfilters());
-		newAIR_W_right.resize(environmentBRIR->GetBRIRNumberOfSubfilters());
-		newAIR_X_right.resize(environmentBRIR->GetBRIRNumberOfSubfilters());
-		newAIR_Y_right.resize(environmentBRIR->GetBRIRNumberOfSubfilters());
-		
-		for (int i=0; i < environmentBRIR->GetBRIRNumberOfSubfilters(); i++) 
-		{
-			newAIR_W_left[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
-			newAIR_X_left[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
-			newAIR_Y_left[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
-			newAIR_W_right[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
-			newAIR_X_right[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
-			newAIR_Y_right[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
-		}
-
-		//3. AIR codification from BRIR
-		for (int i = 0; i < environmentBRIR->GetBRIRNumberOfSubfilters(); i++) 
-		{
-			for (int j = 0; j < environmentBRIR->GetBRIROneSubfilterLength(); j++) 
+			if (s == 0 ||
+				northLeft.size() != s ||
+				southLeft.size() != s ||
+				eastLeft.size() != s ||
+				westLeft.size() != s ||
+				northRight.size() != s ||
+				southRight.size() != s ||
+				eastRight.size() != s ||
+				westRight.size() != s)
 			{
-				newAIR_W_left[i][j] = 0.707107f * (northLeft[i][j] + southLeft[i][j] + eastLeft[i][j] + westLeft[i][j]);
-				newAIR_X_left[i][j] = northLeft[i][j] - southLeft[i][j];
-				newAIR_Y_left[i][j] = westLeft[i][j] - eastLeft[i][j];
-
-				newAIR_W_right[i][j] = 0.707107f * (northRight[i][j] + southRight[i][j] + eastRight[i][j] + westRight[i][j]);
-				newAIR_X_right[i][j] = northRight[i][j] - southRight[i][j];
-				newAIR_Y_right[i][j] = westRight[i][j] - eastRight[i][j];
+				SET_RESULT(RESULT_ERROR_BADSIZE, "Buffers should be the same and not zero");
+				return;
 			}
-		}
 
-		//Setup AIR class
-		environmentABIR.AddImpulseResponse(TBFormatChannel::W, Common::T_ear::LEFT,		std::move(newAIR_W_left));
-		environmentABIR.AddImpulseResponse(TBFormatChannel::W, Common::T_ear::RIGHT,	std::move(newAIR_W_right));
-		environmentABIR.AddImpulseResponse(TBFormatChannel::X, Common::T_ear::LEFT,		std::move(newAIR_X_left));
-		environmentABIR.AddImpulseResponse(TBFormatChannel::X, Common::T_ear::RIGHT,	std::move(newAIR_X_right));
-		environmentABIR.AddImpulseResponse(TBFormatChannel::Y, Common::T_ear::LEFT,		std::move(newAIR_Y_left));
-		environmentABIR.AddImpulseResponse(TBFormatChannel::Y, Common::T_ear::RIGHT,	std::move(newAIR_Y_right));
+			//2. Init AIR buffers
+			TImpulseResponse_Partitioned newAIR_W_left, newAIR_X_left, newAIR_Y_left;
+			TImpulseResponse_Partitioned newAIR_W_right, newAIR_X_right, newAIR_Y_right;
+			newAIR_W_left.resize(environmentBRIR->GetBRIRNumberOfSubfilters());
+			newAIR_X_left.resize(environmentBRIR->GetBRIRNumberOfSubfilters());
+			newAIR_Y_left.resize(environmentBRIR->GetBRIRNumberOfSubfilters());
+			newAIR_W_right.resize(environmentBRIR->GetBRIRNumberOfSubfilters());
+			newAIR_X_right.resize(environmentBRIR->GetBRIRNumberOfSubfilters());
+			newAIR_Y_right.resize(environmentBRIR->GetBRIRNumberOfSubfilters());
+
+			for (int i = 0; i < environmentBRIR->GetBRIRNumberOfSubfilters(); i++)
+			{
+				newAIR_W_left[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+				newAIR_X_left[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+				newAIR_Y_left[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+				newAIR_W_right[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+				newAIR_X_right[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+				newAIR_Y_right[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+			}
+
+			//3. AIR codification from BRIR
+			for (int i = 0; i < environmentBRIR->GetBRIRNumberOfSubfilters(); i++)
+			{
+				for (int j = 0; j < environmentBRIR->GetBRIROneSubfilterLength(); j++)
+				{
+					newAIR_W_left[i][j] = 0.707107f * (northLeft[i][j] + southLeft[i][j] + eastLeft[i][j] + westLeft[i][j]);
+					newAIR_X_left[i][j] = northLeft[i][j] - southLeft[i][j];
+					newAIR_Y_left[i][j] = westLeft[i][j] - eastLeft[i][j];
+
+					newAIR_W_right[i][j] = 0.707107f * (northRight[i][j] + southRight[i][j] + eastRight[i][j] + westRight[i][j]);
+					newAIR_X_right[i][j] = northRight[i][j] - southRight[i][j];
+					newAIR_Y_right[i][j] = westRight[i][j] - eastRight[i][j];
+				}
+			}
+
+			//Setup AIR class
+			environmentABIR.AddImpulseResponse(TBFormatChannel::W, Common::T_ear::LEFT, std::move(newAIR_W_left));
+			environmentABIR.AddImpulseResponse(TBFormatChannel::W, Common::T_ear::RIGHT, std::move(newAIR_W_right));
+			environmentABIR.AddImpulseResponse(TBFormatChannel::X, Common::T_ear::LEFT, std::move(newAIR_X_left));
+			environmentABIR.AddImpulseResponse(TBFormatChannel::X, Common::T_ear::RIGHT, std::move(newAIR_X_right));
+			environmentABIR.AddImpulseResponse(TBFormatChannel::Y, Common::T_ear::LEFT, std::move(newAIR_Y_left));
+			environmentABIR.AddImpulseResponse(TBFormatChannel::Y, Common::T_ear::RIGHT, std::move(newAIR_Y_right));
+		}
+		else {
+			reverberationOrder = ReverberationOrder::BIDIM;
+		}
 	}
 
 
 	void CEnvironment::CalculateABIRwithoutPartitions()
 	{
-		//1. Get BRIR values for each channel
-		TImpulseResponse northLeft = environmentBRIR->	GetBRIR(VirtualSpeakerPosition::NORTH, Common::T_ear::LEFT);
-		TImpulseResponse southLeft = environmentBRIR->	GetBRIR(VirtualSpeakerPosition::SOUTH, Common::T_ear::LEFT);
-		TImpulseResponse eastLeft = environmentBRIR->	GetBRIR(VirtualSpeakerPosition::EAST, Common::T_ear::LEFT);
-		TImpulseResponse westLeft = environmentBRIR->	GetBRIR(VirtualSpeakerPosition::WEST, Common::T_ear::LEFT);
-		TImpulseResponse northRight = environmentBRIR->	GetBRIR(VirtualSpeakerPosition::NORTH, Common::T_ear::RIGHT);
-		TImpulseResponse southRight = environmentBRIR->	GetBRIR(VirtualSpeakerPosition::SOUTH, Common::T_ear::RIGHT);
-		TImpulseResponse eastRight = environmentBRIR->	GetBRIR(VirtualSpeakerPosition::EAST, Common::T_ear::RIGHT);
-		TImpulseResponse westRight = environmentBRIR->	GetBRIR(VirtualSpeakerPosition::WEST, Common::T_ear::RIGHT);
+		if (reverberationOrder == ReverberationOrder::BIDIM) {
 
-		//2. Init AIR buffers
-		TImpulseResponse newAIR_W_left, newAIR_X_left, newAIR_Y_left;
-		TImpulseResponse newAIR_W_right, newAIR_X_right, newAIR_Y_right;
-		newAIR_W_left.	resize(environmentBRIR->GetBRIRLength_frequency(), 0.0f);
-		newAIR_X_left.	resize(environmentBRIR->GetBRIRLength_frequency(), 0.0f);
-		newAIR_Y_left.	resize(environmentBRIR->GetBRIRLength_frequency(), 0.0f);
-		newAIR_W_right.	resize(environmentBRIR->GetBRIRLength_frequency(), 0.0f);
-		newAIR_X_right.	resize(environmentBRIR->GetBRIRLength_frequency(), 0.0f);
-		newAIR_Y_right.	resize(environmentBRIR->GetBRIRLength_frequency(), 0.0f);
+			//1. Get BRIR values for each channel
+			TImpulseResponse northLeft = environmentBRIR->GetBRIR(VirtualSpeakerPosition::NORTH, Common::T_ear::LEFT);
+			TImpulseResponse southLeft = environmentBRIR->GetBRIR(VirtualSpeakerPosition::SOUTH, Common::T_ear::LEFT);
+			TImpulseResponse eastLeft = environmentBRIR->GetBRIR(VirtualSpeakerPosition::EAST, Common::T_ear::LEFT);
+			TImpulseResponse westLeft = environmentBRIR->GetBRIR(VirtualSpeakerPosition::WEST, Common::T_ear::LEFT);
+			TImpulseResponse northRight = environmentBRIR->GetBRIR(VirtualSpeakerPosition::NORTH, Common::T_ear::RIGHT);
+			TImpulseResponse southRight = environmentBRIR->GetBRIR(VirtualSpeakerPosition::SOUTH, Common::T_ear::RIGHT);
+			TImpulseResponse eastRight = environmentBRIR->GetBRIR(VirtualSpeakerPosition::EAST, Common::T_ear::RIGHT);
+			TImpulseResponse westRight = environmentBRIR->GetBRIR(VirtualSpeakerPosition::WEST, Common::T_ear::RIGHT);
 
-		
-		//3. AIR codification from BRIR
+			//2. Init AIR buffers
+			TImpulseResponse newAIR_W_left, newAIR_X_left, newAIR_Y_left;
+			TImpulseResponse newAIR_W_right, newAIR_X_right, newAIR_Y_right;
+			newAIR_W_left.resize(environmentBRIR->GetBRIRLength_frequency(), 0.0f);
+			newAIR_X_left.resize(environmentBRIR->GetBRIRLength_frequency(), 0.0f);
+			newAIR_Y_left.resize(environmentBRIR->GetBRIRLength_frequency(), 0.0f);
+			newAIR_W_right.resize(environmentBRIR->GetBRIRLength_frequency(), 0.0f);
+			newAIR_X_right.resize(environmentBRIR->GetBRIRLength_frequency(), 0.0f);
+			newAIR_Y_right.resize(environmentBRIR->GetBRIRLength_frequency(), 0.0f);
+
+
+			//3. AIR codification from BRIR
 
 			for (int j = 0; j < environmentBRIR->GetBRIRLength_frequency(); j++)
 			{
@@ -238,15 +258,19 @@ namespace Binaural {
 				newAIR_X_right[j] = northRight[j] - southRight[j];
 				newAIR_Y_right[j] = westRight[j] - eastRight[j];
 			}
-	
-		//Setup AIR class
-		environmentABIR.Setup(ownerCore->GetAudioState().bufferSize, environmentBRIR->GetBRIRLength());
-		environmentABIR.AddImpulseResponse(TBFormatChannel::W, Common::T_ear::LEFT, std::move(newAIR_W_left));
-		environmentABIR.AddImpulseResponse(TBFormatChannel::W, Common::T_ear::RIGHT, std::move(newAIR_W_right));
-		environmentABIR.AddImpulseResponse(TBFormatChannel::X, Common::T_ear::LEFT, std::move(newAIR_X_left));
-		environmentABIR.AddImpulseResponse(TBFormatChannel::X, Common::T_ear::RIGHT, std::move(newAIR_X_right));
-		environmentABIR.AddImpulseResponse(TBFormatChannel::Y, Common::T_ear::LEFT, std::move(newAIR_Y_left));
-		environmentABIR.AddImpulseResponse(TBFormatChannel::Y, Common::T_ear::RIGHT, std::move(newAIR_Y_right));
+
+			//Setup AIR class
+			environmentABIR.Setup(ownerCore->GetAudioState().bufferSize, environmentBRIR->GetBRIRLength());
+			environmentABIR.AddImpulseResponse(TBFormatChannel::W, Common::T_ear::LEFT, std::move(newAIR_W_left));
+			environmentABIR.AddImpulseResponse(TBFormatChannel::W, Common::T_ear::RIGHT, std::move(newAIR_W_right));
+			environmentABIR.AddImpulseResponse(TBFormatChannel::X, Common::T_ear::LEFT, std::move(newAIR_X_left));
+			environmentABIR.AddImpulseResponse(TBFormatChannel::X, Common::T_ear::RIGHT, std::move(newAIR_X_right));
+			environmentABIR.AddImpulseResponse(TBFormatChannel::Y, Common::T_ear::LEFT, std::move(newAIR_Y_left));
+			environmentABIR.AddImpulseResponse(TBFormatChannel::Y, Common::T_ear::RIGHT, std::move(newAIR_Y_right));
+		}
+		else {
+			reverberationOrder = ReverberationOrder::BIDIM;
+		}
 	}
 	
 //////////////////////////////////////////////
@@ -512,47 +536,54 @@ namespace Binaural {
 
 	// Process reverb for one b-format channel encoded with 1st order ambisonics (useful for some wrappers)
 	void CEnvironment::ProcessEncodedChannelReverb(TBFormatChannel channel, CMonoBuffer<float> encoderIn, CMonoBuffer<float> & output)
-	{		
-		// error handler: Trust in called methods for setting result
-
+	{	
 		CMonoBuffer<float> channel_FFT;
 		CMonoBuffer<float> Convolution_left_FFT;
 		CMonoBuffer<float> Convolution_right_FFT;
+
 		// Inverse FFT: Back to time domain
 		CMonoBuffer<float> leftOutputBuffer;
-		CMonoBuffer<float> rightOutputBuffer;
-		
+		CMonoBuffer<float> rightOutputBuffer;	
+
+		// error handler: Trust in called methods for setting result
+		if (reverberationOrder == ReverberationOrder::BIDIM) {
+
+			
+
 #ifdef USE_FREQUENCY_COVOLUTION_WITHOUT_PARTITIONS_REVERB 
 
-		//Make FFT and frequency convolution		
-		Common::CFprocessor::GetFFT(encoderIn, channel_FFT, environmentABIR.GetDataLength());
-		Common::CFprocessor::ComplexMultiplication(channel_FFT, GetABIR().GetImpulseResponse(channel, T_ear::RIGHT), Convolution_right_FFT);
-		Common::CFprocessor::ComplexMultiplication(channel_FFT, GetABIR().GetImpulseResponse(channel, T_ear::LEFT), Convolution_left_FFT);
-		//FFT Inverse
-		outputLeft.CalculateIFFT_OLA(Convolution_left_FFT, leftOutputBuffer);
-		outputRight.CalculateIFFT_OLA(Convolution_right_FFT, rightOutputBuffer);
+			//Make FFT and frequency convolution		
+			Common::CFprocessor::GetFFT(encoderIn, channel_FFT, environmentABIR.GetDataLength());
+			Common::CFprocessor::ComplexMultiplication(channel_FFT, GetABIR().GetImpulseResponse(channel, T_ear::RIGHT), Convolution_right_FFT);
+			Common::CFprocessor::ComplexMultiplication(channel_FFT, GetABIR().GetImpulseResponse(channel, T_ear::LEFT), Convolution_left_FFT);
+			//FFT Inverse
+			outputLeft.CalculateIFFT_OLA(Convolution_left_FFT, leftOutputBuffer);
+			outputRight.CalculateIFFT_OLA(Convolution_right_FFT, rightOutputBuffer);
 #else
-		///UPC Convolution
-		if (channel == TBFormatChannel::W)
-		{		
-			wLeft_UPConvolution.ProcessUPConvolution (encoderIn, GetABIR().GetImpulseResponse_Partitioned(TBFormatChannel::W, Common::T_ear::LEFT), leftOutputBuffer);
-			wRight_UPConvolution.ProcessUPConvolution(encoderIn, GetABIR().GetImpulseResponse_Partitioned(TBFormatChannel::W, Common::T_ear::RIGHT),rightOutputBuffer);
-		}
-		else if (channel == TBFormatChannel::X) 
-		{
-			xLeft_UPConvolution.ProcessUPConvolution (encoderIn, GetABIR().GetImpulseResponse_Partitioned(X, Common::T_ear::LEFT), leftOutputBuffer);
-			xRight_UPConvolution.ProcessUPConvolution(encoderIn, GetABIR().GetImpulseResponse_Partitioned(X, Common::T_ear::RIGHT),rightOutputBuffer);
-		}
-		else if (channel == TBFormatChannel::Y) 
-		{
-			yLeft_UPConvolution.ProcessUPConvolution (encoderIn, GetABIR().GetImpulseResponse_Partitioned(Y, Common::T_ear::LEFT), leftOutputBuffer);
-			yRight_UPConvolution.ProcessUPConvolution(encoderIn, GetABIR().GetImpulseResponse_Partitioned(Y, Common::T_ear::RIGHT),rightOutputBuffer);
+			///UPC Convolution
+			if (channel == TBFormatChannel::W)
+			{
+				wLeft_UPConvolution.ProcessUPConvolution(encoderIn, GetABIR().GetImpulseResponse_Partitioned(TBFormatChannel::W, Common::T_ear::LEFT), leftOutputBuffer);
+				wRight_UPConvolution.ProcessUPConvolution(encoderIn, GetABIR().GetImpulseResponse_Partitioned(TBFormatChannel::W, Common::T_ear::RIGHT), rightOutputBuffer);
+			}
+			else if (channel == TBFormatChannel::X)
+			{
+				xLeft_UPConvolution.ProcessUPConvolution(encoderIn, GetABIR().GetImpulseResponse_Partitioned(X, Common::T_ear::LEFT), leftOutputBuffer);
+				xRight_UPConvolution.ProcessUPConvolution(encoderIn, GetABIR().GetImpulseResponse_Partitioned(X, Common::T_ear::RIGHT), rightOutputBuffer);
+			}
+			else if (channel == TBFormatChannel::Y)
+			{
+				yLeft_UPConvolution.ProcessUPConvolution(encoderIn, GetABIR().GetImpulseResponse_Partitioned(Y, Common::T_ear::LEFT), leftOutputBuffer);
+				yRight_UPConvolution.ProcessUPConvolution(encoderIn, GetABIR().GetImpulseResponse_Partitioned(Y, Common::T_ear::RIGHT), rightOutputBuffer);
+			}
+			else {
+				//Error
+			}
+#endif
 		}
 		else {
-			//Error
+			reverberationOrder = ReverberationOrder::BIDIM;
 		}
-#endif
-
 		// Build Stereo buffer
 		output.FromTwoMonosToStereo(leftOutputBuffer, rightOutputBuffer);		
 	}
