@@ -1253,6 +1253,11 @@ namespace Binaural {
 		output.FromTwoMonosToStereo(leftOutputBuffer, rightOutputBuffer);		
 	}
 
+	void CEnvironment::SetReverberationOrder(ReverberationOrder order)
+	{
+		reverberationOrder = order;
+	}
+
 	//brief Calculate the BRIR again
 	void CEnvironment::CalculateBRIR() 
 	{
