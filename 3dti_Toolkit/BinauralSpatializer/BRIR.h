@@ -115,6 +115,7 @@ namespace Binaural
 		*	\param [in] vsPosition Virtual Speaker position (N,S,E,W)
 		*	\param [in] vsChannel Virtual Speaker Channel (left, right)
 		*	\param [in] newBRIR BRIR vector value to add to the BRIR matrix
+		*	\retval boolean to indicate if BRIR has been added correctly
 		*   \eh On error, an error code is reported to the error handler.
 		        Warnings may be reported to the error handler
 		*/
