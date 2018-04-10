@@ -275,7 +275,7 @@ namespace BRIR
 
 				double azimuth = pos[array2DIndex(i, 0, nMeasurements, dims[1])];
 				double elevation = pos[array2DIndex(i, 1, nMeasurements, dims[1])];
-
+				while (elevation < 0) elevation += 360;
 														// SET VIRTUAL SPEAKER
 
 				if ((AnglesAreCloseInDegrees(azimuth, NORTH_AZIMUTH)) && (AnglesAreCloseInDegrees(elevation, 0.0f)))
@@ -303,9 +303,11 @@ namespace BRIR
 					if(!environment->GetBRIR()->AddBRIR(VirtualSpeakerPosition::ZENIT, Common::T_ear::LEFT, std::move(leftBRIRChannel))){return false;}
 					if(!environment->GetBRIR()->AddBRIR(VirtualSpeakerPosition::ZENIT, Common::T_ear::RIGHT, std::move(rightBRIRChannel))){return false;}
 				}
-				if (AnglesAreCloseInDegrees(elevation, -90.0f))
+				if (AnglesAreCloseInDegrees(elevation, 270.0f))
 				{
-					if(!environment->GetBRIR()->AddBRIR(VirtualSpeakerPosition::NADIR, Common::T_ear::LEFT, std::move(leftBRIRChannel))){return false;}
+					if(!environment->GetBRIR()->AddBRIR(VirtualSpeakerPosition::NADIR, Common::T_ear::LEFT, std::move(leftBRIRChannel))){return false;
+					cout << "";
+					}
 					if(!environment->GetBRIR()->AddBRIR(VirtualSpeakerPosition::NADIR, Common::T_ear::RIGHT, std::move(rightBRIRChannel))){return false;}
 				}
 			}
