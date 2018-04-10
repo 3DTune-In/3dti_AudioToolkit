@@ -84,7 +84,7 @@ namespace Binaural {
 				outputLeft.Setup(bufferLength, BRIRLength);
 				outputRight.Setup(bufferLength, BRIRLength);
 #else						
-				if (reverberationOrder == ReverberationOrder::BIDIM) {
+				if (reverberationOrder == TReverberationOrder::BIDIM) {
 
 					//Prepare output buffers to perform UP convolutions in ProcessVirtualAmbisonicReverb
 					wLeft_UPConvolution. Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
@@ -95,7 +95,7 @@ namespace Binaural {
 					yRight_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
 				}
 				else {
-					if (reverberationOrder == ReverberationOrder::TRIDIM){
+					if (reverberationOrder == TReverberationOrder::TRIDIM){
 						wLeft_UPConvolution. Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
 						wRight_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
 						xLeft_UPConvolution. Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
@@ -136,7 +136,7 @@ namespace Binaural {
 	#else
 				//Configure AIR values (partitions and FFTs)
 				CalculateABIRPartitioned();
-				if (reverberationOrder == ReverberationOrder::BIDIM) {
+				if (reverberationOrder == TReverberationOrder::BIDIM) {
 
 					//Prepare output buffers to perform UP convolutions in ProcessVirtualAmbisonicReverb
 					wLeft_UPConvolution. Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
@@ -147,7 +147,7 @@ namespace Binaural {
 					yRight_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
 				}
 				else {
-					if (reverberationOrder == ReverberationOrder::TRIDIM){
+					if (reverberationOrder == TReverberationOrder::TRIDIM){
 						wLeft_UPConvolution. Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
 						wRight_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
 						xLeft_UPConvolution. Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
@@ -170,7 +170,7 @@ namespace Binaural {
 	void CEnvironment::CalculateABIRPartitioned()
 	{
 		environmentABIR.Setup(ownerCore->GetAudioState().bufferSize, environmentBRIR->GetBRIRLength());
-		if (reverberationOrder == ReverberationOrder::BIDIM) {
+		if (reverberationOrder == TReverberationOrder::BIDIM) {
 
 			//1. Get BRIR values for each channel
 			TImpulseResponse_Partitioned northLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NORTH, Common::T_ear::LEFT);
@@ -243,7 +243,7 @@ namespace Binaural {
 			environmentABIR.AddImpulseResponse(TBFormatChannel::Y, Common::T_ear::RIGHT, std::move(newAIR_Y_right));
 		}
 		else {
-			if (reverberationOrder == ReverberationOrder::TRIDIM){
+			if (reverberationOrder == TReverberationOrder::TRIDIM){
 				//1. Get BRIR values for each channel
 				TImpulseResponse_Partitioned northLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NORTH, Common::T_ear::LEFT);
 				TImpulseResponse_Partitioned southLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::SOUTH, Common::T_ear::LEFT);
@@ -402,7 +402,7 @@ namespace Binaural {
 
 	void CEnvironment::CalculateABIRwithoutPartitions()
 	{
-		if (reverberationOrder == ReverberationOrder::BIDIM) {
+		if (reverberationOrder == TReverberationOrder::BIDIM) {
 
 			//1. Get BRIR values for each channel
 			TImpulseResponse northLeft = environmentBRIR->GetBRIR(VirtualSpeakerPosition::NORTH, Common::T_ear::LEFT);
@@ -448,7 +448,7 @@ namespace Binaural {
 			environmentABIR.AddImpulseResponse(TBFormatChannel::Y, Common::T_ear::RIGHT, std::move(newAIR_Y_right));
 		}
 		else {
-			if (reverberationOrder == ReverberationOrder::TRIDIM){
+			if (reverberationOrder == TReverberationOrder::TRIDIM){
 
 			}
 			else
@@ -475,7 +475,7 @@ namespace Binaural {
 			SET_RESULT(RESULT_ERROR_NOTINITIALIZED, "Data is not ready to be processed");
 			return;
 		}
-		if(reverberationOrder == ReverberationOrder::BIDIM){
+		if(reverberationOrder == TReverberationOrder::BIDIM){
 
 		CMonoBuffer<float> w, x, y;	// B-Format data		
 		CMonoBuffer<float> w_AbirW_left_FFT;
@@ -697,7 +697,7 @@ namespace Binaural {
 	} 
 	else
 	{
-				if (reverberationOrder == ReverberationOrder::TRIDIM){
+				if (reverberationOrder == TReverberationOrder::TRIDIM){
 					CMonoBuffer<float> w, x, y, z;	// B-Format data		
 					CMonoBuffer<float> w_AbirW_left_FFT;
 					CMonoBuffer<float> w_AbirW_right_FFT;
@@ -1165,7 +1165,7 @@ namespace Binaural {
 		CMonoBuffer<float> rightOutputBuffer;	
 
 		// error handler: Trust in called methods for setting result
-		if (reverberationOrder == ReverberationOrder::BIDIM) {
+		if (reverberationOrder == TReverberationOrder::BIDIM) {
 
 			
 
@@ -1201,7 +1201,7 @@ namespace Binaural {
 #endif
 		}
 		else {
-			if (reverberationOrder == ReverberationOrder::TRIDIM){
+			if (reverberationOrder == TReverberationOrder::TRIDIM){
 
 
 #ifdef USE_FREQUENCY_COVOLUTION_WITHOUT_PARTITIONS_REVERB 
@@ -1253,7 +1253,7 @@ namespace Binaural {
 		output.FromTwoMonosToStereo(leftOutputBuffer, rightOutputBuffer);		
 	}
 
-	void CEnvironment::SetReverberationOrder(ReverberationOrder order)
+	void CEnvironment::SetReverberationOrder(TReverberationOrder order)
 	{
 		reverberationOrder = order;
 	}

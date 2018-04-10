@@ -43,7 +43,7 @@ enum VirtualSpeakerPosition {
 	NADIR					///<	SPK  (nadir)
 };
 
-enum ReverberationOrder { ADIM, BIDIM, TRIDIM };
+enum TReverberationOrder { ADIM, BIDIM, TRIDIM };
 
 namespace Binaural {
 
@@ -123,10 +123,10 @@ namespace Binaural {
 
 		/** \brief Configures the number of channels of the first-order ambisonic reverb processing
 		*	\details The options are: W, X, Y and Z (3D); W, X and Y (2D); only W (0D)
-		*	\param [in] order ReverberationOrder enum with order option
+		*	\param [in] order TReverberationOrder enum with order option
 		*   \eh Nothing is reported to the error handler.
 		*/
-		void SetReverberationOrder(ReverberationOrder order);
+		void SetReverberationOrder(TReverberationOrder order);
 
     private:
 		
@@ -161,7 +161,7 @@ namespace Binaural {
 		int HADirectionality_LeftChannel_version;			//HA Directionality left version
 		int HADirectionality_RightChannel_version;			//HA Directionality right version
                 
-		ReverberationOrder reverberationOrder = ReverberationOrder::BIDIM;
+		TReverberationOrder reverberationOrder = TReverberationOrder::BIDIM;
 
         friend class CCore;									//Friend class definition
 		friend class CBRIR;
