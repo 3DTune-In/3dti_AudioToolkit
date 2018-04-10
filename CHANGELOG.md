@@ -5,6 +5,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Binaural
+`Changed`
+ - Modified CBRIR::AddBRIR to be a method that returns a boolean value indicating if the BRIR has been added correctly
+   * old: ~~void~~ CBRIR::AddBRIR(VirtualSpeakerPosition vsPosition, Common::T_ear vsChannel, TImpulseResponse && newBRIR)
+   * new: **bool** CBRIR::AddBRIR(VirtualSpeakerPosition vsPosition, Common::T_ear vsChannel, TImpulseResponse && newBRIR)
+
+ `Added` 
+ - New enumeration type TReverberationOrder in CEnvironment
+   * enumerators: ADIM (to only process W channel), BIDIM (to only process X, Y and W channels), TRIDIM (to process X, Y, Z and W channels)
+ - New method to set the reverberation order in CEnvironment
+   * new: CEnvironment::SetReverberationOrder(TReverberationOrder order)
+ - New boolean function to know if a partitioned impulse response is empty
+   * new: bool CBRIR::IsIREmpty(const TImpulseResponse_Partitioned& in)
+   
 ## [M20180319] - AudioToolkit_v1.0_20180319
 
 ### Binaural
@@ -17,7 +31,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - Modified ProcessHRTF to calculate a more precise ITD 
 
-- Modied the return value of the following methods:
+- Modified the return value of the following methods:
   * change: const **std::vector<CMonoBuffer<float>>** CalculateHRIR_partitioned_FromBarycentricCoordinates(Common::T_ear ear, TBarycentricCoordinatesStruct barycentricCoordinates, orientation orientation_pto1, orientation orientation_pto2, orientation orientation_pto3)const;
   * change: const **std::vector<CMonoBuffer<float>>** GetHRIR_partitioned_InterpolationMethod(Common::T_ear ear, float _azimuth, float _elevation) const;
 
