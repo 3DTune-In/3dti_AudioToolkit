@@ -664,7 +664,7 @@ namespace Binaural {
 #endif
 
 																			//////////////////////////////////////////////
-																			// Mix of chabbels decoded after convolution 
+																			// Mix of channels decoded after convolution 
 																			//////////////////////////////////////////////
 
 																			//Interlace		TODO Use the method in bufferClass??
@@ -1133,7 +1133,6 @@ namespace Binaural {
 					WATCH(WV_ENVIRONMENT_OUTPUT_LEFT, outBufferLeft, CMonoBuffer<float>);
 					WATCH(WV_ENVIRONMENT_OUTPUT_RIGHT, outBufferRight, CMonoBuffer<float>);
 				}
-				ProcessVirtualAmbisonicReverb(outBufferLeft, outBufferRight);
 			}
 		
 	}
