@@ -275,11 +275,6 @@ namespace Binaural {
 					nadirLeft.size() != s ||	environmentBRIR->IsIREmpty(nadirLeft) ||
 					nadirRight.size() != s ||	environmentBRIR->IsIREmpty(nadirRight))
 				{
-					bool aux;
-					aux = environmentBRIR->IsIREmpty(zenitLeft);
-					aux = environmentBRIR->IsIREmpty(zenitRight);
-					aux = environmentBRIR->IsIREmpty(nadirLeft);
-					aux = environmentBRIR->IsIREmpty(nadirRight);
 					SET_RESULT(RESULT_ERROR_BADSIZE, "Buffers should be the same and not zero");
 					return;
 				}
@@ -313,12 +308,12 @@ namespace Binaural {
 				{
 					for (int j = 0; j < environmentBRIR->GetBRIROneSubfilterLength(); j++)
 					{
-						newAIR_W_left[i][j] = 0.707107f * (northLeft[i][j] + southLeft[i][j] + eastLeft[i][j] + westLeft[i][j]);
+						newAIR_W_left[i][j] = 0.707107f * (northLeft[i][j] + southLeft[i][j] + eastLeft[i][j] + westLeft[i][j] + zenitLeft[i][j] + nadirLeft[i][j]);
 						newAIR_X_left[i][j] = northLeft[i][j] - southLeft[i][j];
 						newAIR_Y_left[i][j] = westLeft[i][j] - eastLeft[i][j];
 						newAIR_Z_left[i][j] = zenitLeft[i][j] - nadirLeft[i][j];
 
-						newAIR_W_right[i][j] = 0.707107f * (northRight[i][j] + southRight[i][j] + eastRight[i][j] + westRight[i][j]);
+						newAIR_W_right[i][j] = 0.707107f * (northRight[i][j] + southRight[i][j] + eastRight[i][j] + westRight[i][j] + zenitRight[i][j] + nadirRight[i][j]);
 						newAIR_X_right[i][j] = northRight[i][j] - southRight[i][j];
 						newAIR_Y_right[i][j] = westRight[i][j] - eastRight[i][j];
 						newAIR_Z_right[i][j] = zenitRight[i][j] - nadirRight[i][j];
@@ -339,7 +334,7 @@ namespace Binaural {
 			else
 			{
 				//1. Get BRIR values for each channel
-				TImpulseResponse_Partitioned northLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NORTH, Common::T_ear::LEFT);
+				/*TImpulseResponse_Partitioned northLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NORTH, Common::T_ear::LEFT);
 				TImpulseResponse_Partitioned southLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::SOUTH, Common::T_ear::LEFT);
 				TImpulseResponse_Partitioned eastLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::EAST, Common::T_ear::LEFT);
 				TImpulseResponse_Partitioned westLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::WEST, Common::T_ear::LEFT);
@@ -348,20 +343,27 @@ namespace Binaural {
 				TImpulseResponse_Partitioned northRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NORTH, Common::T_ear::RIGHT);
 				TImpulseResponse_Partitioned southRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::SOUTH, Common::T_ear::RIGHT);
 				TImpulseResponse_Partitioned eastRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::EAST, Common::T_ear::RIGHT);
-				TImpulseResponse_Partitioned westRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::WEST, Common::T_ear::RIGHT);
+				TImpulseResponse_Partitioned westRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::WEST, Common::T_ear::RIGHT);*/
+				TImpulseResponse_Partitioned IRLeft, IRRight;
+				for (int i = 0; i <= (int)VirtualSpeakerPosition::NADIR; i++) {
+					TImpulseResponse_Partitioned tempIRL = environmentBRIR->GetBRIR_Partitioned((VirtualSpeakerPosition) i, Common::T_ear::LEFT);
+					if (!environmentBRIR->IsIREmpty(tempIRL)) {
+						IRLeft = tempIRL;
+						break;
+					}
+				}
+				for (int i = 0; i <= (int)VirtualSpeakerPosition::NADIR; i++) {
+					TImpulseResponse_Partitioned tempIRL = environmentBRIR->GetBRIR_Partitioned((VirtualSpeakerPosition)i, Common::T_ear::RIGHT);
+					if (!environmentBRIR->IsIREmpty(tempIRL)) {
+						IRRight = tempIRL;
+						break;
+					}
+				}
 
+				long s = IRLeft.size();
 
-				long s = northLeft.size();
-
-				if (s == 0 ||
-					northLeft.size() != s || environmentBRIR->IsIREmpty(northLeft) ||
-					southLeft.size() != s || environmentBRIR->IsIREmpty(southLeft) ||
-					eastLeft.size() != s || environmentBRIR->IsIREmpty(eastLeft) ||
-					westLeft.size() != s || environmentBRIR->IsIREmpty(westLeft) ||
-					northRight.size() != s || environmentBRIR->IsIREmpty(northRight) ||
-					southRight.size() != s || environmentBRIR->IsIREmpty(southRight) ||
-					eastRight.size() != s || environmentBRIR->IsIREmpty(eastRight) ||
-					westRight.size() != s ||  environmentBRIR->IsIREmpty(westRight))
+				if (s == 0 || environmentBRIR->IsIREmpty(IRRight) ||
+					IRRight.size() != s || environmentBRIR->IsIREmpty(IRRight))
 				{
 					SET_RESULT(RESULT_ERROR_BADSIZE, "Buffers should be the same and not zero");
 					return;
@@ -386,8 +388,8 @@ namespace Binaural {
 				{
 					for (int j = 0; j < environmentBRIR->GetBRIROneSubfilterLength(); j++)
 					{
-						newAIR_W_left[i][j] = 0.707107f * (northLeft[i][j] + southLeft[i][j] + eastLeft[i][j] + westLeft[i][j]);
-						newAIR_W_right[i][j] = 0.707107f * (northRight[i][j] + southRight[i][j] + eastRight[i][j] + westRight[i][j]);
+						newAIR_W_left[i][j] = 0.707107f * (IRLeft[i][j]);
+						newAIR_W_right[i][j] = 0.707107f * (IRRight[i][j]);
 					}
 				}
 

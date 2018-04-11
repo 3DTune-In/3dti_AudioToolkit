@@ -305,9 +305,7 @@ namespace BRIR
 				}
 				if (AnglesAreCloseInDegrees(elevation, 270.0f))
 				{
-					if(!environment->GetBRIR()->AddBRIR(VirtualSpeakerPosition::NADIR, Common::T_ear::LEFT, std::move(leftBRIRChannel))){return false;
-					cout << "";
-					}
+					if(!environment->GetBRIR()->AddBRIR(VirtualSpeakerPosition::NADIR, Common::T_ear::LEFT, std::move(leftBRIRChannel))) {return false;}
 					if(!environment->GetBRIR()->AddBRIR(VirtualSpeakerPosition::NADIR, Common::T_ear::RIGHT, std::move(rightBRIRChannel))){return false;}
 				}
 			}
