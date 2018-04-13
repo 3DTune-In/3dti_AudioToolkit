@@ -88,7 +88,7 @@ namespace Binaural {
 		/** \brief Configure AIR class (with the partitioned impulse responses) using BRIR data for the UPC algorithm
 		*   \eh Nothing is reported to the error handler.
 		*/
-		void CalculateABIRPartitioned();
+		bool CalculateABIRPartitioned();
 
 		/** \brief Configure AIR class using BRIR data for the basic convolution algorithm
 		*   \eh Nothing is reported to the error handler.
@@ -128,10 +128,16 @@ namespace Binaural {
 		*/
 		void SetReverberationOrder(TReverberationOrder order);
 
+		/** \brief Gets the enum variable that allows to configure the number of channels of the first-order ambisonic reverb processing
+		*	\details The options are: W, X, Y and Z (3D); W, X and Y (2D); only W (0D)
+		*	\retval TReverberationOrder enum with order option
+		*   \eh Nothing is reported to the error handler.
+		*/
+		TReverberationOrder GetReverberationOrder();
     private:
 		
 		// Set ABIR of environment. Create AIR class using ambisonic codification. Also, initialize convolution buffers
-		void SetABIR();
+		bool SetABIR();
 		// Calculate the BRIR again
 		void CalculateBRIR();
 		// Apply the directionality to simulate the hearing aid device

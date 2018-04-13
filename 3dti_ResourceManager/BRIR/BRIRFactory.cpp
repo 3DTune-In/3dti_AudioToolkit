@@ -161,8 +161,7 @@ namespace BRIR
 	{
 		if (LoadBRIRTableFromSOFA(sofafile, environment)) 
 		{
-			environment->GetBRIR()->EndSetup();
-			return true;
+			return environment->GetBRIR()->EndSetup();
 		}
 		else 
 		{

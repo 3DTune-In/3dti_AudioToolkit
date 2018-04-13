@@ -131,7 +131,7 @@ namespace Binaural
 		*   \eh On success, RESULT_OK is reported to the error handler.
 		*       On error, an error code is reported to the error handler.
 		*/
-		void EndSetup();
+		bool EndSetup();
 
 		/** \brief Get BRIR filter length in time domain
 		*   \retval length int BRIR filter length in time domain

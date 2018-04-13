@@ -83,7 +83,7 @@ namespace Binaural {
 		}
 	}
 
-	void CBRIR::EndSetup()
+	bool CBRIR::EndSetup()
 	{
 		if (!t_BRIR_DataBase.empty())
 		{
@@ -98,17 +98,21 @@ namespace Binaural {
 #endif 
 			
 			//Calculate ARIR table and set the convolution buffers
-			ownerEnvironment->SetABIR();
+			if (!ownerEnvironment->SetABIR()) {
+				return false;
+			}
 
 			//Free up memory
 			//t_BRIR_DataBase.clear();
 
 			SET_RESULT(RESULT_OK, "BRIR Matrix completed succesfully");
+			return true;
 		}
 		else
 		{
 			// TO DO: Should be ASSERT?
 			SET_RESULT(RESULT_ERROR_NOTSET, "The t_BRIR_DataBase map has not been set");
+			return false;
 		}		
 	}
 	

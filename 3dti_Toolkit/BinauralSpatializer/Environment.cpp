@@ -116,7 +116,12 @@ namespace Binaural {
 		}
 	}
 
-	void CEnvironment::SetABIR()
+	TReverberationOrder CEnvironment::GetReverberationOrder()
+	{
+		return reverberationOrder;
+	}
+
+	bool CEnvironment::SetABIR()
 	{
 		if (ownerCore != nullptr)
 		{
@@ -134,7 +139,7 @@ namespace Binaural {
 				outputRight.Setup(bufferLength, BRIRLength);
 	#else
 				//Configure AIR values (partitions and FFTs)
-				CalculateABIRPartitioned();
+				bool result = CalculateABIRPartitioned();
 				if (reverberationOrder == TReverberationOrder::BIDIM) {
 
 					//Prepare output buffers to perform UP convolutions in ProcessVirtualAmbisonicReverb
@@ -160,13 +165,21 @@ namespace Binaural {
 						wRight_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
 					}
 				}
+				return result;
 	#endif
+			}
+			else
+			{
+				return false;
 			}
 			// TODO if (GET_LAST_RESULT() != OK) { RAISE_NOT_INITIALISED_ERROR(...); }
 		}
+		else {
+			return false;
+		}
 	}
 
-	void CEnvironment::CalculateABIRPartitioned()
+	bool CEnvironment::CalculateABIRPartitioned()
 	{
 		environmentABIR.Setup(ownerCore->GetAudioState().bufferSize, environmentBRIR->GetBRIRLength());
 		if (reverberationOrder == TReverberationOrder::BIDIM) {
@@ -195,7 +208,7 @@ namespace Binaural {
 			{
 
 				SET_RESULT(RESULT_ERROR_BADSIZE, "Buffers should be the same and not zero");
-				return;
+				return false;
 			}
 
 			//2. Init AIR buffers
@@ -275,7 +288,7 @@ namespace Binaural {
 					nadirRight.size() != s ||	environmentBRIR->IsIREmpty(nadirRight))
 				{
 					SET_RESULT(RESULT_ERROR_BADSIZE, "Buffers should be the same and not zero");
-					return;
+					return false;
 				}
 
 				//2. Init AIR buffers
@@ -365,7 +378,7 @@ namespace Binaural {
 					IRRight.size() != s || environmentBRIR->IsIREmpty(IRRight))
 				{
 					SET_RESULT(RESULT_ERROR_BADSIZE, "Buffers should be the same and not zero");
-					return;
+					return false;
 				}
 
 				//2. Init AIR buffers
@@ -398,6 +411,7 @@ namespace Binaural {
 
 			}
 		}
+		return true;
 	}
 
 
