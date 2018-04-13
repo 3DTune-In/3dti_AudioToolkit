@@ -110,7 +110,6 @@ namespace Binaural {
 						wLeft_UPConvolution. Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
 						wRight_UPConvolution.Setup(bufferLength, GetABIR().GetDataBlockLength_freq(), GetABIR().GetDataNumberOfBlocks(), false);
 					}
-					ResetReverbBuffers();
 				}
 #endif
 			}	
