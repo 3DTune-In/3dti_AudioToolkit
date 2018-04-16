@@ -86,6 +86,7 @@ namespace Binaural {
 		void ResetReverbBuffers();
               		
 		/** \brief Configure AIR class (with the partitioned impulse responses) using BRIR data for the UPC algorithm
+		*	\retval	boolean to indicate if calculation was successful
 		*   \eh Nothing is reported to the error handler.
 		*/
 		bool CalculateABIRPartitioned();

@@ -128,6 +128,7 @@ namespace Binaural
 		void AddBRIRTable(TBRIRTable && newTable);
 
 		/** \brief Stop the BRIR configuration and set the ABIR configuration		
+		*   \retval boolean to indicate if setup was successful
 		*   \eh On success, RESULT_OK is reported to the error handler.
 		*       On error, an error code is reported to the error handler.
 		*/
