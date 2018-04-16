@@ -10,14 +10,23 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
  - Modified CBRIR::AddBRIR to be a method that returns a boolean value indicating if the BRIR has been added correctly
    * old: ~~void~~ CBRIR::AddBRIR(VirtualSpeakerPosition vsPosition, Common::T_ear vsChannel, TImpulseResponse && newBRIR)
    * new: **bool** CBRIR::AddBRIR(VirtualSpeakerPosition vsPosition, Common::T_ear vsChannel, TImpulseResponse && newBRIR)
+ - Modified CBRIR::EndSetup to be a method that returns a boolean value indicating if setup has been successful
+   * old: ~~void~~ CBRIR::AddBRIR()
+   * new: **bool** CBRIR::AddBRIR()
+ - Modified CEnvironment::CalculateABIRPartitioned to be a method that returns a boolean value indicating if ABIR has been calculated correctly
+   * old: ~~void~~ CEnvironment::CalculateABIRPartitioned()
+   * new: **bool** CEnvironment::CalculateABIRPartitioned()
 
- `Added` 
+   
+`Added` 
  - New enumeration type TReverberationOrder in CEnvironment
    * enumerators: ADIM (to only process W channel), BIDIM (to only process X, Y and W channels), TRIDIM (to process X, Y, Z and W channels)
  - New method to set the reverberation order in CEnvironment
    * new: CEnvironment::SetReverberationOrder(TReverberationOrder order)
  - New boolean function to know if a partitioned impulse response is empty
    * new: bool CBRIR::IsIREmpty(const TImpulseResponse_Partitioned& in)
+ - New function to get the reverberation order in CEnvironment
+   * new: TReverberationOrder CEnvironment::GetReverberationOrder()
    
 ## [M20180319] - AudioToolkit_v1.0_20180319
 
