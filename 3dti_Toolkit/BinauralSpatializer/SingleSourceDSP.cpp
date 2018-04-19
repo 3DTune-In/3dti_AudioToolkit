@@ -346,8 +346,11 @@ namespace Binaural {
 			return leftAzimuth;
 		else if ( ear == Common::T_ear::RIGHT )
 			return rightAzimuth;
-		else
-			SET_RESULT(RESULT_ERROR_INVALID_PARAM, "Call to CSingleSourceDSP::GetEarAzimuth with invalid param" );
+        else
+        {
+            SET_RESULT(RESULT_ERROR_INVALID_PARAM, "Call to CSingleSourceDSP::GetEarAzimuth with invalid param" );
+            return 0.0f;
+        }
 	}
 
 	// Returns the elevation of the specified ear
@@ -357,8 +360,11 @@ namespace Binaural {
 			return leftElevation;
 		else if (ear == Common::T_ear::RIGHT)
 			return rightElevation;
-		else
-			SET_RESULT( RESULT_ERROR_INVALID_PARAM, "Call to CSingleSourceDSP::GetEarAzimuth with invalid param" );
+        else
+        {
+			SET_RESULT( RESULT_ERROR_INVALID_PARAM, "Call to CSingleSourceDSP::GetEarElevation with invalid param" );
+            return 0.0f;
+        }
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

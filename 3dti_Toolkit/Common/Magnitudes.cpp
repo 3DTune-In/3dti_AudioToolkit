@@ -23,7 +23,7 @@
 #include <Common/Magnitudes.h>
 #include <Common/ErrorHandler.h>
 
-#include <math.h>
+#include <cmath>
 
 #define DEFAULT_REVERB_ATTENUATION_DB -3.01f				///< Default reverb attenuation with distance, in decibels
 #define DEFAULT_ANECHOIC_ATTENUATION_DB	-6.0206f			///< log10f(0.5f) * 20.0f Default anechoic attenuation with distance, in decibels 

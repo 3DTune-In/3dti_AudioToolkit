@@ -115,10 +115,11 @@ namespace Binaural
 		*	\param [in] vsPosition Virtual Speaker position (N,S,E,W)
 		*	\param [in] vsChannel Virtual Speaker Channel (left, right)
 		*	\param [in] newBRIR BRIR vector value to add to the BRIR matrix
+		*	\retval boolean to indicate if BRIR has been added correctly
 		*   \eh On error, an error code is reported to the error handler.
 		        Warnings may be reported to the error handler
 		*/
-		void AddBRIR(VirtualSpeakerPosition vsPosition, Common::T_ear vsChannel, TImpulseResponse && newBRIR);
+		bool AddBRIR(VirtualSpeakerPosition vsPosition, Common::T_ear vsChannel, TImpulseResponse && newBRIR);
 		
 		/** \brief Set the full BRIR matrix.
 		*	\param [in] newTable full table with all BRIR data
@@ -127,10 +128,11 @@ namespace Binaural
 		void AddBRIRTable(TBRIRTable && newTable);
 
 		/** \brief Stop the BRIR configuration and set the ABIR configuration		
+		*   \retval boolean to indicate if setup was successful
 		*   \eh On success, RESULT_OK is reported to the error handler.
 		*       On error, an error code is reported to the error handler.
 		*/
-		void EndSetup();
+		bool EndSetup();
 
 		/** \brief Get BRIR filter length in time domain
 		*   \retval length int BRIR filter length in time domain
@@ -192,6 +194,8 @@ namespace Binaural
 		*	\retval table raw BRIR table partitioned
 		*/
 		//const TBRIRTablePartitioned & GetRawBRIRTablePartitioned() const;
+		
+		bool IsIREmpty(const TImpulseResponse_Partitioned& in);
 
 	private:
 
