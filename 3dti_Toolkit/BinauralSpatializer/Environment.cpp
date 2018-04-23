@@ -346,7 +346,7 @@ namespace Binaural {
 			else
 			{
 				//1. Get BRIR values for each channel
-				/*TImpulseResponse_Partitioned northLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NORTH, Common::T_ear::LEFT);
+				TImpulseResponse_Partitioned northLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NORTH, Common::T_ear::LEFT);
 				TImpulseResponse_Partitioned southLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::SOUTH, Common::T_ear::LEFT);
 				TImpulseResponse_Partitioned eastLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::EAST, Common::T_ear::LEFT);
 				TImpulseResponse_Partitioned westLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::WEST, Common::T_ear::LEFT);
@@ -355,44 +355,66 @@ namespace Binaural {
 				TImpulseResponse_Partitioned northRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NORTH, Common::T_ear::RIGHT);
 				TImpulseResponse_Partitioned southRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::SOUTH, Common::T_ear::RIGHT);
 				TImpulseResponse_Partitioned eastRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::EAST, Common::T_ear::RIGHT);
-				TImpulseResponse_Partitioned westRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::WEST, Common::T_ear::RIGHT);*/
-				TImpulseResponse_Partitioned IRLeft, IRRight;
-				for (int i = 0; i <= (int)VirtualSpeakerPosition::NADIR; i++) {
-					TImpulseResponse_Partitioned tempIRL = environmentBRIR->GetBRIR_Partitioned((VirtualSpeakerPosition) i, Common::T_ear::LEFT);
-					if (!environmentBRIR->IsIREmpty(tempIRL)) {
-						IRLeft = tempIRL;
-						break;
-					}
-				}
-				for (int i = 0; i <= (int)VirtualSpeakerPosition::NADIR; i++) {
-					TImpulseResponse_Partitioned tempIRL = environmentBRIR->GetBRIR_Partitioned((VirtualSpeakerPosition)i, Common::T_ear::RIGHT);
-					if (!environmentBRIR->IsIREmpty(tempIRL)) {
-						IRRight = tempIRL;
-						break;
-					}
-				}
+				TImpulseResponse_Partitioned westRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::WEST, Common::T_ear::RIGHT);
+				TImpulseResponse_Partitioned zenitRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::ZENIT, Common::T_ear::RIGHT);
+				TImpulseResponse_Partitioned nadirRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NADIR, Common::T_ear::RIGHT);
 
-				long s = IRLeft.size();
+				TImpulseResponse_Partitioned zenitLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::ZENIT, Common::T_ear::LEFT);
+				TImpulseResponse_Partitioned nadirLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NADIR, Common::T_ear::LEFT);
 
-				if (s == 0 || environmentBRIR->IsIREmpty(IRRight) ||
-					IRRight.size() != s || environmentBRIR->IsIREmpty(IRRight))
+				long s = northLeft.size();
+
+				if (s == 0 ||
+					northLeft.size() != s || environmentBRIR->IsIREmpty(northLeft) ||
+					southLeft.size() != s || environmentBRIR->IsIREmpty(southLeft) ||
+					eastLeft.size() != s || environmentBRIR->IsIREmpty(eastLeft) ||
+					westLeft.size() != s || environmentBRIR->IsIREmpty(westLeft) ||
+					northRight.size() != s || environmentBRIR->IsIREmpty(northRight) ||
+					southRight.size() != s || environmentBRIR->IsIREmpty(southRight) ||
+					eastRight.size() != s || environmentBRIR->IsIREmpty(eastRight) ||
+					westRight.size() != s || environmentBRIR->IsIREmpty(westRight))
 				{
 					SET_RESULT(RESULT_ERROR_BADSIZE, "Buffers should be the same and not zero");
 					return false;
 				}
+				bool useZAxis = true;
+				if (zenitLeft.size() != s || environmentBRIR->IsIREmpty(zenitLeft) ||
+					zenitRight.size() != s || environmentBRIR->IsIREmpty(zenitRight) ||
+					nadirLeft.size() != s || environmentBRIR->IsIREmpty(nadirLeft) ||
+					nadirRight.size() != s || environmentBRIR->IsIREmpty(nadirRight)) {
+					useZAxis = false;
+				}
 
 				//2. Init AIR buffers
-				TImpulseResponse_Partitioned newAIR_W_left;
-				TImpulseResponse_Partitioned newAIR_W_right;
+				TImpulseResponse_Partitioned newAIR_W_left, newAIR_X_left, newAIR_Y_left, newAIR_Z_left;
+				TImpulseResponse_Partitioned newAIR_W_right, newAIR_X_right, newAIR_Y_right, newAIR_Z_right;
 				newAIR_W_left.resize(environmentBRIR->GetBRIRNumberOfSubfilters());
+				newAIR_X_left.resize(environmentBRIR->GetBRIRNumberOfSubfilters());
+				newAIR_Y_left.resize(environmentBRIR->GetBRIRNumberOfSubfilters());
 
 				newAIR_W_right.resize(environmentBRIR->GetBRIRNumberOfSubfilters());
+				newAIR_X_right.resize(environmentBRIR->GetBRIRNumberOfSubfilters());
+				newAIR_Y_right.resize(environmentBRIR->GetBRIRNumberOfSubfilters());
 
+				if (useZAxis) {
+				newAIR_Z_right.resize(environmentBRIR->GetBRIRNumberOfSubfilters());
+				newAIR_Z_left.resize(environmentBRIR->GetBRIRNumberOfSubfilters());
+				}
 
 				for (int i = 0; i < environmentBRIR->GetBRIRNumberOfSubfilters(); i++)
 				{
 					newAIR_W_left[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+					newAIR_X_left[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+					newAIR_Y_left[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
 					newAIR_W_right[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+					newAIR_X_right[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+					newAIR_Y_right[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+
+					if (useZAxis) {
+						newAIR_Z_right[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+						newAIR_Z_left[i].resize(environmentBRIR->GetBRIROneSubfilterLength(), 0.0f);
+					}
+
 				}
 
 				//3. AIR codification from BRIR
@@ -425,6 +447,15 @@ namespace Binaural {
 				//Setup AIR class
 				environmentABIR.AddImpulseResponse(TBFormatChannel::W, Common::T_ear::LEFT, std::move(newAIR_W_left));
 				environmentABIR.AddImpulseResponse(TBFormatChannel::W, Common::T_ear::RIGHT, std::move(newAIR_W_right));
+				environmentABIR.AddImpulseResponse(TBFormatChannel::X, Common::T_ear::LEFT, std::move(newAIR_X_left));
+				environmentABIR.AddImpulseResponse(TBFormatChannel::X, Common::T_ear::RIGHT, std::move(newAIR_X_right));
+				environmentABIR.AddImpulseResponse(TBFormatChannel::Y, Common::T_ear::LEFT, std::move(newAIR_Y_left));
+				environmentABIR.AddImpulseResponse(TBFormatChannel::Y, Common::T_ear::RIGHT, std::move(newAIR_Y_right));
+
+				if (useZAxis) {
+					environmentABIR.AddImpulseResponse(TBFormatChannel::Z, Common::T_ear::LEFT, std::move(newAIR_Z_left));
+					environmentABIR.AddImpulseResponse(TBFormatChannel::Z, Common::T_ear::RIGHT, std::move(newAIR_Z_right));
+				}
 
 			}
 		}
