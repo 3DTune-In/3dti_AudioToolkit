@@ -140,12 +140,6 @@ class CHRTF;
 		*/	
 		Common::TAudioStateStruct GetCoreAudioState() const;
 
-		/** \brief Get the minimum allowed distance between the listener and any source
-		*	\retval distance value in meters that stores the minimum allowed distance between the listener and any source		
-		*   \eh Nothing is reported to the error handler.
-		*/
-		float GetMinimumDistanceToSource();
-
 		/** \brief Get CMagnitudes instance from owner Core
 		*	\retval magnitudes magnitudes object
 		*   \eh Nothing is reported to the error handler.
@@ -231,7 +225,6 @@ class CHRTF;
 		
 		Common::CTransform listenerTransform;		// Transform matrix (position and orientation) of listener    
 		float listenerHeadRadius;					// Head radius of listener     
-		float listenerMinimumDistanceToSource;		// Minimum distante between the listener and the source		
 
 		float listenerILDAttenutationDB;			// Attenuation to apply when the ILD is in use (HighPerformance)
 
