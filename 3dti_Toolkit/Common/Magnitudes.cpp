@@ -112,4 +112,14 @@ namespace Common {
 	{
 		return reverbAttenuationDB;
 	}
+
+	bool CMagnitudes::AreSame(float a, float b, float epsilon)
+	{
+		float absA = fabs(a);
+		float absB = fabs(b);
+		float diff = fabs(a - b);
+
+		return diff < epsilon;
+	}
+
 }//end namespace Common
