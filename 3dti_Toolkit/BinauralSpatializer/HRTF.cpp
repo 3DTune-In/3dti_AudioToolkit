@@ -320,8 +320,8 @@ namespace Binaural
 		{
 			if (runTimeInterpolation)
 			{
-				if (AreSame(_azimuth,	sphereBorder, epsilon_sewing))	{_azimuth = 0.0f;	}
-				if (AreSame(_elevation, sphereBorder, epsilon_sewing))	{ _elevation = 0.0f;}
+				if (Common::CMagnitudes::AreSame(_azimuth,	sphereBorder, epsilon_sewing))	{_azimuth = 0.0f;	}
+				if (Common::CMagnitudes::AreSame(_elevation, sphereBorder, epsilon_sewing))	{ _elevation = 0.0f;}
 
 				//If we are in the sphere poles, do not perform the interpolation (the HRIR value for this orientations have been calculated with a different method in the resampled methods, because our barycentric interpolation method doesn't work in the poles)
 				int iazimuth = static_cast<int>(round(_azimuth));
@@ -413,8 +413,8 @@ namespace Binaural
 			{
 				if (runTimeInterpolation)
 				{
-					if (AreSame(_azimuthCenter, sphereBorder, epsilon_sewing)) { _azimuthCenter = 0.0f; }
-					if (AreSame(_elevationCenter, sphereBorder, epsilon_sewing)) { _elevationCenter = 0.0f; }
+					if (Common::CMagnitudes::AreSame(_azimuthCenter, sphereBorder, epsilon_sewing)) { _azimuthCenter = 0.0f; }
+					if (Common::CMagnitudes::AreSame(_elevationCenter, sphereBorder, epsilon_sewing)) { _elevationCenter = 0.0f; }
 
 					//If we are in the sphere poles, do not perform the interpolation (the HRIR value for this orientations have been calculated with a different method in the resampled methods, because our barycentric interpolation method doesn't work in the poles)
 					int iazimuth = static_cast<int>(round(_azimuthCenter));
@@ -1452,29 +1452,6 @@ namespace Binaural
 		//Calculate the ITD (from https://www.lpi.tel.uva.es/~nacho/docencia/ing_ond_1/trabajos_05_06/io5/public_html/ & http://interface.cipic.ucdavis.edu/sound/tutorial/psych.html)
 		float ITD = _headRadius * (_interauralAzimuth + std::sin(_interauralAzimuth)) / ownerListener->GetCoreMagnitudes().GetSoundSpeed(); //_azimuth in radians!
 		return ITD;
-	}
-
-
-	const bool CHRTF::AreSame(float a, float b, float epsilon) const
-	{
-		//return fabs(a - b) < epsilon_sewing;
-		float absA = fabs(a);
-		float absB = fabs(b);
-		float diff = fabs(a - b);
-
-		return diff < epsilon;
-
-		//if (a == b) { // shortcut, handles infinities
-		//	return true;
-		//}
-		//else if (a == 0 || b == 0 || diff < std::numberic_limits<float>::min()) {
-		//	// a or b is zero or both are extremely close to it
-		//	// relative error is less meaningful here
-		//	return diff < (epsilon * std::numberic_limits<float>::min());
-		//}
-		//else { // use relative error
-		//	return diff / fmin((absA + absB), std::numberic_limits<float>::max()) < epsilon;
-		//}
 	}
 
 

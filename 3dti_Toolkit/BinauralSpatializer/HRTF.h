@@ -407,9 +407,6 @@ namespace Binaural
 		// Reset HRTF
 		void Reset();
 
-		//Compare two float values
-		const bool AreSame(float a, float b, float epsilon) const;
-
 
 		friend class CListener;
 	};

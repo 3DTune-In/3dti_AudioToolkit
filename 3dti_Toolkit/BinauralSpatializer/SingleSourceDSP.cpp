@@ -328,10 +328,12 @@ namespace Binaural {
 		vectorToListener = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(sourceTransform);
 
 		distanceToListener = vectorToListener.GetDistance();
+
+		//Check listener and source are in the same position
 		if (distanceToListener <= EPSILON ) {
 			return;
 		}
-		
+
 		Common::CVector3 leftVectorTo = ownerCore->GetListener()->GetListenerEarTransform(Common::T_ear::LEFT).GetVectorTo(sourceTransform);
 		Common::CVector3 rightVectorTo = ownerCore->GetListener()->GetListenerEarTransform(Common::T_ear::RIGHT).GetVectorTo(sourceTransform);
 		Common::CVector3 leftVectorTo_sphereProjection =	GetSphereProjectionPosition(leftVectorTo, ownerCore->GetListener()->GetListenerEarLocalPosition(Common::T_ear::LEFT), ownerCore->GetListener()->GetHRTF()->GetHRTFDistanceOfMeasurement());
