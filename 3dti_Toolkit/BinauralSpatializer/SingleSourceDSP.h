@@ -37,6 +37,8 @@
 
 //#define USE_UPC_WITHOUT_MEMORY
 #define EPSILON 0.0001f
+#define ELEVATION_SINGULAR_POINT_UP 90.0
+#define ELEVATION_SINGULAR_POINT_DOWN 270.0
 
 namespace Binaural {
 	

@@ -339,17 +339,27 @@ namespace Binaural {
 		Common::CVector3 leftVectorTo_sphereProjection =	GetSphereProjectionPosition(leftVectorTo, ownerCore->GetListener()->GetListenerEarLocalPosition(Common::T_ear::LEFT), ownerCore->GetListener()->GetHRTF()->GetHRTFDistanceOfMeasurement());
 		Common::CVector3 rightVectorTo_sphereProjection =	GetSphereProjectionPosition(rightVectorTo, ownerCore->GetListener()->GetListenerEarLocalPosition(Common::T_ear::RIGHT), ownerCore->GetListener()->GetHRTF()->GetHRTFDistanceOfMeasurement());
 
-		leftAzimuth =		leftVectorTo_sphereProjection.GetAzimuthDegrees();	//Get left azimuth
-		leftElevation =	leftVectorTo_sphereProjection.GetElevationDegrees();	//Get left elevation
-
-		rightAzimuth =	rightVectorTo_sphereProjection.GetAzimuthDegrees();		//Get right azimuth
+		leftElevation = leftVectorTo_sphereProjection.GetElevationDegrees();	//Get left elevation
+		if (!Common::CMagnitudes::AreSame(ELEVATION_SINGULAR_POINT_UP, leftElevation, EPSILON) && !Common::CMagnitudes::AreSame(ELEVATION_SINGULAR_POINT_DOWN, leftElevation, EPSILON)) 
+		{
+			leftAzimuth = leftVectorTo_sphereProjection.GetAzimuthDegrees();	//Get left azimuth
+		}
+		
 		rightElevation = rightVectorTo_sphereProjection.GetElevationDegrees();	//Get right elevation	
+		if (!Common::CMagnitudes::AreSame(ELEVATION_SINGULAR_POINT_UP, rightElevation, EPSILON) && !Common::CMagnitudes::AreSame(ELEVATION_SINGULAR_POINT_DOWN, rightElevation, EPSILON))
+		{
+			rightAzimuth = rightVectorTo_sphereProjection.GetAzimuthDegrees();		//Get right azimuth
+		}
 
-		distanceToListener = vectorToListener.GetDistance();				//Get Distance
+
+		centerElevation = vectorToListener.GetElevationDegrees();		//Get elevation from the head center
+		if (!Common::CMagnitudes::AreSame(ELEVATION_SINGULAR_POINT_UP, centerElevation, EPSILON) && !Common::CMagnitudes::AreSame(ELEVATION_SINGULAR_POINT_DOWN, centerElevation, EPSILON)) 
+		{
+			centerAzimuth = vectorToListener.GetAzimuthDegrees();		//Get azimuth from the head center
+		}
+
 		interauralAzimuth = vectorToListener.GetInterauralAzimuthDegrees();	//Get Interaural Azimuth
 
-		centerAzimuth = vectorToListener.GetAzimuthDegrees();		//Get azimuth from the head center
-		centerElevation = vectorToListener.GetElevationDegrees();		//Get elevation from the head center
 	}
 
 	// Returns the azimuth of the specified ear.
