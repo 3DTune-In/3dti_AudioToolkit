@@ -589,10 +589,15 @@ namespace Binaural {
 					continue;
 				}
 
+				//Check if the source is in the same position as the listener head. If yes, do not apply spatialization to this source
+				if (eachSource->distanceToListener < ownerCore->GetListener()->GetHeadRadius())
+				{
+					continue;
+				}
+
 				// Get azimuth, elevation and distance from listener to each source
 				// We precompute everything, to minimize per-sample computations. 
 				Common::CTransform sourceTransform = eachSource->GetSourceTransform();
-				sourceTransform = eachSource->CalculateTransformPositionWithRestrictions(sourceTransform);
 				Common::CVector3 vectorToSource = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(sourceTransform);
 				float sourceAzimuth = vectorToSource.GetAzimuthRadians();
 				float sourceElevation = vectorToSource.GetElevationRadians();
@@ -817,7 +822,6 @@ namespace Binaural {
 						// Get azimuth, elevation and distance from listener to each source
 						// We precompute everything, to minimize per-sample computations. 
 						Common::CTransform sourceTransform = eachSource->GetSourceTransform();
-						sourceTransform = eachSource->CalculateTransformPositionWithRestrictions(sourceTransform);
 						Common::CVector3 vectorToSource = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(sourceTransform);
 						float sourceAzimuth = vectorToSource.GetAzimuthRadians();
 						float sourceElevation = vectorToSource.GetElevationRadians();
@@ -1036,7 +1040,6 @@ namespace Binaural {
 						// Get azimuth, elevation and distance from listener to each source
 						// We precompute everything, to minimize per-sample computations. 
 						Common::CTransform sourceTransform = eachSource->GetSourceTransform();
-						sourceTransform = eachSource->CalculateTransformPositionWithRestrictions(sourceTransform);
 						Common::CVector3 vectorToSource = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(sourceTransform);
 						float sourceAzimuth = vectorToSource.GetAzimuthRadians();
 						float sourceElevation = vectorToSource.GetElevationRadians();

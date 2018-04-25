@@ -36,6 +36,7 @@
 #include <Common/FiltersChain.h>
 
 //#define USE_UPC_WITHOUT_MEMORY
+#define EPSILON 0.0001f
 
 namespace Binaural {
 	
@@ -300,8 +301,6 @@ namespace Binaural {
 		void ProcessAddDelay_ExpansionMethod(CMonoBuffer<float>& input, CMonoBuffer<float>& output, CMonoBuffer<float>& delayBuffer, int newDelay);
 		// Reset source convolution buffers
 		void ResetSourceConvolutionBuffers(shared_ptr<CListener> listener);
-		// Calculate a new source transform position taking into account the restrictions, source that can not be inside of the listener head
-		Common::CTransform CalculateTransformPositionWithRestrictions(Common::CTransform newSourceTransform);
 		// return the flag which tells if the buffer is updated and ready for a new anechoic process
 		bool IsAnechoicProcessReady();
 		// return the flag which tells if the buffer is updated and ready for a new reverb process

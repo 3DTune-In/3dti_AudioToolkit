@@ -242,7 +242,6 @@ namespace Binaural {
 	{
 		ASSERT(_inBuffer.size() == ownerCore->GetAudioState().bufferSize, RESULT_ERROR_BADSIZE, "InBuffer size has to be equal to the input size indicated by the Core::SetAudioState method", "");
 		
-
 		// Check process flag
 		if (!enableAnechoic)
 		{
@@ -269,7 +268,15 @@ namespace Binaural {
 		{
 			CMonoBuffer<float> inBuffer = _inBuffer; //We have to copy input buffer to a new buffer because the distance effects methods work changing the input buffer				
 			
-			// Apply Far distance effect
+			//Check if the source is in the same position as the listener head. If yes, do not apply spatialization
+			if (distanceToListener <= ownerCore->GetListener()->GetHeadRadius())
+			{
+				outLeftBuffer = inBuffer;
+				outRightBuffer = inBuffer;
+				return;
+			}
+													 
+			//Apply Far distance effect
 			if (IsFarDistanceEffectEnabled()) {	ProcessFarDistanceEffect(inBuffer, distanceToListener); }			
 			
 			// Apply distance attenuation
@@ -316,23 +323,27 @@ namespace Binaural {
 	// Calculates the values returned by GetEarAzimuth and GetEarElevation
 	void CSingleSourceDSP::CalculateSourceCoordinates()
 	{
-		// Keep source outside listener head
-		Common::CTransform safeSourceTransform = CalculateTransformPositionWithRestrictions(sourceTransform);
 
 		//Get azimuth and elevation between listener and source
-		vectorToListener = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(safeSourceTransform);
-		Common::CVector3 leftVectorTo = ownerCore->GetListener()->GetListenerEarTransform(Common::T_ear::LEFT).GetVectorTo(safeSourceTransform);
-		Common::CVector3 rightVectorTo = ownerCore->GetListener()->GetListenerEarTransform(Common::T_ear::RIGHT).GetVectorTo(safeSourceTransform);
+		vectorToListener = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(sourceTransform);
+
+		distanceToListener = vectorToListener.GetDistance();
+		if (distanceToListener <= EPSILON ) {
+			return;
+		}
+		
+		Common::CVector3 leftVectorTo = ownerCore->GetListener()->GetListenerEarTransform(Common::T_ear::LEFT).GetVectorTo(sourceTransform);
+		Common::CVector3 rightVectorTo = ownerCore->GetListener()->GetListenerEarTransform(Common::T_ear::RIGHT).GetVectorTo(sourceTransform);
 		Common::CVector3 leftVectorTo_sphereProjection =	GetSphereProjectionPosition(leftVectorTo, ownerCore->GetListener()->GetListenerEarLocalPosition(Common::T_ear::LEFT), ownerCore->GetListener()->GetHRTF()->GetHRTFDistanceOfMeasurement());
 		Common::CVector3 rightVectorTo_sphereProjection =	GetSphereProjectionPosition(rightVectorTo, ownerCore->GetListener()->GetListenerEarLocalPosition(Common::T_ear::RIGHT), ownerCore->GetListener()->GetHRTF()->GetHRTFDistanceOfMeasurement());
 
-		leftAzimuth =		leftVectorTo_sphereProjection.GetAzimuthDegrees();		//Get left azimuth
+		leftAzimuth =		leftVectorTo_sphereProjection.GetAzimuthDegrees();	//Get left azimuth
 		leftElevation =	leftVectorTo_sphereProjection.GetElevationDegrees();	//Get left elevation
 
 		rightAzimuth =	rightVectorTo_sphereProjection.GetAzimuthDegrees();		//Get right azimuth
 		rightElevation = rightVectorTo_sphereProjection.GetElevationDegrees();	//Get right elevation	
 
-		distanceToListener = vectorToListener.GetDistance();							//Get Distance
+		distanceToListener = vectorToListener.GetDistance();				//Get Distance
 		interauralAzimuth = vectorToListener.GetInterauralAzimuthDegrees();	//Get Interaural Azimuth
 
 		centerAzimuth = vectorToListener.GetAzimuthDegrees();		//Get azimuth from the head center
@@ -664,47 +675,6 @@ namespace Binaural {
 		#endif
 	}
 	
-	///Calculate a new source transform position taking into account the restrictions, source that can not be inside of the listener head
-	Common::CTransform CSingleSourceDSP::CalculateTransformPositionWithRestrictions(Common::CTransform sourceTransform)
-	{		
-		float sourceMinimumDistance = 0.1f;		//Default value, just in case
-		if (ownerCore!=nullptr){
-			if (ownerCore->GetListener() != nullptr) {
-				
-				//Get the minimum distance possible
-				sourceMinimumDistance = ownerCore->GetListener()->GetMinimumDistanceToSource();			
-				//Get distance between listener and source						
-				Common::CVector3 vectorToSource = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(sourceTransform);
-				float sourceDistance = vectorToSource.GetDistance();	// OPTIMIZATION: we could use GetSqrDistance instead
-				//Check if the distance is less than the minumun
-				if (sourceDistance < sourceMinimumDistance)
-				{
-					//How to project a point on to a sphere
-					//Let p be the point (source position), s the sphere's centre (listener position) and r the radius (minimum distance)
-					//then x = s + r*(p-s)/(norm(p-s)) where x is the point projected (new source position)									
-					//Get s (listner position)
-					Common::CTransform listernerTransform = ownerCore->GetListener()->GetListenerTransform();
-					Common::CVector3 listenerPosition = listernerTransform.GetPosition();
-					if (sourceDistance != 0.0f) {
-						//Get projectionVector vector			
-						float scale = sourceMinimumDistance / sourceDistance;
-						lastSourceProjectionVector = Common::CVector3(scale * vectorToSource.x, scale * vectorToSource.y, scale * vectorToSource.z);
-					}
-					//New position
-					Common::CVector3 newSourcePosition = listenerPosition + lastSourceProjectionVector;
-					//Create a return the new source transform
-					Common::CTransform newSourceTransform;
-					newSourceTransform.SetPosition(newSourcePosition);
-					return newSourceTransform;
-				}
-				else
-				{
-					return sourceTransform;
-				}
-			}
-		}
-		return sourceTransform;
-	}
 	
 	///Return the flag which tells if the buffer is updated and ready for a new anechoic process
 	bool CSingleSourceDSP::IsAnechoicProcessReady() { return readyForAnechoic; }
