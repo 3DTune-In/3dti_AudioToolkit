@@ -236,11 +236,11 @@ namespace Binaural {
 			{
 				for (int j = 0; j < environmentBRIR->GetBRIROneSubfilterLength(); j++)
 				{
-					newAIR_W_left[i][j] = 0.8660257f * (northLeft[i][j] + southLeft[i][j] + eastLeft[i][j] + westLeft[i][j]);
+					newAIR_W_left[i][j] = 0.707107f * (northLeft[i][j] + southLeft[i][j] + eastLeft[i][j] + westLeft[i][j]);
 					newAIR_X_left[i][j] = northLeft[i][j] - southLeft[i][j];
 					newAIR_Y_left[i][j] = westLeft[i][j] - eastLeft[i][j];
 
-					newAIR_W_right[i][j] = 0.8660257f * (northRight[i][j] + southRight[i][j] + eastRight[i][j] + westRight[i][j]);
+					newAIR_W_right[i][j] = 0.707107f * (northRight[i][j] + southRight[i][j] + eastRight[i][j] + westRight[i][j]);
 					newAIR_X_right[i][j] = northRight[i][j] - southRight[i][j];
 					newAIR_Y_right[i][j] = westRight[i][j] - eastRight[i][j];
 				}
@@ -438,8 +438,8 @@ namespace Binaural {
 						}
 						else
 						{
-							newAIR_W_left[i][j] *= 1.224745f;
-							newAIR_W_right[i][j] *= 1.224745f;
+							newAIR_W_left [i][j] *= 1.57814f;			//This statements equalize power of channel W when only two axis are used in 0D and 2D mode
+							newAIR_W_right[i][j] *= 1.57814f;			//because 2D mode compensates the lack of Z channel by adding power to X channel 
 						}
 					}
 				}
