@@ -5,6 +5,40 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Binaural
+
+`Removed`
+ - Removed function CListener::GetMinimumDistanceToSource
+   * old: float CListener::GetMinimumDistanceToSource()
+ - Removed function CSingleSourceDSP::CalculateTransformPositionWithRestrictions
+   * old: Common::CTransform CSingleSourceDSP::CalculateTransformPositionWithRestrictions(Common::CTransform newSourceTransform)
+ - Removed function CHRTF::AreSame
+   * old: const bool CHRTF::AreSame(float a, float b, float epsilon)
+   
+`Changed`
+ - Modified CBRIR::AddBRIR to be a method that returns a boolean value indicating if the BRIR has been added correctly
+   * old: ~~void~~ CBRIR::AddBRIR(VirtualSpeakerPosition vsPosition, Common::T_ear vsChannel, TImpulseResponse && newBRIR)
+   * new: **bool** CBRIR::AddBRIR(VirtualSpeakerPosition vsPosition, Common::T_ear vsChannel, TImpulseResponse && newBRIR)
+ - Modified CBRIR::EndSetup to be a method that returns a boolean value indicating if setup has been successful
+   * old: ~~void~~ CBRIR::AddBRIR()
+   * new: **bool** CBRIR::AddBRIR()
+ - Modified CEnvironment::CalculateABIRPartitioned to be a method that returns a boolean value indicating if ABIR has been calculated correctly
+   * old: ~~void~~ CEnvironment::CalculateABIRPartitioned()
+   * new: **bool** CEnvironment::CalculateABIRPartitioned()
+
+   
+`Added` 
+ - New enumeration type TReverberationOrder in CEnvironment
+   * enumerators: ADIM (to only process W channel), BIDIM (to only process X, Y and W channels), TRIDIM (to process X, Y, Z and W channels)
+ - New method to set the reverberation order in CEnvironment
+   * new: CEnvironment::SetReverberationOrder(TReverberationOrder order)
+ - New boolean function to know if a partitioned impulse response is empty
+   * new: bool CBRIR::IsIREmpty(const TImpulseResponse_Partitioned& in)
+ - New function to get the reverberation order in CEnvironment
+   * new: TReverberationOrder CEnvironment::GetReverberationOrder()
+ - New static boolean function CMagnitudes::AreSame to know if two float values (a and b) have same value within a margin specified by epsilon
+   * new: static bool CMagnitudes::AreSame(float a, float b, float epsilon)
+ 
 ## [M20180319] - AudioToolkit_v1.0_20180319
 
 ### Binaural
