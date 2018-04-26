@@ -10,10 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 `Removed`
  - Removed function CListener::GetMinimumDistanceToSource
    * old: float CListener::GetMinimumDistanceToSource()
- - Removed function CSingleSourceDSP::CalculateTransformPositionWithRestrictions
-   * old: Common::CTransform CSingleSourceDSP::CalculateTransformPositionWithRestrictions(Common::CTransform newSourceTransform)
- - Removed function CHRTF::AreSame
-   * old: const bool CHRTF::AreSame(float a, float b, float epsilon)
    
 `Changed`
  - Modified CBRIR::AddBRIR to be a method that returns a boolean value indicating if the BRIR has been added correctly
