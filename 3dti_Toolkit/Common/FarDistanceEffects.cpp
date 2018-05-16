@@ -103,12 +103,20 @@ namespace Common {
 
 		if (distance > DISTANCE_MODEL_THRESHOLD_FAR)	
 		{
+			/*
 			// See comments in definition of constants CUT_OFF_FREQUENCY_FUNCTION__COEF_X
 			float A = CUT_OFF_FREQUENCY_FUNCTION__COEF_A;
 			float B = CUT_OFF_FREQUENCY_FUNCTION__COEF_B;
 			float C = CUT_OFF_FREQUENCY_FUNCTION__COEF_C;
 
-			return A * std::pow(10, -B * (distance - C));
+			return A * std::pow(10, -B * (distance - C));*/
+
+			float c_pow = 2.0f, c_div = 7100.0f, ax = 100.0f, dmin = 15.0f, dmax = 100.0f;
+			float b = exp(pow(dmax - dmin, c_pow) / c_div);
+			if (distance > dmax) distance = dmax;
+			return ((20000 / b) * exp((pow(dmax - distance, c_pow)) / c_div));
+
+
 		}
 		else
 			return NO_FILTERING_CUT_OFF_FREQUENCY;
