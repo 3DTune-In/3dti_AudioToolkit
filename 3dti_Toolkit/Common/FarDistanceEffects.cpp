@@ -29,7 +29,7 @@
 // Q for LPF
 #define LPF_Q 1.414213562
 
-#define NUM_OF_BIQUAD_FILTERS_FOR_FAR_DISTANCE_FILTERING 1
+#define NUM_OF_BIQUAD_FILTERS_FOR_FAR_DISTANCE_FILTERING 2
 
 // The default function that provides the cutoff frequency that models the distortion of far sound sources
 // follows this expression:   Fc = A · 10^-B(distance - C)
