@@ -21,11 +21,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
  - Modified CEnvironment::CalculateABIRPartitioned to be a method that returns a boolean value indicating if ABIR has been calculated correctly
    * old: ~~void~~ CEnvironment::CalculateABIRPartitioned()
    * new: **bool** CEnvironment::CalculateABIRPartitioned()
+ - Modified far distance effect, now uses a different cutoff frequency calculation and low-pass filtering
+ - Modified directionality attenuation calculation
 
-   
 `Added` 
  - New enumeration type TReverberationOrder in CEnvironment
-   * enumerators: ADIM (to only process W channel), BIDIM (to only process X, Y and W channels), TRIDIM (to process X, Y, Z and W channels)
+   * enumerators: ADIMENSIONAL (to only process W channel), BIDIMENSIONAL (to only process X, Y and W channels), TRIDIMENSIONAL (to process X, Y, Z and W channels)
  - New method to set the reverberation order in CEnvironment
    * new: CEnvironment::SetReverberationOrder(TReverberationOrder order)
  - New boolean function to know if a partitioned impulse response is empty
@@ -34,7 +35,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
    * new: TReverberationOrder CEnvironment::GetReverberationOrder()
  - New static boolean function CMagnitudes::AreSame to know if two float values (a and b) have same value within a margin specified by epsilon
    * new: static bool CMagnitudes::AreSame(float a, float b, float epsilon)
- 
+
+### HAHLSimulation
+`Changed`
+ - Modified Audiometry maximum attenuation to 120 dB
+
+
 ## [M20180319] - AudioToolkit_v1.0_20180319
 
 ### Binaural
