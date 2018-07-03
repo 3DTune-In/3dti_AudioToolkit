@@ -148,14 +148,14 @@ namespace Binaural {
 		void ProcessEncodedChannelReverbAdimensional(TBFormatChannel channel, CMonoBuffer<float> encoderIn, CMonoBuffer<float> & output);
 
 		//Calculates partitioned ABIR in each reverberation order configuration
-		bool CEnvironment::CalculateABIRPartitionedAdimensional();
-		bool CEnvironment::CalculateABIRPartitionedBidimensional();
-		bool CEnvironment::CalculateABIRPartitionedThreedimensional();
+		bool CalculateABIRPartitionedAdimensional();
+		bool CalculateABIRPartitionedBidimensional();
+		bool CalculateABIRPartitionedThreedimensional();
 
 		//Sets ABIR in each reverberation order configuration
-		void CEnvironment::SetABIRAdimensional(int bufferLength, int blockLengthFreq, int numberOfBlocks);
-		void CEnvironment::SetABIRBidimensional(int bufferLength, int blockLengthFreq, int numberOfBlocks);
-		void CEnvironment::SetABIRThreedimensional(int bufferLength, int blockLengthFreq, int numberOfBlocks);
+		void SetABIRAdimensional(int bufferLength, int blockLengthFreq, int numberOfBlocks);
+		void SetABIRBidimensional(int bufferLength, int blockLengthFreq, int numberOfBlocks);
+		void SetABIRThreedimensional(int bufferLength, int blockLengthFreq, int numberOfBlocks);
 
 		// Set ABIR of environment. Create AIR class using ambisonic codification. Also, initialize convolution buffers
 		bool SetABIR();
