@@ -274,7 +274,7 @@ namespace Binaural
 		if (directionalityExtend > 30) directionalityExtend = 30.0f;
 		float directionalityFactor = 0.5f - 0.5f * std::pow(10, -directionalityExtend / 20);
 		float directionalityAttenuation = 1 - directionalityFactor + (directionalityFactor)* std::cos(angleToForwardAxis_rad);
-		return (20 * std::log10f(directionalityAttenuation));
+		return (20 * std::log10(directionalityAttenuation));
 	}
 	
 	int CListener::GetHRTFResamplingStep() const
