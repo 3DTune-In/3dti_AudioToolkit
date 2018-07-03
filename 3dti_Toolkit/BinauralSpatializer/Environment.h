@@ -43,7 +43,7 @@ enum VirtualSpeakerPosition {
 	NADIR					///<	SPK  (nadir)
 };
 
-enum TReverberationOrder { ADIM, BIDIM, TRIDIM };
+enum TReverberationOrder { ADIMENSIONAL, BIDIMENSIONAL, THREEDIMENSIONAL };
 
 namespace Binaural {
 
@@ -136,7 +136,27 @@ namespace Binaural {
 		*/
 		TReverberationOrder GetReverberationOrder();
     private:
-		
+
+		//Processes virtual ambisonic reverb in each reverberation order configuration
+		void ProcessVirtualAmbisonicReverbAdimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight);
+		void ProcessVirtualAmbisonicReverbBidimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight);
+		void ProcessVirtualAmbisonicReverbThreedimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight);
+
+		//Processes a reverb encoded channel in each reverberation order configuration. TODO: make unique function
+		void ProcessEncodedChannelReverbThreedimensional(TBFormatChannel channel, CMonoBuffer<float> encoderIn, CMonoBuffer<float> & output);
+		void ProcessEncodedChannelReverbBidimensional(TBFormatChannel channel, CMonoBuffer<float> encoderIn, CMonoBuffer<float> & output);
+		void ProcessEncodedChannelReverbAdimensional(TBFormatChannel channel, CMonoBuffer<float> encoderIn, CMonoBuffer<float> & output);
+
+		//Calculates partitioned ABIR in each reverberation order configuration
+		bool CEnvironment::CalculateABIRPartitionedAdimensional();
+		bool CEnvironment::CalculateABIRPartitionedBidimensional();
+		bool CEnvironment::CalculateABIRPartitionedThreedimensional();
+
+		//Sets ABIR in each reverberation order configuration
+		void CEnvironment::SetABIRAdimensional(int bufferLength, int blockLengthFreq, int numberOfBlocks);
+		void CEnvironment::SetABIRBidimensional(int bufferLength, int blockLengthFreq, int numberOfBlocks);
+		void CEnvironment::SetABIRThreedimensional(int bufferLength, int blockLengthFreq, int numberOfBlocks);
+
 		// Set ABIR of environment. Create AIR class using ambisonic codification. Also, initialize convolution buffers
 		bool SetABIR();
 		// Calculate the BRIR again
