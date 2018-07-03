@@ -271,7 +271,10 @@ namespace Binaural
 
 	float CListener::CalculateDirectionalityAttenuation( float directionalityExtend, float angleToForwardAxis_rad)
 	{
-		return (-1.0f *  directionalityExtend * std::sin( angleToForwardAxis_rad / 2.0f ));
+		if (directionalityExtend > 30) directionalityExtend = 30.0f;
+		float directionalityFactor = 0.5f - 0.5f * std::pow(10, -directionalityExtend / 20);
+		float directionalityAttenuation = 1 - directionalityFactor + (directionalityFactor)* std::cos(angleToForwardAxis_rad);
+		return (20 * std::log10f(directionalityAttenuation));
 	}
 	
 	int CListener::GetHRTFResamplingStep() const
