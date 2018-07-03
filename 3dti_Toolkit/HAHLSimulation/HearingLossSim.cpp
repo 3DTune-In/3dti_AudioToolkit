@@ -347,8 +347,8 @@ namespace HAHLSimulation {
 	float CHearingLossSim::CalculateThresholdFromDBHL(float dBHL)
 	{
 		float limitedDBHL = dBHL;
-		if (limitedDBHL > 160.0f)
-			limitedDBHL = 160.0f;
+		if (limitedDBHL > 120.0f)
+			limitedDBHL = 120.0f;
 
 		return T100 - A100 + (A100*limitedDBHL) * 0.01f;
 	}
