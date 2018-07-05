@@ -24,7 +24,6 @@
 #include <BinauralSpatializer/Listener.h>
 #include <BinauralSpatializer/Core.h>
 
-#define MINIMUMDISTANCETOSOURCE 0.1f
 #define ILDATTENUATION -6.0f
 #define NUM_STEPS_TO_INTEGRATE_CARDIOID_FOR_REVERB 100
 
@@ -34,7 +33,6 @@ namespace Binaural
 	CListener::CListener(CCore* _ownerCore, float _listenerHeadRadius)
     :ownerCore{_ownerCore},
      listenerHeadRadius{_listenerHeadRadius},
-	 listenerMinimumDistanceToSource{ MINIMUMDISTANCETOSOURCE },
 	 listenerILDAttenutationDB{ ILDATTENUATION },
 	 enableDirectionality {false, false},	 
 	 anechoicDirectionalityAttenuation{0.0f, 0.0f},	 
@@ -165,11 +163,6 @@ namespace Binaural
 		if (listenerHRTF!=nullptr){ listenerHRTF->CalculateNewHRTFTable(); }		
 	}
 	
-	//Get the minimum distance between the listener and any source
-	float CListener::GetMinimumDistanceToSource() 
-	{
-		return listenerMinimumDistanceToSource;
-	}
 	
 	//Get CMagnitudes instance
 	Common::CMagnitudes CListener::GetCoreMagnitudes() const 
@@ -278,7 +271,10 @@ namespace Binaural
 
 	float CListener::CalculateDirectionalityAttenuation( float directionalityExtend, float angleToForwardAxis_rad)
 	{
-		return (-1.0f *  directionalityExtend * std::sin( angleToForwardAxis_rad / 2.0f ));
+		if (directionalityExtend > 30) directionalityExtend = 30.0f;
+		float directionalityFactor = 0.5f - 0.5f * std::pow(10, -directionalityExtend / 20);
+		float directionalityAttenuation = 1 - directionalityFactor + (directionalityFactor)* std::cos(angleToForwardAxis_rad);
+		return (20 * std::log10(directionalityAttenuation));
 	}
 	
 	int CListener::GetHRTFResamplingStep() const

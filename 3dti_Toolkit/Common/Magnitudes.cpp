@@ -23,7 +23,7 @@
 #include <Common/Magnitudes.h>
 #include <Common/ErrorHandler.h>
 
-#include <math.h>
+#include <cmath>
 
 #define DEFAULT_REVERB_ATTENUATION_DB -3.01f				///< Default reverb attenuation with distance, in decibels
 #define DEFAULT_ANECHOIC_ATTENUATION_DB	-6.0206f			///< log10f(0.5f) * 20.0f Default anechoic attenuation with distance, in decibels 
@@ -112,4 +112,14 @@ namespace Common {
 	{
 		return reverbAttenuationDB;
 	}
+
+	bool CMagnitudes::AreSame(float a, float b, float epsilon)
+	{
+		float absA = fabs(a);
+		float absB = fabs(b);
+		float diff = fabs(a - b);
+
+		return diff < epsilon;
+	}
+
 }//end namespace Common

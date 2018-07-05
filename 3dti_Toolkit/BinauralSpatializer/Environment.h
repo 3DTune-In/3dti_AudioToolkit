@@ -39,8 +39,11 @@ enum VirtualSpeakerPosition {
 	SOUTH,					///<	SPK3 (south)
 	EAST,					///<	SPK4 (east)
 	WEST,					///<	SPK2 (west)
+	ZENIT,					///<	SPK  (zenit)
+	NADIR					///<	SPK  (nadir)
 };
 
+enum TReverberationOrder { ADIMENSIONAL, BIDIMENSIONAL, THREEDIMENSIONAL };
 
 namespace Binaural {
 
@@ -83,9 +86,10 @@ namespace Binaural {
 		void ResetReverbBuffers();
               		
 		/** \brief Configure AIR class (with the partitioned impulse responses) using BRIR data for the UPC algorithm
+		*	\retval	boolean to indicate if calculation was successful
 		*   \eh Nothing is reported to the error handler.
 		*/
-		void CalculateABIRPartitioned();
+		bool CalculateABIRPartitioned();
 
 		/** \brief Configure AIR class using BRIR data for the basic convolution algorithm
 		*   \eh Nothing is reported to the error handler.
@@ -118,10 +122,43 @@ namespace Binaural {
 		*/
 		void ProcessEncodedChannelReverb(TBFormatChannel channel, CMonoBuffer<float> encoderIn, CMonoBuffer<float> & output);
 
+		/** \brief Configures the number of channels of the first-order ambisonic reverb processing
+		*	\details The options are: W, X, Y and Z (3D); W, X and Y (2D); only W (0D)
+		*	\param [in] order TReverberationOrder enum with order option
+		*   \eh Nothing is reported to the error handler.
+		*/
+		void SetReverberationOrder(TReverberationOrder order);
+
+		/** \brief Gets the enum variable that allows to configure the number of channels of the first-order ambisonic reverb processing
+		*	\details The options are: W, X, Y and Z (3D); W, X and Y (2D); only W (0D)
+		*	\retval TReverberationOrder enum with order option
+		*   \eh Nothing is reported to the error handler.
+		*/
+		TReverberationOrder GetReverberationOrder();
     private:
-		
+
+		//Processes virtual ambisonic reverb in each reverberation order configuration
+		void ProcessVirtualAmbisonicReverbAdimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight);
+		void ProcessVirtualAmbisonicReverbBidimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight);
+		void ProcessVirtualAmbisonicReverbThreedimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight);
+
+		//Processes a reverb encoded channel in each reverberation order configuration. TODO: make unique function
+		void ProcessEncodedChannelReverbThreedimensional(TBFormatChannel channel, CMonoBuffer<float> encoderIn, CMonoBuffer<float> & output);
+		void ProcessEncodedChannelReverbBidimensional(TBFormatChannel channel, CMonoBuffer<float> encoderIn, CMonoBuffer<float> & output);
+		void ProcessEncodedChannelReverbAdimensional(TBFormatChannel channel, CMonoBuffer<float> encoderIn, CMonoBuffer<float> & output);
+
+		//Calculates partitioned ABIR in each reverberation order configuration
+		bool CalculateABIRPartitionedAdimensional();
+		bool CalculateABIRPartitionedBidimensional();
+		bool CalculateABIRPartitionedThreedimensional();
+
+		//Sets ABIR in each reverberation order configuration
+		void SetABIRAdimensional(int bufferLength, int blockLengthFreq, int numberOfBlocks);
+		void SetABIRBidimensional(int bufferLength, int blockLengthFreq, int numberOfBlocks);
+		void SetABIRThreedimensional(int bufferLength, int blockLengthFreq, int numberOfBlocks);
+
 		// Set ABIR of environment. Create AIR class using ambisonic codification. Also, initialize convolution buffers
-		void SetABIR();
+		bool SetABIR();
 		// Calculate the BRIR again
 		void CalculateBRIR();
 		// Apply the directionality to simulate the hearing aid device
@@ -141,13 +178,18 @@ namespace Binaural {
 		Common::CUPCEnvironment wLeft_UPConvolution;		//Buffers to perform Uniformly Partitioned Convolution
 		Common::CUPCEnvironment xLeft_UPConvolution;		//Buffers to perform Uniformly Partitioned Convolution
 		Common::CUPCEnvironment yLeft_UPConvolution;		//Buffers to perform Uniformly Partitioned Convolution
+		Common::CUPCEnvironment zLeft_UPConvolution;		//Buffers to perform Uniformly Partitioned Convolution
 		Common::CUPCEnvironment wRight_UPConvolution;		//Buffers to perform Uniformly Partitioned Convolution
 		Common::CUPCEnvironment xRight_UPConvolution;		//Buffers to perform Uniformly Partitioned Convolution
 		Common::CUPCEnvironment yRight_UPConvolution;		//Buffers to perform Uniformly Partitioned Convolution
+		Common::CUPCEnvironment zRight_UPConvolution;		//Buffers to perform Uniformly Partitioned Convolution
+
 #endif
 		int HADirectionality_LeftChannel_version;			//HA Directionality left version
 		int HADirectionality_RightChannel_version;			//HA Directionality right version
                 
+		TReverberationOrder reverberationOrder;
+
         friend class CCore;									//Friend class definition
 		friend class CBRIR;
 };

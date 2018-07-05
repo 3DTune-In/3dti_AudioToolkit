@@ -86,8 +86,8 @@ namespace HAHLSimulation {
 
 	void CHearingLossSim::SetHearingLevel_dBHL(Common::T_ear ear, int bandIndex, float hearingLevel_dBHL)
 	{
-		if (hearingLevel_dBHL > 100)
-			hearingLevel_dBHL = 100;
+		if (hearingLevel_dBHL > 99)
+			hearingLevel_dBHL = 99;
 
 		// Check band index
 		ASSERT((bandIndex >= 0) && (bandIndex < audiometries.left.size()), RESULT_ERROR_OUTOFRANGE, "Attempt to set hearing level for a wrong band number", "Band for hearing level is correct");
@@ -347,8 +347,8 @@ namespace HAHLSimulation {
 	float CHearingLossSim::CalculateThresholdFromDBHL(float dBHL)
 	{
 		float limitedDBHL = dBHL;
-		if (limitedDBHL > 160.0f)
-			limitedDBHL = 160.0f;
+		if (limitedDBHL > 120.0f)
+			limitedDBHL = 120.0f;
 
 		return T100 - A100 + (A100*limitedDBHL) * 0.01f;
 	}

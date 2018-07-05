@@ -24,7 +24,7 @@
 #define _CAIR_H_
 
 #include <unordered_map>
-#include <math.h>  
+#include <cmath>  
 #include <Common/Buffer.h>
 #include <Common/Fprocessor.h>
 #include <Common/ErrorHandler.h>

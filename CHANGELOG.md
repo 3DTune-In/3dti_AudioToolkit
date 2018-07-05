@@ -3,6 +3,44 @@ All notable changes to the 3DTuneIn Toolkit will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [M20180705] - AudioToolkit_v1.1_20180705
+
+### Binaural
+
+`Removed`
+ - Removed function CListener::GetMinimumDistanceToSource
+   * old: float CListener::GetMinimumDistanceToSource()
+   
+`Changed`
+ - Modified CBRIR::AddBRIR to be a method that returns a boolean value indicating if the BRIR has been added correctly
+   * old: ~~void~~ CBRIR::AddBRIR(VirtualSpeakerPosition vsPosition, Common::T_ear vsChannel, TImpulseResponse && newBRIR)
+   * new: **bool** CBRIR::AddBRIR(VirtualSpeakerPosition vsPosition, Common::T_ear vsChannel, TImpulseResponse && newBRIR)
+ - Modified CBRIR::EndSetup to be a method that returns a boolean value indicating if setup has been successful
+   * old: ~~void~~ CBRIR::AddBRIR()
+   * new: **bool** CBRIR::AddBRIR()
+ - Modified CEnvironment::CalculateABIRPartitioned to be a method that returns a boolean value indicating if ABIR has been calculated correctly
+   * old: ~~void~~ CEnvironment::CalculateABIRPartitioned()
+   * new: **bool** CEnvironment::CalculateABIRPartitioned()
+ - Modified far distance effect, now uses a different cutoff frequency calculation and low-pass filtering
+ - Modified directionality attenuation calculation
+
+`Added` 
+ - New enumeration type TReverberationOrder in CEnvironment
+   * enumerators: ADIMENSIONAL (to only process W channel), BIDIMENSIONAL (to only process X, Y and W channels), TRIDIMENSIONAL (to process X, Y, Z and W channels)
+ - New method to set the reverberation order in CEnvironment
+   * new: CEnvironment::SetReverberationOrder(TReverberationOrder order)
+ - New boolean function to know if a partitioned impulse response is empty
+   * new: bool CBRIR::IsIREmpty(const TImpulseResponse_Partitioned& in)
+ - New function to get the reverberation order in CEnvironment
+   * new: TReverberationOrder CEnvironment::GetReverberationOrder()
+ - New static boolean function CMagnitudes::AreSame to know if two float values (a and b) have same value within a margin specified by epsilon
+   * new: static bool CMagnitudes::AreSame(float a, float b, float epsilon)
+
+### HAHLSimulation
+`Changed`
+ - Modified Audiometry maximum attenuation to 120 dB
+
+
 ## [M20180319] - AudioToolkit_v1.0_20180319
 
 ### Binaural

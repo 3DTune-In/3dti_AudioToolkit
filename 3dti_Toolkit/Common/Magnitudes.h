@@ -85,6 +85,12 @@ namespace Common {
 		*/
 		float GetSoundSpeed() const;
 
+		/** \brief Compare two float values
+		*	\retval if both float are equals
+		*   \eh Nothing is reported to the error handler.
+		*/
+		static bool AreSame(float a, float b, float epsilon);
+
 		// ATTRIBUTES:
 	private:
 		float anechoicAttenuationDB;    // Constant for modeling the attenuation due to distance in anechoic process, in decibel units
