@@ -3,7 +3,7 @@ All notable changes to the 3DTuneIn Toolkit will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
-## [Unreleased]
+## [M20180705] - AudioToolkit_v1.1_20180705
 
 ### Binaural
 
