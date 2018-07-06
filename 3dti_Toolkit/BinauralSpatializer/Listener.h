@@ -217,7 +217,7 @@ class CHRTF;
 		float CalculateDirectionalityLinearAttenuation(float directionalityExtend, float angleToForwardAxis_rad);
 
 		// Calculates reverb directionality linear attenuation
-		float CalculateReverbDirectionalityAttenuation(float directionalityExtend_dB);
+		float CalculateReverbDirectionalityLinearAttenuation(float directionalityExtend_dB);
 		
 		// Reset HRTF 
 		void ResetHRTF();
@@ -238,8 +238,8 @@ class CHRTF;
 
 		float listenerILDAttenutationDB;			// Attenuation to apply when the ILD is in use (HighPerformance)
 
-		Common::CEarPair<float> anechoicDirectionalityAttenuation;  // Max value for directionality attenuation in dBs for each channel
-		Common::CEarPair<float> reverbDirectionalityAttenuation;    // Max value for directionality attenuation in dBs for each channel				
+		Common::CEarPair<float> anechoicDirectionalityLinearAttenuation;  // Max value for directionality attenuation in dBs for each channel
+		Common::CEarPair<float> reverbDirectionalityLinearAttenuation;    // Max value for directionality attenuation in dBs for each channel				
 		Common::CEarPair<bool>	enableDirectionality;				// True when current settings for directionality will be applied to each channel (left or right)		
 
 		friend class CHRTF;							//Friend Class definition
