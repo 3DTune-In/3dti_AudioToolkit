@@ -186,13 +186,13 @@ class CHRTF;
 		*/
 		float GetReverbDirectionalityAttenuation_dB(Common::T_ear ear) const;
 
-		/** \brief returns the attenuation in dB due to directionality
-		*	\param [in] directionalityExtend (typical values 0 - 30 dBs)
+		/** \brief returns the linear attenuation due to directionality
+		*	\param [in] directionalityExtend sets the directionality front-back ratio (restricted values from 0 to 30 dBs)
 		*	\param [in] angleToForwardAxis_rad angle in radians between the forward direction and the vector to the sound source
 		*	\retval attenuation attenuation in dB
 		*   \eh Nothing is reported to the error handler.
 		*/
-		float CalculateDirectionalityAttenuation(float directionalityExtend, float angleToForwardAxis_rad);
+		float CalculateDirectionalityAttenuation_dB(float directionalityExtend, float angleToForwardAxis_rad);
 
 		/** \brief Get HRTF resampling step from owner core		
 		*	\retval HRTF resampling step, in degress
@@ -207,7 +207,17 @@ class CHRTF;
 		// Calculate the HRTF resampling and FFT again
 		void CalculateHRTF();
 
-		float CalculateReverbDirectionalityAttenuation(float directionalityExtend_dB);
+		// Gets reverb directionality linear attenuation
+		float GetReverbDirectionalityLinearAttenuation(Common::T_ear ear) const;
+
+		// Gets reverb directionality linear attenuation
+		float GetAnechoicDirectionalityLinearAttenuation(Common::T_ear ear) const;
+
+		// Calculates reverb directionality linear attenuation
+		float CalculateDirectionalityLinearAttenuation(float directionalityExtend, float angleToForwardAxis_rad);
+
+		// Calculates reverb directionality linear attenuation
+		float CalculateReverbDirectionalityLinearAttenuation(float directionalityExtend_dB);
 		
 		// Reset HRTF 
 		void ResetHRTF();
@@ -228,12 +238,15 @@ class CHRTF;
 
 		float listenerILDAttenutationDB;			// Attenuation to apply when the ILD is in use (HighPerformance)
 
-		Common::CEarPair<float> anechoicDirectionalityAttenuation;  // Max value for directionality attenuation in dBs for each channel
-		Common::CEarPair<float> reverbDirectionalityAttenuation;    // Max value for directionality attenuation in dBs for each channel				
+		Common::CEarPair<float> anechoicDirectionalityLinearAttenuation;  // Max value for directionality attenuation in dBs for each channel
+		Common::CEarPair<float> reverbDirectionalityLinearAttenuation;    // Max value for directionality attenuation in dBs for each channel				
 		Common::CEarPair<bool>	enableDirectionality;				// True when current settings for directionality will be applied to each channel (left or right)		
 
 		friend class CHRTF;							//Friend Class definition
 		friend class CCore;							//Friend Class definition
+		friend class CEnvironment;					//Friend Class definition
+		friend class CSingleSourceDSP;				//Friend Class definition
+		friend class CListener;						//Friend Class definition
 	};    
 }
 #endif

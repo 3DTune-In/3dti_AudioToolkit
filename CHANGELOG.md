@@ -3,6 +3,16 @@ All notable changes to the 3DTuneIn Toolkit will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [M20180706] - AudioToolkit_v1.2_20180706 
+
+### Binaural
+
+`Changed`
+ - Modified CalculateDirectionalityAttenuation function name:
+     * old: float CalculateDirectionalityAttenuation(float directionalityExtend, float angleToForwardAxis_rad);
+     * new: float CalculateDirectionalityAttenuation**_dB**(float directionalityExtend, float angleToForwardAxis_rad);
+
+
 ## [M20180705] - AudioToolkit_v1.1_20180705
 
 ### Binaural
@@ -53,7 +63,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - Modified ProcessHRTF to calculate a more precise ITD 
 
-- Modied the return value of the following methods:
+- Modified the return value of the following methods:
   * change: const **std::vector<CMonoBuffer<float>>** CalculateHRIR_partitioned_FromBarycentricCoordinates(Common::T_ear ear, TBarycentricCoordinatesStruct barycentricCoordinates, orientation orientation_pto1, orientation orientation_pto2, orientation orientation_pto3)const;
   * change: const **std::vector<CMonoBuffer<float>>** GetHRIR_partitioned_InterpolationMethod(Common::T_ear ear, float _azimuth, float _elevation) const;
 

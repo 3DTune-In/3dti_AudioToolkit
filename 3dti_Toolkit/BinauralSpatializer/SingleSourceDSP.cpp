@@ -570,21 +570,18 @@ namespace Binaural {
 	{			
 		if (ownerCore->GetListener()->IsDirectionalityEnabled(Common::T_ear::LEFT)) 
 		{
-			ProcessDirectionality(leftBuffer, ownerCore->GetListener()->GetAnechoicDirectionalityAttenuation_dB(Common::T_ear::LEFT), angleToForwardAxisRadians);
+			ProcessDirectionality(leftBuffer, ownerCore->GetListener()->GetAnechoicDirectionalityLinearAttenuation(Common::T_ear::LEFT), angleToForwardAxisRadians);
 		}
 		if (ownerCore->GetListener()->IsDirectionalityEnabled(Common::T_ear::RIGHT))
 		{
-			ProcessDirectionality(rightBuffer, ownerCore->GetListener()->GetAnechoicDirectionalityAttenuation_dB(Common::T_ear::RIGHT), angleToForwardAxisRadians);
+			ProcessDirectionality(rightBuffer, ownerCore->GetListener()->GetAnechoicDirectionalityLinearAttenuation(Common::T_ear::RIGHT), angleToForwardAxisRadians);
 		}	
 	}
 
 	void CSingleSourceDSP::ProcessDirectionality(CMonoBuffer<float> &buffer, float directionalityAttenutaion, float angleToForwardAxis_rad)
 	{				
-		float attL = ownerCore->GetListener()->CalculateDirectionalityAttenuation(directionalityAttenutaion, angleToForwardAxis_rad);
-		attL = std::pow(10.0, attL / 20.0);
-		buffer.ApplyGain(attL);	
+		buffer.ApplyGain(ownerCore->GetListener()->CalculateDirectionalityLinearAttenuation(directionalityAttenutaion, angleToForwardAxis_rad));
 	}		
-
 
 	// Apply doppler effect simulation
 	void CSingleSourceDSP::ProcessAddDelay_ExpansionMethod(CMonoBuffer<float>& input, CMonoBuffer<float>& output, CMonoBuffer<float>& delayBuffer, int newDelay)

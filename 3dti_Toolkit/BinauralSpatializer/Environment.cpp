@@ -777,10 +777,10 @@ namespace Binaural {
 		// HA Directionality in reverb path
 		//////////////////////////////////////////////////////////		
 		if (ownerCore->GetListener()->IsDirectionalityEnabled(Common::T_ear::LEFT)) {
-			ProcessDirectionality(outBufferLeft, ownerCore->GetListener()->GetReverbDirectionalityAttenuation_dB(Common::T_ear::LEFT));
+			ProcessDirectionality(outBufferLeft, ownerCore->GetListener()->GetReverbDirectionalityLinearAttenuation(Common::T_ear::LEFT));
 		}
 		if (ownerCore->GetListener()->IsDirectionalityEnabled(Common::T_ear::RIGHT)) {
-			ProcessDirectionality(outBufferRight, ownerCore->GetListener()->GetReverbDirectionalityAttenuation_dB(Common::T_ear::RIGHT));
+			ProcessDirectionality(outBufferRight, ownerCore->GetListener()->GetReverbDirectionalityLinearAttenuation(Common::T_ear::RIGHT));
 		}
 
 		// WATCHER
@@ -997,10 +997,10 @@ namespace Binaural {
 		// HA Directionality in reverb path
 		//////////////////////////////////////////////////////////		
 		if (ownerCore->GetListener()->IsDirectionalityEnabled(Common::T_ear::LEFT)) {
-			ProcessDirectionality(outBufferLeft, ownerCore->GetListener()->GetReverbDirectionalityAttenuation_dB(Common::T_ear::LEFT));
+			ProcessDirectionality(outBufferLeft, ownerCore->GetListener()->GetReverbDirectionalityLinearAttenuation(Common::T_ear::LEFT));
 		}
 		if (ownerCore->GetListener()->IsDirectionalityEnabled(Common::T_ear::RIGHT)) {
-			ProcessDirectionality(outBufferRight, ownerCore->GetListener()->GetReverbDirectionalityAttenuation_dB(Common::T_ear::RIGHT));
+			ProcessDirectionality(outBufferRight, ownerCore->GetListener()->GetReverbDirectionalityLinearAttenuation(Common::T_ear::RIGHT));
 		}
 
 		// WATCHER
@@ -1216,10 +1216,10 @@ namespace Binaural {
 		// HA Directionality in reverb path
 		//////////////////////////////////////////////////////////		
 		if (ownerCore->GetListener()->IsDirectionalityEnabled(Common::T_ear::LEFT)) {
-			ProcessDirectionality(outBufferLeft, ownerCore->GetListener()->GetReverbDirectionalityAttenuation_dB(Common::T_ear::LEFT));
+			ProcessDirectionality(outBufferLeft, ownerCore->GetListener()->GetReverbDirectionalityLinearAttenuation(Common::T_ear::LEFT));
 		}
 		if (ownerCore->GetListener()->IsDirectionalityEnabled(Common::T_ear::RIGHT)) {
-			ProcessDirectionality(outBufferRight, ownerCore->GetListener()->GetReverbDirectionalityAttenuation_dB(Common::T_ear::RIGHT));
+			ProcessDirectionality(outBufferRight, ownerCore->GetListener()->GetReverbDirectionalityLinearAttenuation(Common::T_ear::RIGHT));
 		}
 
 		// WATCHER

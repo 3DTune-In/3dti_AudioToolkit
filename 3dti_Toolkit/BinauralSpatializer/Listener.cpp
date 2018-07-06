@@ -35,8 +35,8 @@ namespace Binaural
      listenerHeadRadius{_listenerHeadRadius},
 	 listenerILDAttenutationDB{ ILDATTENUATION },
 	 enableDirectionality {false, false},	 
-	 anechoicDirectionalityAttenuation{0.0f, 0.0f},	 
-	 reverbDirectionalityAttenuation{ 0.0f, 0.0f }	 
+	 anechoicDirectionalityLinearAttenuation{0.0f, 0.0f},	 
+	 reverbDirectionalityLinearAttenuation{ 0.0f, 0.0f }	 
     {				
 		std::unique_ptr<CHRTF> a(new CHRTF(this));		// HRTF of listener
 		listenerHRTF = std::move(a);	
@@ -222,60 +222,86 @@ namespace Binaural
 		}
 		if (ear == Common::T_ear::LEFT)
 		{
-			anechoicDirectionalityAttenuation.left = _directionalityAttenuation;
-			reverbDirectionalityAttenuation.left = CalculateReverbDirectionalityAttenuation(_directionalityAttenuation);
+			anechoicDirectionalityLinearAttenuation.left = std::pow(10, _directionalityAttenuation / 20);
+			reverbDirectionalityLinearAttenuation.left = CalculateReverbDirectionalityLinearAttenuation(_directionalityAttenuation);
 		}
 		if (ear == Common::T_ear::RIGHT)
 		{
-			anechoicDirectionalityAttenuation.right = _directionalityAttenuation;
-			reverbDirectionalityAttenuation.right = CalculateReverbDirectionalityAttenuation(_directionalityAttenuation);
+			anechoicDirectionalityLinearAttenuation.right = std::pow(10, _directionalityAttenuation / 20);
+			reverbDirectionalityLinearAttenuation.right = CalculateReverbDirectionalityLinearAttenuation(_directionalityAttenuation);
 		}
 	}
 	
 	float CListener::GetAnechoicDirectionalityAttenuation_dB(Common::T_ear ear) const 
 	{ 
 		if (ear == Common::T_ear::LEFT)
-			return anechoicDirectionalityAttenuation.left; 
+			return 20 * std::log(anechoicDirectionalityLinearAttenuation.left);
 		if (ear == Common::T_ear::RIGHT)
-			return anechoicDirectionalityAttenuation.right;
+			return 20 * std::log(anechoicDirectionalityLinearAttenuation.right);
 		return -1.0f;
 	}
-		
+
+	float CListener::GetAnechoicDirectionalityLinearAttenuation(Common::T_ear ear) const
+	{
+		if (ear == Common::T_ear::LEFT)
+			return anechoicDirectionalityLinearAttenuation.left;
+		if (ear == Common::T_ear::RIGHT)
+			return anechoicDirectionalityLinearAttenuation.right;
+		return -1.0f;
+	}
+
 	float CListener::GetReverbDirectionalityAttenuation_dB(Common::T_ear ear) const 
 	{ 
 		if (ear == Common::T_ear::LEFT)			
-			return reverbDirectionalityAttenuation.left; 
+			return 20 * std::log(reverbDirectionalityLinearAttenuation.left); 
 		if (ear == Common::T_ear::RIGHT)
-			return reverbDirectionalityAttenuation.right;
+			return 20 * std::log(reverbDirectionalityLinearAttenuation.right);
 		return -1.0f;
 	}								
 	
-	float CListener::CalculateReverbDirectionalityAttenuation(float directionalityExtend_dB)
+	float CListener::GetReverbDirectionalityLinearAttenuation(Common::T_ear ear) const
+	{
+		if (ear == Common::T_ear::LEFT)
+			return reverbDirectionalityLinearAttenuation.left;
+		if (ear == Common::T_ear::RIGHT)
+			return reverbDirectionalityLinearAttenuation.right;
+		return -1.0f;
+	}
+
+	float CListener::CalculateReverbDirectionalityLinearAttenuation(float directionalityExtend_dB)
 	{
 		
 		float angle_rad = 0;
 		float angleStep = M_PI / (float)NUM_STEPS_TO_INTEGRATE_CARDIOID_FOR_REVERB;
 		float v = 0;
+
 		for (int c = 0; c <= NUM_STEPS_TO_INTEGRATE_CARDIOID_FOR_REVERB; c++)
 		{			
-			v += CalculateDirectionalityAttenuation(directionalityExtend_dB, angle_rad) * std::sin(angle_rad);			
+			// Weighted sum of the directionality of the sphere rings
+			v += std::pow(CalculateDirectionalityLinearAttenuation(directionalityExtend_dB, angle_rad),2) * std::sin(angle_rad);	
 			angle_rad += angleStep;
 		}
-
-		v = 0.5 * v / (NUM_STEPS_TO_INTEGRATE_CARDIOID_FOR_REVERB + 1);
-
-		v = std::pow(10.0, v / 20.0);
+		// Normalizing (making omnidirectional non-attenuating)
+		v = std::sqrt(v /(2 * (NUM_STEPS_TO_INTEGRATE_CARDIOID_FOR_REVERB + 1)));
 
 		return v;		
 	}	
 
-	float CListener::CalculateDirectionalityAttenuation( float directionalityExtend, float angleToForwardAxis_rad)
+	float CListener::CalculateDirectionalityLinearAttenuation(float directionalityExtend, float angleToForwardAxis_rad)
 	{
-		if (directionalityExtend > 30) directionalityExtend = 30.0f;
+		if		(directionalityExtend > 30)	  directionalityExtend = 30.0f;
+		else if (directionalityExtend <  0)	  directionalityExtend =  0.0f;
+
 		float directionalityFactor = 0.5f - 0.5f * std::pow(10, -directionalityExtend / 20);
-		float directionalityAttenuation = 1 - directionalityFactor + (directionalityFactor)* std::cos(angleToForwardAxis_rad);
-		return (20 * std::log10(directionalityAttenuation));
+
+		return 1 - directionalityFactor + directionalityFactor * std::cos(angleToForwardAxis_rad);
 	}
+
+	float CListener::CalculateDirectionalityAttenuation_dB(float directionalityExtend, float angleToForwardAxis_rad)
+	{
+		return 20.0f * log10(CalculateDirectionalityLinearAttenuation(directionalityExtend, angleToForwardAxis_rad));
+	}
+
 	
 	int CListener::GetHRTFResamplingStep() const
 	{
