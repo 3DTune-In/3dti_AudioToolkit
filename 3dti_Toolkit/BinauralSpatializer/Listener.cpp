@@ -277,11 +277,12 @@ namespace Binaural
 
 		for (int c = 0; c <= NUM_STEPS_TO_INTEGRATE_CARDIOID_FOR_REVERB; c++)
 		{			
-			v += std::pow(CalculateDirectionalityLinearAttenuation(directionalityExtend_dB, angle_rad),2);			
+			// Weighted sum of the directionality of the sphere rings
+			v += std::pow(CalculateDirectionalityLinearAttenuation(directionalityExtend_dB, angle_rad),2) * std::sin(angle_rad);	
 			angle_rad += angleStep;
 		}
-
-		v = std::sqrt(v / NUM_STEPS_TO_INTEGRATE_CARDIOID_FOR_REVERB);
+		// Normalizing (making omnidirectional non-attenuating)
+		v = std::sqrt(v /(2 * (NUM_STEPS_TO_INTEGRATE_CARDIOID_FOR_REVERB + 1)));
 
 		return v;		
 	}	
