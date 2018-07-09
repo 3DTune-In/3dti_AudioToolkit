@@ -12,6 +12,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
      * old: float CalculateDirectionalityAttenuation(float directionalityExtend, float angleToForwardAxis_rad);
      * new: float CalculateDirectionalityAttenuation**_dB**(float directionalityExtend, float angleToForwardAxis_rad);
 
+ - Modified reverb attenuation calculation, now the integral over the directionality pattern is performed on the squared linear directionality, as it represents the addition of numerous incoherent power contributions.
+
+ - All Get/Set directionality public functions now use decibels and the Toolkit internally works in linear units to avoid conversion from decibels to linear units every audio frame.
 
 ## [M20180705] - AudioToolkit_v1.1_20180705
 
