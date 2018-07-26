@@ -3,6 +3,13 @@ All notable changes to the 3DTuneIn Toolkit will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [M20180726] - AudioToolkit_v1.2_20180726 
+
+### Binaural
+
+`Changed`
+ - Reverberation order's default value is now BIDIMENSIONAL
+
 ## [M20180706] - AudioToolkit_v1.2_20180706 
 
 ### Binaural
