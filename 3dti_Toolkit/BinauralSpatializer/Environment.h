@@ -188,7 +188,7 @@ namespace Binaural {
 		int HADirectionality_LeftChannel_version;			//HA Directionality left version
 		int HADirectionality_RightChannel_version;			//HA Directionality right version
                 
-		TReverberationOrder reverberationOrder;
+        TReverberationOrder reverberationOrder = TReverberationOrder::BIDIMENSIONAL;
 
         friend class CCore;									//Friend class definition
 		friend class CBRIR;
