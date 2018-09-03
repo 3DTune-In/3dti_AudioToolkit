@@ -730,27 +730,31 @@ namespace Binaural {
 	const Common::CVector3 CSingleSourceDSP::GetSphereProjectionPosition(Common::CVector3 vectorToEar, Common::CVector3 earLocalPosition, float distance) const
 	{
 		//get axis according to the defined convention
-		float leftAxis =	vectorToEar.GetAxis(LEFT_AXIS);
+		float leftAxis =	(-1)*vectorToEar.GetAxis(RIGHT_AXIS);
 		float forwardAxis = vectorToEar.GetAxis(FORWARD_AXIS);
 		float upAxis =		vectorToEar.GetAxis(UP_AXIS);
 		// Error handler:
 		if ((leftAxis == 0.0f) && (forwardAxis == 0.0f) && (upAxis == 0.0f)) {
 			ASSERT(false, RESULT_ERROR_DIVBYZERO, "Axes are not correctly set. Please, check axis conventions", "Azimuth computed from vector succesfully");
 		}
+		//get ear position in right axis
+		float earLeftAxis = (-1)*earLocalPosition.GetAxis(RIGHT_AXIS);
+
 		//Resolve a quadratic equation to get lambda, which is the parameter that define the line between the ear and the sphere, passing by the source
 		// (x_sphere, y_sphere, z_sphere) = earLocalPosition + lambda * vectorToEar 
 		// x_sphere^2 + y_sphere^2 + z_sphere^2 = distance^2
 
+	
 		float a = forwardAxis * forwardAxis + leftAxis * leftAxis + upAxis * upAxis;
-		float b = 2.0f * earLocalPosition.y * leftAxis;
-		float c = earLocalPosition.y * earLocalPosition.y - distance * distance;
+		float b = 2.0f * earLeftAxis * leftAxis;
+		float c = earLeftAxis * earLeftAxis - distance * distance;
 		float lambda = (-b + sqrt(b*b - 4.0f* a*c))* 0.5f * (1 / a);
 
 		Common::CVector3 cartesianposition;
 		
-		cartesianposition.x = lambda * forwardAxis;
-		cartesianposition.y = earLocalPosition.y + lambda * leftAxis;
-		cartesianposition.z = lambda * upAxis;
+		cartesianposition.SetAxis(FORWARD_AXIS, lambda * forwardAxis);
+		cartesianposition.SetAxis(RIGHT_AXIS, (-1)* (earLeftAxis + lambda * leftAxis));
+		cartesianposition.SetAxis(UP_AXIS, lambda * upAxis);
 
 		return cartesianposition;
 	}
