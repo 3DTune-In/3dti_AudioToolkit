@@ -630,15 +630,9 @@ namespace Binaural {
 			// We precompute everything, to minimize per-sample computations. 
 			Common::CTransform sourceTransform = eachSource->GetSourceTransform();
 			Common::CVector3 vectorToSource = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(sourceTransform);
-			float sourceAzimuth = vectorToSource.GetAzimuthRadians();
-			float sourceElevation = vectorToSource.GetElevationRadians();
+
 			float sourceDistance = vectorToSource.GetDistance();
-			float cosAzimuth = std::cos(sourceAzimuth);
-			float sinAzimuth = std::sin(sourceAzimuth);
-			float sinElevation = std::sin(sourceElevation);
-			float cosElevation = std::cos(sourceElevation);
-			float cosAcosE = cosAzimuth * cosElevation;
-			float sinAcosE = sinAzimuth * cosElevation;
+
 			CMonoBuffer<float> sourceBuffer = eachSource->GetBuffer();
 			//ASSERT(sourceBuffer.size() > 0, RESULT_ERROR_NOTSET, "Attempt to process virtual ambisonics reverb without previously feeding audio source buffers", "");
 
@@ -844,15 +838,23 @@ namespace Binaural {
 			// We precompute everything, to minimize per-sample computations. 
 			Common::CTransform sourceTransform = eachSource->GetSourceTransform();
 			Common::CVector3 vectorToSource = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(sourceTransform);
-			float sourceAzimuth = vectorToSource.GetAzimuthRadians();
 			float sourceElevation = vectorToSource.GetElevationRadians();
-			float sourceDistance = vectorToSource.GetDistance();
-			float cosAzimuth = std::cos(sourceAzimuth);
-			float sinAzimuth = std::sin(sourceAzimuth);
 			float sinElevationAbs = std::fabs(std::sin(sourceElevation));	// TEST: adding power to W channel to compensate for the lack of Z channel
 			float cosElevation = std::cos(sourceElevation);
-			float cosAcosE = cosAzimuth * cosElevation;
-			float sinAcosE = sinAzimuth * cosElevation;
+
+			float cosAcosE = 0.0f;	
+			float sinAcosE = 0.0f;
+			if (!Common::CMagnitudes::AreSame(0.0f, cosElevation, EPSILON))
+			{
+				float sourceAzimuth = vectorToSource.GetAzimuthRadians();
+				float cosAzimuth = std::cos(sourceAzimuth);
+				float sinAzimuth = std::sin(sourceAzimuth);
+				cosAcosE = cosAzimuth * cosElevation;
+				sinAcosE = sinAzimuth * cosElevation;
+			}
+
+			float sourceDistance = vectorToSource.GetDistance();
+
 			CMonoBuffer<float> sourceBuffer = eachSource->GetBuffer();
 			//ASSERT(sourceBuffer.size() > 0, RESULT_ERROR_NOTSET, "Attempt to process virtual ambisonics reverb without previously feeding audio source buffers", "");
 
@@ -1060,15 +1062,24 @@ namespace Binaural {
 			// We precompute everything, to minimize per-sample computations. 
 			Common::CTransform sourceTransform = eachSource->GetSourceTransform();
 			Common::CVector3 vectorToSource = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(sourceTransform);
-			float sourceAzimuth = vectorToSource.GetAzimuthRadians();
+
 			float sourceElevation = vectorToSource.GetElevationRadians();
-			float sourceDistance = vectorToSource.GetDistance();
-			float cosAzimuth = std::cos(sourceAzimuth);
-			float sinAzimuth = std::sin(sourceAzimuth);
 			float sinElevation = std::sin(sourceElevation);
 			float cosElevation = std::cos(sourceElevation);
-			float cosAcosE = cosAzimuth * cosElevation;
-			float sinAcosE = sinAzimuth * cosElevation;
+
+			float cosAcosE = 0.0f;
+			float sinAcosE = 0.0f;
+			if (!Common::CMagnitudes::AreSame(0.0f, cosElevation, EPSILON))
+			{
+				float sourceAzimuth = vectorToSource.GetAzimuthRadians();
+				float cosAzimuth = std::cos(sourceAzimuth);
+				float sinAzimuth = std::sin(sourceAzimuth);
+				cosAcosE = cosAzimuth * cosElevation;
+				sinAcosE = sinAzimuth * cosElevation;
+			}
+
+			float sourceDistance = vectorToSource.GetDistance();
+
 			CMonoBuffer<float> sourceBuffer = eachSource->GetBuffer();
 			//ASSERT(sourceBuffer.size() > 0, RESULT_ERROR_NOTSET, "Attempt to process virtual ambisonics reverb without previously feeding audio source buffers", "");
 
