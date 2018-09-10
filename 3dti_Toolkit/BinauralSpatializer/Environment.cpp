@@ -1056,7 +1056,13 @@ namespace Binaural {
 			{
 				SET_RESULT(RESULT_WARNING, "Attempt to do reverb process without updating source buffer; please call to SetBuffer before ProcessVirtualAmbisonicReverb.");
 				continue;
-		}
+			}
+
+			//Check if the source is in the same position as the listener head. If yes, do not apply spatialization to this source
+			if (eachSource->distanceToListener < ownerCore->GetListener()->GetHeadRadius())
+			{
+				continue;
+			}
 
 			// Get azimuth, elevation and distance from listener to each source
 			// We precompute everything, to minimize per-sample computations. 
