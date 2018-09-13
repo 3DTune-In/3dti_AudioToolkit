@@ -254,8 +254,6 @@ namespace Binaural {
 			PROFILER3DTI.RelativeSampleStart(dsSSDSPTransform);
 		#endif
 
-		float angleToForwardAxisRadians = vectorToListener.GetAngleToForwardAxisRadians();  //angle that this vector keeps with the forward axis
-
 		// WATCHER 
 		WATCH(TWatcherVariable::WV_ANECHOIC_AZIMUTH_LEFT, leftAzimuth, float);
 		WATCH(TWatcherVariable::WV_ANECHOIC_AZIMUTH_RIGHT, rightAzimuth, float);		
@@ -302,6 +300,7 @@ namespace Binaural {
 			}
 			
 			// Apply the directionality to simulate the hearing aid device
+			float angleToForwardAxisRadians = vectorToListener.GetAngleToForwardAxisRadians();  //angle that this vector keeps with the forward axis
 			ProcessDirectionality(outLeftBuffer, outRightBuffer, angleToForwardAxisRadians);
 
 			readyForAnechoic = false;	// Mark the buffer as already used for anechoic process
