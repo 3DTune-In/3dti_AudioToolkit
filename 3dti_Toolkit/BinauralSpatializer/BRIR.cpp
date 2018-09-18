@@ -165,7 +165,7 @@ namespace Binaural {
 			}
 			else
 			{
-				SET_RESULT(RESULT_ERROR_NOTSET, "GetBRIR_Partitioned: BRIR not found. Returning an empty BRIR");
+				SET_RESULT(RESULT_ERROR_NOTSET, "GetBRIR_Partitioned: BRIR "+ std::to_string(vsPos) +" not found. Returning an empty BRIR");
 				return emptyBRIR_partitioned;
 			}
 		}

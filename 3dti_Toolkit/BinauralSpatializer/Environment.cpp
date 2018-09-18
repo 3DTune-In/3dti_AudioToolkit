@@ -483,27 +483,6 @@ namespace Binaural {
 	{
 		environmentABIR.Setup(ownerCore->GetAudioState().bufferSize, environmentBRIR->GetBRIRLength());
 
-		
-		//1. Get BRIR values for each channel
-		TImpulseResponse_Partitioned northLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NORTH, Common::T_ear::LEFT);
-		TImpulseResponse_Partitioned southLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::SOUTH, Common::T_ear::LEFT);
-		TImpulseResponse_Partitioned eastLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::EAST, Common::T_ear::LEFT);
-		TImpulseResponse_Partitioned westLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::WEST, Common::T_ear::LEFT);
-		TImpulseResponse_Partitioned zenitLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::ZENIT, Common::T_ear::LEFT);
-		TImpulseResponse_Partitioned nadirLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NADIR, Common::T_ear::LEFT);
-
-		TImpulseResponse_Partitioned northRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NORTH, Common::T_ear::RIGHT);
-		TImpulseResponse_Partitioned southRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::SOUTH, Common::T_ear::RIGHT);
-		TImpulseResponse_Partitioned eastRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::EAST, Common::T_ear::RIGHT);
-		TImpulseResponse_Partitioned westRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::WEST, Common::T_ear::RIGHT);
-		TImpulseResponse_Partitioned zenitRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::ZENIT, Common::T_ear::RIGHT);
-		TImpulseResponse_Partitioned nadirRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NADIR, Common::T_ear::RIGHT);
-		
-		long s = northLeft.size();
-		
-		TImpulseResponse_Partitioned newAIR_W_left, newAIR_X_left, newAIR_Y_left, newAIR_Z_left;
-		TImpulseResponse_Partitioned newAIR_W_right, newAIR_X_right, newAIR_Y_right, newAIR_Z_right;
-
 		switch (reverberationOrder) {
 		case TReverberationOrder::BIDIMENSIONAL:
 			return CalculateABIRPartitionedBidimensional();
