@@ -719,7 +719,7 @@ namespace Binaural {
 		CMonoBuffer<float> temp_OutputBlockLeft(ouputBuffer_temp.begin() + halfsize, ouputBuffer_temp.end());
 		mixerOutput_left = std::move(temp_OutputBlockLeft);			//To use in C++11
 
-																	//Right channel
+		//Right channel
 		ouputBuffer_temp.clear();
 		Common::CFprocessor::CalculateIFFT(mixerOutput_right_FFT, ouputBuffer_temp);
 		//We are left only with the final half of the result
@@ -728,16 +728,11 @@ namespace Binaural {
 		mixerOutput_right = std::move(temp_OutputBlockRight);			//To use in C++11
 #endif
 
-																		//////////////////////////////////////////////
-																		// Mix of chabbels decoded after convolution 
-																		//////////////////////////////////////////////
-
-																		//Interlace		TODO Use the method in bufferClass??
-		for (int i = 0; i < mixerOutput_left.size(); i++) {
-			outBufferLeft.push_back(mixerOutput_left[i]);
-			outBufferRight.push_back(mixerOutput_right[i]);
-		}
-
+		//////////////////////////////////////////////
+		// Move channels to output buffers
+		//////////////////////////////////////////////		
+		outBufferLeft = std::move(mixerOutput_left);			//To use in C++11
+		outBufferRight = std::move(mixerOutput_right);			//To use in C++11		
 
 #ifdef USE_PROFILER_Environment
 		PROFILER3DTI.RelativeSampleEnd(dsEnvInvFFT);
@@ -760,6 +755,7 @@ namespace Binaural {
 		WATCH(WV_ENVIRONMENT_OUTPUT_LEFT, outBufferLeft, CMonoBuffer<float>);
 		WATCH(WV_ENVIRONMENT_OUTPUT_RIGHT, outBufferRight, CMonoBuffer<float>);
 	}
+
 	void CEnvironment::ProcessVirtualAmbisonicReverbBidimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight)
 	{
 		CMonoBuffer<float> w, x, y;	// B-Format data		
@@ -956,16 +952,11 @@ namespace Binaural {
 		mixerOutput_right = std::move(temp_OutputBlockRight);			//To use in C++11
 #endif
 
-																		//////////////////////////////////////////////
-																		// Mix of channels decoded after convolution 
-																		//////////////////////////////////////////////
-
-																		//Interlace		TODO Use the method in bufferClass??
-		for (int i = 0; i < mixerOutput_left.size(); i++) {
-			outBufferLeft.push_back(mixerOutput_left[i]);
-			outBufferRight.push_back(mixerOutput_right[i]);
-		}
-
+		//////////////////////////////////////////////
+		// Move channels to output buffers
+		//////////////////////////////////////////////		
+		outBufferLeft = std::move(mixerOutput_left);			//To use in C++11
+		outBufferRight = std::move(mixerOutput_right);			//To use in C++11		
 
 #ifdef USE_PROFILER_Environment
 		PROFILER3DTI.RelativeSampleEnd(dsEnvInvFFT);
@@ -988,6 +979,7 @@ namespace Binaural {
 		WATCH(WV_ENVIRONMENT_OUTPUT_LEFT, outBufferLeft, CMonoBuffer<float>);
 		WATCH(WV_ENVIRONMENT_OUTPUT_RIGHT, outBufferRight, CMonoBuffer<float>);
 	}
+	
 	void CEnvironment::ProcessVirtualAmbisonicReverbThreedimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight)
 	{
 		CMonoBuffer<float> w, x, y, z;	// B-Format data		
@@ -1190,16 +1182,11 @@ namespace Binaural {
 		mixerOutput_right = std::move(temp_OutputBlockRight);			//To use in C++11
 #endif
 
-																		//////////////////////////////////////////////
-																		// Mix of chabbels decoded after convolution 
-																		//////////////////////////////////////////////
-
-																		//Interlace		TODO Use the method in bufferClass??
-		for (int i = 0; i < mixerOutput_left.size(); i++) {
-			outBufferLeft.push_back(mixerOutput_left[i]);
-			outBufferRight.push_back(mixerOutput_right[i]);
-		}
-
+		//////////////////////////////////////////////
+		// Move channels to output buffers
+		//////////////////////////////////////////////			
+		outBufferLeft = std::move(mixerOutput_left);			//To use in C++11
+		outBufferRight = std::move(mixerOutput_right);			//To use in C++11		
 
 #ifdef USE_PROFILER_Environment
 		PROFILER3DTI.RelativeSampleEnd(dsEnvInvFFT);
@@ -1230,6 +1217,13 @@ namespace Binaural {
 		{
 			SET_RESULT(RESULT_ERROR_NOTINITIALIZED, "Data is not ready to be processed");
 			return;
+		}
+		
+		// Check outbuffers size
+		if (outBufferLeft.size() != 0 || outBufferRight.size() != 0) {
+			outBufferLeft.clear();
+			outBufferRight.clear();
+			SET_RESULT(RESULT_ERROR_BADSIZE, "outBufferLeft and outBufferRight were expected to be empty, they will be cleared. CEnvironment::ProcessVirtualAmbisonicReverb");
 		}
 
 		// This would crash if there are no sources created. Rather than reporting error, do nothing
