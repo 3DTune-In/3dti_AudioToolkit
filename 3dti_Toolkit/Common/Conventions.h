@@ -27,11 +27,14 @@
 /*! \file */
 
 // Axis convention pre-sets
-// Your app should define one of the axis convention presets, as a preprocessor directive: 
-// _3DTI_AXIS_CONVENTION_DEFAULT,		// Same as _3DTI_AXIS_CONVENTION_OPENFRAMEWORK
+// Your project could define, as global preprocessor difinitions, one of the axis convention presets, as a preprocessor directive: 
 // _3DTI_AXIS_CONVENTION_OPENFRAMEWORK,	// Openframeworks test apps
 // _3DTI_AXIS_CONVENTION_UNITY,			// Unity 5.x
-// _3DTI_AXIS_CONVENTION_AMBISONIC		// Ambisonics
+//
+// If no convention is defined, the Ambisonic convention is used:
+// UP_AXIS is Z					
+// RIGHT_AXIS is -Y			
+// FORWARD_AXIS is X		
 
 
 // Spherical angle convention pre-sets
@@ -59,40 +62,34 @@ typedef int TCircularMotion;	///< Type definition for defining spherical motion
 
 /////////////////////////////////////////////////////////////////////
 // PRESET IMPLEMENTATION
-/*
-#if defined(_3DTI_AXIS_CONVENTION_DEFAULT)
-	#define _3DTI_AXIS_CONVENTION_OPENFRAMEWORK
-#endif
-*/
 
-#if defined (_3DTI_AXIS_CONVENTION_BINAURAL_TEST_APP )
 
-#define UP_AXIS AXIS_Z			        ///< In the test app Z is the UP direction
-#define RIGHT_AXIS AXIS_MINUS_Y			///< In the test app -Y is the RIGHT direction
-#define FORWARD_AXIS AXIS_X		        ///< In the test app X is the FORWARD direction
-#define LEFT_AXIS AXIS_Y		        ///< In the test app Y is the LEFT direction
+#if defined(_3DTI_AXIS_CONVENTION_BINAURAL_TEST_APP)
+
+	#define UP_AXIS AXIS_Z			        ///< In the test app Z is the UP direction
+	#define RIGHT_AXIS AXIS_MINUS_Y			///< In the test app -Y is the RIGHT direction
+	#define FORWARD_AXIS AXIS_X		        ///< In the test app X is the FORWARD direction
 
 #elif defined(_3DTI_AXIS_CONVENTION_UNITY)
 	#define UP_AXIS AXIS_Y					///< In Unity 5.x, Y is the UP direction
 	#define RIGHT_AXIS AXIS_X				///< In Unity 5.x, X is the RIGHT direction
 	#define FORWARD_AXIS AXIS_Z				///< In Unity 5.x, Z is the FORWARD direction
-	#define LEFT_AXIS AXIS_MINUS_X				///< In Unity 5.x, X is the RIGHT direction
-
 
 #elif defined ( _3DTI_AXIS_CONVENTION_OPENFRAMEWORK )
 	#define UP_AXIS AXIS_MINUS_Z			///< In Open Framework test apps, -Z is the UP direction
 	#define RIGHT_AXIS AXIS_X				///< In Open Framework test apps, X is the RIGHT direction
 	#define FORWARD_AXIS AXIS_MINUS_Y		///< In Open Framework test apps, -Y is the FORWARD direction
 
-#elif defined( _3DTI_AXIS_CONVENTION_AMBISONIC )
+#elif defined(_3DTI_AXIS_CONVENTION_WEBAUDIOAPI)
+	#define UP_AXIS AXIS_Y					///< In the Web Audio API, Y is the UP direction
+	#define RIGHT_AXIS AXIS_X				///< In the Web Audio API, X is the RIGHT direction
+	#define FORWARD_AXIS AXIS_MINUS_Z		///< In the Web Audio API, -Z is the FORWARD direction
+
+#else
 	#define UP_AXIS AXIS_Z					///< In Ambisonics, Z is the UP direction
 	#define RIGHT_AXIS AXIS_MINUS_Y			///< In Ambisonics, -Y is the RIGHT direction
 	#define FORWARD_AXIS AXIS_X				///< In Ambisonics, X is the FORWARD direction
 
-#elif defined(_3DTI_AXIS_CONVENTION_WEBAUDIOAPI)
-	#define UP_AXIS AXIS_Y             ///< In the Web Audio API, Y is the UP direction
-	#define RIGHT_AXIS AXIS_X          ///< In the Web Audio API, X is the RIGHT direction
-	#define FORWARD_AXIS AXIS_MINUS_Z  ///< In the Web Audio API, -Z is the FORWARD direction
 #endif
 
 /////////////////////////////////////////////////////////////////////

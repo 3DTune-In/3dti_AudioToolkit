@@ -483,27 +483,6 @@ namespace Binaural {
 	{
 		environmentABIR.Setup(ownerCore->GetAudioState().bufferSize, environmentBRIR->GetBRIRLength());
 
-		
-		//1. Get BRIR values for each channel
-		TImpulseResponse_Partitioned northLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NORTH, Common::T_ear::LEFT);
-		TImpulseResponse_Partitioned southLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::SOUTH, Common::T_ear::LEFT);
-		TImpulseResponse_Partitioned eastLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::EAST, Common::T_ear::LEFT);
-		TImpulseResponse_Partitioned westLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::WEST, Common::T_ear::LEFT);
-		TImpulseResponse_Partitioned zenitLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::ZENIT, Common::T_ear::LEFT);
-		TImpulseResponse_Partitioned nadirLeft = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NADIR, Common::T_ear::LEFT);
-
-		TImpulseResponse_Partitioned northRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NORTH, Common::T_ear::RIGHT);
-		TImpulseResponse_Partitioned southRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::SOUTH, Common::T_ear::RIGHT);
-		TImpulseResponse_Partitioned eastRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::EAST, Common::T_ear::RIGHT);
-		TImpulseResponse_Partitioned westRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::WEST, Common::T_ear::RIGHT);
-		TImpulseResponse_Partitioned zenitRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::ZENIT, Common::T_ear::RIGHT);
-		TImpulseResponse_Partitioned nadirRight = environmentBRIR->GetBRIR_Partitioned(VirtualSpeakerPosition::NADIR, Common::T_ear::RIGHT);
-		
-		long s = northLeft.size();
-		
-		TImpulseResponse_Partitioned newAIR_W_left, newAIR_X_left, newAIR_Y_left, newAIR_Z_left;
-		TImpulseResponse_Partitioned newAIR_W_right, newAIR_X_right, newAIR_Y_right, newAIR_Z_right;
-
 		switch (reverberationOrder) {
 		case TReverberationOrder::BIDIMENSIONAL:
 			return CalculateABIRPartitionedBidimensional();
@@ -626,19 +605,19 @@ namespace Binaural {
 				continue;
 			}
 
+			//Check if the source is in the same position as the listener head. If yes, do not apply spatialization to this source
+			if (eachSource->distanceToListener < ownerCore->GetListener()->GetHeadRadius())
+			{
+				continue;
+			}
+
 			// Get azimuth, elevation and distance from listener to each source
 			// We precompute everything, to minimize per-sample computations. 
 			Common::CTransform sourceTransform = eachSource->GetSourceTransform();
 			Common::CVector3 vectorToSource = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(sourceTransform);
-			float sourceAzimuth = vectorToSource.GetAzimuthRadians();
-			float sourceElevation = vectorToSource.GetElevationRadians();
+
 			float sourceDistance = vectorToSource.GetDistance();
-			float cosAzimuth = std::cos(sourceAzimuth);
-			float sinAzimuth = std::sin(sourceAzimuth);
-			float sinElevation = std::sin(sourceElevation);
-			float cosElevation = std::cos(sourceElevation);
-			float cosAcosE = cosAzimuth * cosElevation;
-			float sinAcosE = sinAzimuth * cosElevation;
+
 			CMonoBuffer<float> sourceBuffer = eachSource->GetBuffer();
 			//ASSERT(sourceBuffer.size() > 0, RESULT_ERROR_NOTSET, "Attempt to process virtual ambisonics reverb without previously feeding audio source buffers", "");
 
@@ -746,7 +725,7 @@ namespace Binaural {
 		CMonoBuffer<float> temp_OutputBlockLeft(ouputBuffer_temp.begin() + halfsize, ouputBuffer_temp.end());
 		mixerOutput_left = std::move(temp_OutputBlockLeft);			//To use in C++11
 
-																	//Right channel
+		//Right channel
 		ouputBuffer_temp.clear();
 		Common::CFprocessor::CalculateIFFT(mixerOutput_right_FFT, ouputBuffer_temp);
 		//We are left only with the final half of the result
@@ -755,16 +734,11 @@ namespace Binaural {
 		mixerOutput_right = std::move(temp_OutputBlockRight);			//To use in C++11
 #endif
 
-																		//////////////////////////////////////////////
-																		// Mix of chabbels decoded after convolution 
-																		//////////////////////////////////////////////
-
-																		//Interlace		TODO Use the method in bufferClass??
-		for (int i = 0; i < mixerOutput_left.size(); i++) {
-			outBufferLeft.push_back(mixerOutput_left[i]);
-			outBufferRight.push_back(mixerOutput_right[i]);
-		}
-
+		//////////////////////////////////////////////
+		// Move channels to output buffers
+		//////////////////////////////////////////////		
+		outBufferLeft = std::move(mixerOutput_left);			//To use in C++11
+		outBufferRight = std::move(mixerOutput_right);			//To use in C++11		
 
 #ifdef USE_PROFILER_Environment
 		PROFILER3DTI.RelativeSampleEnd(dsEnvInvFFT);
@@ -787,6 +761,7 @@ namespace Binaural {
 		WATCH(WV_ENVIRONMENT_OUTPUT_LEFT, outBufferLeft, CMonoBuffer<float>);
 		WATCH(WV_ENVIRONMENT_OUTPUT_RIGHT, outBufferRight, CMonoBuffer<float>);
 	}
+
 	void CEnvironment::ProcessVirtualAmbisonicReverbBidimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight)
 	{
 		CMonoBuffer<float> w, x, y;	// B-Format data		
@@ -844,15 +819,23 @@ namespace Binaural {
 			// We precompute everything, to minimize per-sample computations. 
 			Common::CTransform sourceTransform = eachSource->GetSourceTransform();
 			Common::CVector3 vectorToSource = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(sourceTransform);
-			float sourceAzimuth = vectorToSource.GetAzimuthRadians();
 			float sourceElevation = vectorToSource.GetElevationRadians();
-			float sourceDistance = vectorToSource.GetDistance();
-			float cosAzimuth = std::cos(sourceAzimuth);
-			float sinAzimuth = std::sin(sourceAzimuth);
 			float sinElevationAbs = std::fabs(std::sin(sourceElevation));	// TEST: adding power to W channel to compensate for the lack of Z channel
 			float cosElevation = std::cos(sourceElevation);
-			float cosAcosE = cosAzimuth * cosElevation;
-			float sinAcosE = sinAzimuth * cosElevation;
+
+			float cosAcosE = 0.0f;	
+			float sinAcosE = 0.0f;
+			if (!Common::CMagnitudes::AreSame(0.0f, cosElevation, EPSILON))
+			{
+				float sourceAzimuth = vectorToSource.GetAzimuthRadians();
+				float cosAzimuth = std::cos(sourceAzimuth);
+				float sinAzimuth = std::sin(sourceAzimuth);
+				cosAcosE = cosAzimuth * cosElevation;
+				sinAcosE = sinAzimuth * cosElevation;
+			}
+
+			float sourceDistance = vectorToSource.GetDistance();
+
 			CMonoBuffer<float> sourceBuffer = eachSource->GetBuffer();
 			//ASSERT(sourceBuffer.size() > 0, RESULT_ERROR_NOTSET, "Attempt to process virtual ambisonics reverb without previously feeding audio source buffers", "");
 
@@ -975,16 +958,11 @@ namespace Binaural {
 		mixerOutput_right = std::move(temp_OutputBlockRight);			//To use in C++11
 #endif
 
-																		//////////////////////////////////////////////
-																		// Mix of channels decoded after convolution 
-																		//////////////////////////////////////////////
-
-																		//Interlace		TODO Use the method in bufferClass??
-		for (int i = 0; i < mixerOutput_left.size(); i++) {
-			outBufferLeft.push_back(mixerOutput_left[i]);
-			outBufferRight.push_back(mixerOutput_right[i]);
-		}
-
+		//////////////////////////////////////////////
+		// Move channels to output buffers
+		//////////////////////////////////////////////		
+		outBufferLeft = std::move(mixerOutput_left);			//To use in C++11
+		outBufferRight = std::move(mixerOutput_right);			//To use in C++11		
 
 #ifdef USE_PROFILER_Environment
 		PROFILER3DTI.RelativeSampleEnd(dsEnvInvFFT);
@@ -1007,6 +985,7 @@ namespace Binaural {
 		WATCH(WV_ENVIRONMENT_OUTPUT_LEFT, outBufferLeft, CMonoBuffer<float>);
 		WATCH(WV_ENVIRONMENT_OUTPUT_RIGHT, outBufferRight, CMonoBuffer<float>);
 	}
+	
 	void CEnvironment::ProcessVirtualAmbisonicReverbThreedimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight)
 	{
 		CMonoBuffer<float> w, x, y, z;	// B-Format data		
@@ -1054,21 +1033,36 @@ namespace Binaural {
 			{
 				SET_RESULT(RESULT_WARNING, "Attempt to do reverb process without updating source buffer; please call to SetBuffer before ProcessVirtualAmbisonicReverb.");
 				continue;
-		}
+			}
+
+			//Check if the source is in the same position as the listener head. If yes, do not apply spatialization to this source
+			if (eachSource->distanceToListener < ownerCore->GetListener()->GetHeadRadius())
+			{
+				continue;
+			}
 
 			// Get azimuth, elevation and distance from listener to each source
 			// We precompute everything, to minimize per-sample computations. 
 			Common::CTransform sourceTransform = eachSource->GetSourceTransform();
 			Common::CVector3 vectorToSource = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(sourceTransform);
-			float sourceAzimuth = vectorToSource.GetAzimuthRadians();
+
 			float sourceElevation = vectorToSource.GetElevationRadians();
-			float sourceDistance = vectorToSource.GetDistance();
-			float cosAzimuth = std::cos(sourceAzimuth);
-			float sinAzimuth = std::sin(sourceAzimuth);
 			float sinElevation = std::sin(sourceElevation);
 			float cosElevation = std::cos(sourceElevation);
-			float cosAcosE = cosAzimuth * cosElevation;
-			float sinAcosE = sinAzimuth * cosElevation;
+
+			float cosAcosE = 0.0f;
+			float sinAcosE = 0.0f;
+			if (!Common::CMagnitudes::AreSame(0.0f, cosElevation, EPSILON))
+			{
+				float sourceAzimuth = vectorToSource.GetAzimuthRadians();
+				float cosAzimuth = std::cos(sourceAzimuth);
+				float sinAzimuth = std::sin(sourceAzimuth);
+				cosAcosE = cosAzimuth * cosElevation;
+				sinAcosE = sinAzimuth * cosElevation;
+			}
+
+			float sourceDistance = vectorToSource.GetDistance();
+
 			CMonoBuffer<float> sourceBuffer = eachSource->GetBuffer();
 			//ASSERT(sourceBuffer.size() > 0, RESULT_ERROR_NOTSET, "Attempt to process virtual ambisonics reverb without previously feeding audio source buffers", "");
 
@@ -1194,16 +1188,11 @@ namespace Binaural {
 		mixerOutput_right = std::move(temp_OutputBlockRight);			//To use in C++11
 #endif
 
-																		//////////////////////////////////////////////
-																		// Mix of chabbels decoded after convolution 
-																		//////////////////////////////////////////////
-
-																		//Interlace		TODO Use the method in bufferClass??
-		for (int i = 0; i < mixerOutput_left.size(); i++) {
-			outBufferLeft.push_back(mixerOutput_left[i]);
-			outBufferRight.push_back(mixerOutput_right[i]);
-		}
-
+		//////////////////////////////////////////////
+		// Move channels to output buffers
+		//////////////////////////////////////////////			
+		outBufferLeft = std::move(mixerOutput_left);			//To use in C++11
+		outBufferRight = std::move(mixerOutput_right);			//To use in C++11		
 
 #ifdef USE_PROFILER_Environment
 		PROFILER3DTI.RelativeSampleEnd(dsEnvInvFFT);
@@ -1234,6 +1223,13 @@ namespace Binaural {
 		{
 			SET_RESULT(RESULT_ERROR_NOTINITIALIZED, "Data is not ready to be processed");
 			return;
+		}
+		
+		// Check outbuffers size
+		if (outBufferLeft.size() != 0 || outBufferRight.size() != 0) {
+			outBufferLeft.clear();
+			outBufferRight.clear();
+			SET_RESULT(RESULT_ERROR_BADSIZE, "outBufferLeft and outBufferRight were expected to be empty, they will be cleared. CEnvironment::ProcessVirtualAmbisonicReverb");
 		}
 
 		// This would crash if there are no sources created. Rather than reporting error, do nothing

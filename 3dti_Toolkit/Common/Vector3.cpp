@@ -215,7 +215,10 @@ namespace Common {
 		float rightAxis = GetAxis(RIGHT_AXIS);
 		float forwardAxis = GetAxis(FORWARD_AXIS);
 		if ((rightAxis == 0.0f) && (forwardAxis == 0.0f))
-			ASSERT(false, RESULT_ERROR_DIVBYZERO, "Axes are not correctly set. Please, check axis conventions", "Azimuth computed from vector succesfully");
+		{
+			SET_RESULT(RESULT_ERROR_INVALID_PARAM, "Azimuth cannot be computed for a (0,0,z) vector. 0.0 is returned");
+			return 0.0f;
+		}
 
 		// front=0; left=-90; right=90
 		//return atan2(*rightAxis, *forwardAxis);		
@@ -314,8 +317,6 @@ namespace Common {
 			SET_RESULT(RESULT_ERROR_DIVBYZERO, "Distance from source to listener is zero");
 			return 0.0f;
 		}
-		//else
-		//	SET_RESULT(RESULT_OK, "Interaural azimuth computed from vector succesfully");	// No more possible errors. 
 
 		float f = GetAxis(FORWARD_AXIS);
 		float angle = SafeAcos(f / distance);

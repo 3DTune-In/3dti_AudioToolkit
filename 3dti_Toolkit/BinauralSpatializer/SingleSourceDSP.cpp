@@ -254,8 +254,6 @@ namespace Binaural {
 			PROFILER3DTI.RelativeSampleStart(dsSSDSPTransform);
 		#endif
 
-		float angleToForwardAxisRadians = vectorToListener.GetAngleToForwardAxisRadians();  //angle that this vector keeps with the forward axis
-
 		// WATCHER 
 		WATCH(TWatcherVariable::WV_ANECHOIC_AZIMUTH_LEFT, leftAzimuth, float);
 		WATCH(TWatcherVariable::WV_ANECHOIC_AZIMUTH_RIGHT, rightAzimuth, float);		
@@ -302,6 +300,7 @@ namespace Binaural {
 			}
 			
 			// Apply the directionality to simulate the hearing aid device
+			float angleToForwardAxisRadians = vectorToListener.GetAngleToForwardAxisRadians();  //angle that this vector keeps with the forward axis
 			ProcessDirectionality(outLeftBuffer, outRightBuffer, angleToForwardAxisRadians);
 
 			readyForAnechoic = false;	// Mark the buffer as already used for anechoic process
@@ -730,27 +729,31 @@ namespace Binaural {
 	const Common::CVector3 CSingleSourceDSP::GetSphereProjectionPosition(Common::CVector3 vectorToEar, Common::CVector3 earLocalPosition, float distance) const
 	{
 		//get axis according to the defined convention
-		float leftAxis =	vectorToEar.GetAxis(LEFT_AXIS);
+		float rightAxis =	vectorToEar.GetAxis(RIGHT_AXIS);
 		float forwardAxis = vectorToEar.GetAxis(FORWARD_AXIS);
 		float upAxis =		vectorToEar.GetAxis(UP_AXIS);
 		// Error handler:
-		if ((leftAxis == 0.0f) && (forwardAxis == 0.0f) && (upAxis == 0.0f)) {
+		if ((rightAxis == 0.0f) && (forwardAxis == 0.0f) && (upAxis == 0.0f)) {
 			ASSERT(false, RESULT_ERROR_DIVBYZERO, "Axes are not correctly set. Please, check axis conventions", "Azimuth computed from vector succesfully");
 		}
+		//get ear position in right axis
+		float earRightAxis = earLocalPosition.GetAxis(RIGHT_AXIS);
+
 		//Resolve a quadratic equation to get lambda, which is the parameter that define the line between the ear and the sphere, passing by the source
 		// (x_sphere, y_sphere, z_sphere) = earLocalPosition + lambda * vectorToEar 
 		// x_sphere^2 + y_sphere^2 + z_sphere^2 = distance^2
 
-		float a = forwardAxis * forwardAxis + leftAxis * leftAxis + upAxis * upAxis;
-		float b = 2.0f * earLocalPosition.y * leftAxis;
-		float c = earLocalPosition.y * earLocalPosition.y - distance * distance;
+	
+		float a = forwardAxis * forwardAxis + rightAxis * rightAxis + upAxis * upAxis;
+		float b = 2.0f * earRightAxis * rightAxis;
+		float c = earRightAxis * earRightAxis - distance * distance;
 		float lambda = (-b + sqrt(b*b - 4.0f* a*c))* 0.5f * (1 / a);
 
 		Common::CVector3 cartesianposition;
 		
-		cartesianposition.x = lambda * forwardAxis;
-		cartesianposition.y = earLocalPosition.y + lambda * leftAxis;
-		cartesianposition.z = lambda * upAxis;
+		cartesianposition.SetAxis(FORWARD_AXIS, lambda * forwardAxis);
+		cartesianposition.SetAxis(RIGHT_AXIS, (earRightAxis + lambda * rightAxis));
+		cartesianposition.SetAxis(UP_AXIS, lambda * upAxis);
 
 		return cartesianposition;
 	}

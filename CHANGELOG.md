@@ -3,6 +3,21 @@ All notable changes to the 3DTuneIn Toolkit will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [M20181003] - AudioToolkit_v1.3_20181003
+
+### Binaural
+
+`Fixed`
+ -  Solved a bug with computation of azimuth and elevation when axis conventions were different from that of the Binaural Test_App.
+ -  Solved a crash with reverb when elevation is +90deg or -90deg.
+ -  Now it is checked if the source is inside the head for adimensional and three-dimensional reverb. (It was only in the bi-dimensional mode).
+ -  HRTF files in 3dti-hrtf format were updated (they were outdated and incompatible with the current version of the toolkit)
+ -  Bug fixed in IIR filters for the high performance mode.
+
+`Changed`
+ -  BRIR files in the resource folder are updated to adjust levels with provided HRTF. 
+ 
+ 
 ## [M20180726] - AudioToolkit_v1.2_20180726 
 
 ### Binaural

@@ -457,6 +457,7 @@ namespace Common {
 
 			// Start with a clean buffer
 			this->clear();
+			this->reserve(2 * left.size());
 
 			// Interlace channels
 			for (int sample = 0; sample < left.size(); sample++)
