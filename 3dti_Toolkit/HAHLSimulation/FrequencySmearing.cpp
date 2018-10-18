@@ -78,6 +78,15 @@ namespace HAHLSimulation {
 		}				
 	}//Setup
 
+	CFrequencySmearing::SmearingAlgorithm CFrequencySmearing::GetSmearingAlgorithm()
+	{
+		return smearingAlgorithm;
+	}
+
+	void CFrequencySmearing::SetSmearingAlgorithm(SmearingAlgorithm _smearingAlgorithm)
+	{
+		Setup(bufferSize, samplingRate, _smearingAlgorithm);
+	}
 
 	void CFrequencySmearing::Process(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer)
 	{
@@ -466,16 +475,6 @@ namespace HAHLSimulation {
 	CMonoBuffer<float>* CFrequencySmearing::GetSmearingWindow()
 	{
 		return &smearingWindow;
-	}
-
-	CFrequencySmearing::SmearingAlgorithm CFrequencySmearing::GetSmearingAlgorithm()
-	{
-		return smearingAlgorithm;
-	}
-
-	void CFrequencySmearing::SetSmearingAlgorithm(SmearingAlgorithm _smearingAlgorithm)
-	{
-		smearingAlgorithm = _smearingAlgorithm;
 	}
 
 	bool CFrequencySmearing::IsCloseToZero(float value)
