@@ -42,7 +42,7 @@ namespace HAHLSimulation {
 	///////////////////
 
 	//Initialize the class and allocate memory.
-	void CFrequencySmearing::Setup(int _bufferSize, float _samplingRate)
+	void CFrequencySmearing::Setup(int _bufferSize, float _samplingRate, SmearingAlgorithm _smearingAlgorithm)
 	{
 		ASSERT(_bufferSize > 0, RESULT_ERROR_BADSIZE, "Bad buffer size when setting up frequency smearing", "");
 		
@@ -59,6 +59,7 @@ namespace HAHLSimulation {
 			bufferSize = _bufferSize;					//Store the new buffer size
 			samplingRate = _samplingRate;				//Store the new sampling rate
 			oneSampleBandwidth = (samplingRate / ((float)bufferSize * 4.0f));
+			smearingAlgorithm = _smearingAlgorithm;
 
 			downwardSmearingBufferSize = DEFAULT_SMEARING_SECTION_SIZE;
 			upwardSmearingBufferSize = DEFAULT_SMEARING_SECTION_SIZE;			

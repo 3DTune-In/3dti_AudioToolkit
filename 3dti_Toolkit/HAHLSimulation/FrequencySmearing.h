@@ -45,6 +45,10 @@ namespace HAHLSimulation {
 
 	public:
 
+		enum SmearingAlgorithm {
+			CLASSIC, SUBFRAME
+		};
+
 		/** \brief Default constructor
 		*/
 		CFrequencySmearing();
@@ -56,7 +60,7 @@ namespace HAHLSimulation {
 		*   \eh On success, RESULT_OK is reported to the error handler.
 		*       On error, an error code is reported to the error handler.
 		*/
-		void Setup(int _bufferSize, float _samplingRate);
+		void Setup(int _bufferSize, float _samplingRate, SmearingAlgorithm _smearingAlgorithm);
 
 		/** \brief Process one buffer through frequency smearing effect.		
 		*	\param [in] inputBuffer input buffer, in frequency domain
@@ -147,6 +151,7 @@ namespace HAHLSimulation {
 		int upwardSmearingBufferSize;		// Size of upward section of smearing window, in number of samples
 		float downwardSmearing_Hz;			// Amount of smearing (standard deviation) of downward section of smearing window, in Hz
 		float upwardSmearing_Hz;			// Amount of smearing (standard deviation) of upward section of smearing window, in Hz
+		SmearingAlgorithm smearingAlgorithm;
 	};
 }
 #endif
