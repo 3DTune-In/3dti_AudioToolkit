@@ -115,6 +115,7 @@ namespace HAHLSimulation {
 		inputBufferWindow.reserve(bufferSize);
 
 		CMonoBuffer<float> storagePrevBuffer[4];
+		int shift = bufferSize / 4;
 
 		for (int i = 0; i < 4; i++) {
 
@@ -124,8 +125,8 @@ namespace HAHLSimulation {
 			//
 			inputBufferWindow.clear(); inputBufferWindow.reserve(bufferSize);
 			inputBufferWindow.insert(inputBufferWindow.end(),
-									 longInputBuffer.begin() + i * bufferSize / 4,
-									 longInputBuffer.begin() + i * bufferSize / 4 + bufferSize);
+									 longInputBuffer.begin() + i * shift,
+									 longInputBuffer.begin() + i * shift + bufferSize);
 
 			//Enveloped using Hann Window
 			CMonoBuffer<float> inputBufferCrossfaded;
@@ -161,33 +162,33 @@ namespace HAHLSimulation {
 		}
 
 		// Output buffer sums all contributions for each quarter
-		int shift = bufferSize / 4;
-		for (int i = 0; i < bufferSize; i+=shift) {
+		
+		for (int i = 0; i < 4; i++) {
 			for (int j = 0; j < shift; j++) {
 				switch (i) {
 				case 0: // First quarter
-					outputBuffer[i+j] = storageLastBuffer[0][shift * 3 + j] +
+					outputBuffer[j] =	storageLastBuffer[0][shift * 3 + j] +
 										storageLastBuffer[1][shift * 2 + j] +
 										storageLastBuffer[2][shift + j] +
 										storagePrevBuffer[0][j];
 					break;
 				case 1: // Second quarter
-					outputBuffer[i+j] = storageLastBuffer[1][shift * 3 + j] +
-										storageLastBuffer[2][shift * 2 + j] +
-										storagePrevBuffer[0][shift + j] +
-										storagePrevBuffer[1][j];
+					outputBuffer[shift + j] =	storageLastBuffer[1][shift * 3 + j] +
+												storageLastBuffer[2][shift * 2 + j] +
+												storagePrevBuffer[0][shift + j] +
+												storagePrevBuffer[1][j];
 					break;
 				case 2: // Third quarter
-					outputBuffer[i+j] = storageLastBuffer[2][shift * 3 + j] +
-										storagePrevBuffer[0][shift * 2 + j] +
-										storagePrevBuffer[1][shift + j] +
-										storagePrevBuffer[2][j];
+					outputBuffer[shift * 2 + j] =	storageLastBuffer[2][shift * 3 + j] +
+													storagePrevBuffer[0][shift * 2 + j] +
+													storagePrevBuffer[1][shift + j] +
+													storagePrevBuffer[2][j];
 					break;
 				case 3: // Fourth quarter
-					outputBuffer[i+j] = storagePrevBuffer[0][shift * 3 + j] +
-										storagePrevBuffer[1][shift * 2 + j] +
-										storagePrevBuffer[2][shift + j] +
-										storagePrevBuffer[3][j];
+					outputBuffer[shift * 3 + j] =	storagePrevBuffer[0][shift * 3 + j] +
+													storagePrevBuffer[1][shift * 2 + j] +
+													storagePrevBuffer[2][shift + j] +
+													storagePrevBuffer[3][j];
 					break;
 				}
 			}
