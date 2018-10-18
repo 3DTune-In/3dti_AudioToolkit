@@ -147,6 +147,10 @@ namespace HAHLSimulation {
 
 		void InitializePreviousBuffers();
 
+		void ProcessSubframe(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer);
+
+		void ProcessClassic(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer);
+
 		// Process 1D convolution of input buffer with smearing window, with output size equal to input size.
 		// To achieve same size, convolution starts from the zero point of the smearing window and ends at the same point.
 		void ProcessSmearingConvolution(CMonoBuffer<float> &inputBuffer, CMonoBuffer<float> &outputBuffer);
