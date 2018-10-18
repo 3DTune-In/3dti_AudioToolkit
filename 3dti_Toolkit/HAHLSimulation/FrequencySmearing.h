@@ -145,6 +145,8 @@ namespace HAHLSimulation {
 		// Tell if a float value is zero or close to zero
 		bool IsCloseToZero(float value);
 
+		void InitializePreviousBuffers();
+
 		// Process 1D convolution of input buffer with smearing window, with output size equal to input size.
 		// To achieve same size, convolution starts from the zero point of the smearing window and ends at the same point.
 		void ProcessSmearingConvolution(CMonoBuffer<float> &inputBuffer, CMonoBuffer<float> &outputBuffer);
@@ -152,14 +154,15 @@ namespace HAHLSimulation {
 		///////////////
 		// ATTRIBUTES	
 		///////////////
-		int bufferSize;							//Size of the inputs buffer		
-		float samplingRate;						//Sampling rate, in Hz
-		bool setupDone;							//It's true when setup has been called at least once
-		float oneSampleBandwidth;				//Precomputed bandwidth for one sample of frequency-domain buffer, in Hz
-		CMonoBuffer<float> previousBuffer;		//To store the previous buffer
-		CMonoBuffer<float> storageBuffer;		//To store the partial results of the convolution
-		CMonoBuffer<float> hannWindowBuffer;	//To store the hann window
-		CMonoBuffer<float> smearingWindow;		//To store the smearing window		
+		int bufferSize;										//Size of the inputs buffer		
+		float samplingRate;									//Sampling rate, in Hz
+		bool setupDone;										//It's true when setup has been called at least once
+		float oneSampleBandwidth;							//Precomputed bandwidth for one sample of frequency-domain buffer, in Hz
+		CMonoBuffer<float> previousBuffer;					//To store the previous buffer
+		CMonoBuffer<float> storageBuffer;					//To store partial results of the convolution from previous buffer
+		CMonoBuffer<float> storageLastBuffer[3];			//To store needed partial results of the convolution from last buffer
+		CMonoBuffer<float> hannWindowBuffer;				//To store the hann window
+		CMonoBuffer<float> smearingWindow;					//To store the smearing window		
 
 		// Configurable parameters		
 		int downwardSmearingBufferSize;		// Size of downward section of smearing window, in number of samples

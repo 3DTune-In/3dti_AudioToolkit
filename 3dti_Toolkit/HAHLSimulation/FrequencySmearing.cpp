@@ -61,14 +61,15 @@ namespace HAHLSimulation {
 			oneSampleBandwidth = (samplingRate / ((float)bufferSize * 4.0f));
 			smearingAlgorithm = _smearingAlgorithm;
 
+			InitializePreviousBuffers();
+
 			downwardSmearingBufferSize = DEFAULT_SMEARING_SECTION_SIZE;
 			upwardSmearingBufferSize = DEFAULT_SMEARING_SECTION_SIZE;			
 			downwardSmearing_Hz = DEFAULT_SMEARING_HZ;
 			upwardSmearing_Hz = DEFAULT_SMEARING_HZ;			
-
-			previousBuffer.resize(bufferSize);			//Reserve space to store one buffer frame
-			storageBuffer.resize(bufferSize);			//Reserve space to store one buffer frame
-			hannWindowBuffer.resize(bufferSize * 2);	//Reserve space to store hann window need double of buffer frame size
+			previousBuffer.resize(bufferSize);		//Reserve space to store half window size
+			storageBuffer.resize(bufferSize);
+			hannWindowBuffer.resize(smearingAlgorithm == SmearingAlgorithm::SUBFRAME ? bufferSize : bufferSize*2);		//Reserve space to store hann window		
 			CalculateHannWindow();						//Calculate hann window to this buffer size
 			CalculateSmearingWindow();					//Calculate smearing window with default parameters			
 
@@ -359,6 +360,15 @@ namespace HAHLSimulation {
 			return true;
 		else
 			return false;
+	}
+
+	void CFrequencySmearing::InitializePreviousBuffers()
+	{
+		for (int i = 0; i < 3; i++) {
+			storageLastBuffer[i].reserve(bufferSize);
+			storageLastBuffer[i].insert(storageLastBuffer[i].begin(), bufferSize, 0.0f);
+		}
+		previousBuffer.insert(previousBuffer.begin(), bufferSize, 0.0f);
 	}
 
 	void CFrequencySmearing::ProcessSmearingConvolution(CMonoBuffer<float> &inputBuffer, CMonoBuffer<float> &outputBuffer)
