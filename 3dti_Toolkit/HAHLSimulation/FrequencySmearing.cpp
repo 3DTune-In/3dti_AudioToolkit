@@ -343,6 +343,15 @@ namespace HAHLSimulation {
 		return &smearingWindow;
 	}
 
+	CFrequencySmearing::SmearingAlgorithm CFrequencySmearing::GetSmearingAlgorithm()
+	{
+		return smearingAlgorithm;
+	}
+
+	void CFrequencySmearing::SetSmearingAlgorithm(SmearingAlgorithm _smearingAlgorithm)
+	{
+		smearingAlgorithm = _smearingAlgorithm;
+	}
 
 	bool CFrequencySmearing::IsCloseToZero(float value)
 	{

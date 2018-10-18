@@ -101,6 +101,21 @@ namespace HAHLSimulation {
 		*/
 		CMonoBuffer<float>* GetSmearingWindow();
 
+
+		/** \brief Get frequency smearing algorithm
+		*	\retval smearingAlgorithm enum
+		*   \eh Nothing is reported to the error handler.
+		*/
+		SmearingAlgorithm GetSmearingAlgorithm();
+
+		/** \brief Set frequency smearing algorithm
+		*	\param [in] _smearingAlgorithm enum
+		*   \eh Nothing is reported to the error handler.
+		*/
+		void SetSmearingAlgorithm(SmearingAlgorithm _smearingAlgorithm);
+
+		
+
 	private:
 		
 		/////////////
