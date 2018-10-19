@@ -48,13 +48,6 @@ namespace HAHLSimulation {
 		
 		if (_bufferSize > 0)		//In case the error handler is off
 		{
-			//Second time this method has been called we have to clear all buffers
-			if (setupDone) {
-				previousBuffer.clear();
-				storageBuffer.clear();
-				hannWindowBuffer.clear();
-				smearingWindow.clear();				
-			}
 
 			bufferSize = _bufferSize;					//Store the new buffer size
 			samplingRate = _samplingRate;				//Store the new sampling rate
@@ -67,11 +60,8 @@ namespace HAHLSimulation {
 			upwardSmearingBufferSize = DEFAULT_SMEARING_SECTION_SIZE;			
 			downwardSmearing_Hz = DEFAULT_SMEARING_HZ;
 			upwardSmearing_Hz = DEFAULT_SMEARING_HZ;			
-			previousBuffer.resize(bufferSize);		//Reserve space to store half window size
-			storageBuffer.resize(bufferSize);
-			hannWindowBuffer.resize(smearingAlgorithm == SmearingAlgorithm::SUBFRAME ? bufferSize : bufferSize*2);		//Reserve space to store hann window		
-			CalculateHannWindow();						//Calculate hann window to this buffer size
-			CalculateSmearingWindow();					//Calculate smearing window with default parameters			
+
+			SmearingWindowSetup();
 
 			setupDone = true;
 			SET_RESULT(RESULT_OK, "Smearing frequency succesfully set");
@@ -259,6 +249,12 @@ namespace HAHLSimulation {
 			//Update new buffer
 			previousBuffer = inputBuffer;		
 		}						
+	}
+
+	void CFrequencySmearing::SmearingWindowSetup() {
+		hannWindowBuffer.resize(smearingAlgorithm == SmearingAlgorithm::SUBFRAME ? bufferSize : bufferSize * 2);		//Reserve space to store hann window		
+		CalculateHannWindow();						//Calculate hann window to this buffer size
+		CalculateSmearingWindow();					//Calculate smearing window with default parameters			
 	}
 
 	void CFrequencySmearing::CalculateHannWindow()
@@ -487,11 +483,20 @@ namespace HAHLSimulation {
 
 	void CFrequencySmearing::InitializePreviousBuffers()
 	{
+		if (setupDone) {
+			previousBuffer.clear();
+			storageBuffer.clear();
+			hannWindowBuffer.clear();
+			smearingWindow.clear();
+		}
 		for (int i = 0; i < 3; i++) {
 			storageLastBuffer[i].reserve(bufferSize);
 			storageLastBuffer[i].insert(storageLastBuffer[i].begin(), bufferSize, 0.0f);
 		}
 		previousBuffer.insert(previousBuffer.begin(), bufferSize, 0.0f);
+
+		previousBuffer.resize(bufferSize);
+		storageBuffer.resize(bufferSize);
 	}
 
 	void CFrequencySmearing::ProcessSmearingConvolution(CMonoBuffer<float> &inputBuffer, CMonoBuffer<float> &outputBuffer)

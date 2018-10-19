@@ -142,6 +142,9 @@ namespace HAHLSimulation {
 		// Calculate probability for a single value following a gaussian distribution
 		float CalculateGaussianProbability(float mean, float deviation, float value);
 
+		// Configures 
+		void SmearingWindowSetup();
+
 		// Tell if a float value is zero or close to zero
 		bool IsCloseToZero(float value);
 
