@@ -75,7 +75,9 @@ namespace HAHLSimulation {
 
 	void CFrequencySmearing::SetSmearingAlgorithm(SmearingAlgorithm _smearingAlgorithm)
 	{
-		Setup(bufferSize, samplingRate, _smearingAlgorithm);
+		smearingAlgorithm = _smearingAlgorithm;
+		InitializePreviousBuffers();
+		SmearingWindowSetup();		
 	}
 
 	void CFrequencySmearing::Process(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer)
@@ -252,9 +254,9 @@ namespace HAHLSimulation {
 	}
 
 	void CFrequencySmearing::SmearingWindowSetup() {
-		hannWindowBuffer.resize(smearingAlgorithm == SmearingAlgorithm::SUBFRAME ? bufferSize : bufferSize * 2);		//Reserve space to store hann window		
+		hannWindowBuffer.resize(smearingAlgorithm == SmearingAlgorithm::SUBFRAME ? bufferSize : bufferSize * 2);		//Reserve space to store hann window depending on algorithm		
 		CalculateHannWindow();						//Calculate hann window to this buffer size
-		CalculateSmearingWindow();					//Calculate smearing window with default parameters			
+		CalculateSmearingWindow();					//Calculate smearing window with actual parameters	
 	}
 
 	void CFrequencySmearing::CalculateHannWindow()
