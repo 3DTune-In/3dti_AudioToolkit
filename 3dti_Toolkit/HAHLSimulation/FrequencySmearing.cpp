@@ -254,9 +254,18 @@ namespace HAHLSimulation {
 	}
 
 	void CFrequencySmearing::SmearingWindowSetup() {
-		hannWindowBuffer.resize(smearingAlgorithm == SmearingAlgorithm::SUBFRAME ? bufferSize : bufferSize * 2);		//Reserve space to store hann window depending on algorithm		
+		
+		if (smearingAlgorithm == SmearingAlgorithm::CLASSIC) {
+			CalculateSmearingWindow();					//Calculate smearing window with actual parameters			
+			hannWindowBuffer.resize(bufferSize * 2);		//Reserve space to store hann window depending on algorithm		
+		}
+		else {
+			smearingMatrix.resize(bufferSize);
+			for (int i = 0; i < bufferSize; i++) smearingMatrix[i].resize(bufferSize);
+			CalculateSmearingMatrix();
+			hannWindowBuffer.resize(bufferSize);		//Reserve space to store hann window depending on algorithm		
+		}
 		CalculateHannWindow();						//Calculate hann window to this buffer size
-		CalculateSmearingWindow();					//Calculate smearing window with actual parameters	
 	}
 
 	void CFrequencySmearing::CalculateHannWindow()
@@ -309,10 +318,11 @@ namespace HAHLSimulation {
 		// Note: if input buffer size is even, this might have undefined behavior
 		CMonoBuffer<float> leftInputBuffer(inputBuffer.begin(), inputBuffer.begin() + inputBuffer.size()/2 + 1);	// Get left side		
 
-		// 2. Process convolution between smearing window and left section of input
+		// 2. Process convolution between smearing window or matrix and left section of input
 		outputBuffer.clear();
 		outputBuffer.assign(leftInputBuffer.size(), 0.0f);
-		ProcessSmearingConvolution(leftInputBuffer, outputBuffer);		
+		if (smearingAlgorithm == SmearingAlgorithm::CLASSIC)	ProcessSmearingConvolution(leftInputBuffer, outputBuffer);		
+		else													ProcessSmearingComplexConvolution(leftInputBuffer, outputBuffer);
 
 		// 3. Copy inverted convolved buffer to right side of symmetric output (except for last sample)		
 		//for (int i = 0; i < leftInputBuffer.size() - 1; i++)
@@ -376,6 +386,92 @@ namespace HAHLSimulation {
 		else{ return number;}
 	}
 	
+	CMonoBuffer<CMonoBuffer<float>> CFrequencySmearing::CalculateAuditoryFilter(int lowerSideBroadening, int upperSideBroadening)
+	{
+		CMonoBuffer<CMonoBuffer<float>> auditoryFilter;
+		auditoryFilter.resize(bufferSize);
+
+		// Initializing all-zeros (bufferSize, bufferSize) matrix
+		for (int i = 0; i < bufferSize; i++)
+		{
+			auditoryFilter[i].reserve(bufferSize);
+			auditoryFilter[i].insert(auditoryFilter[i].end(), bufferSize, 0.0f);
+		}
+
+		// First row is all-zeros except first number, calculated independently to avoid division by zero
+		auditoryFilter[0][0] = 1.0f / (((float)lowerSideBroadening + (float)upperSideBroadening) / 2.0f);
+		
+		// Remaining rows are calculated element-by-element
+		float fhz, erbhz, pl, pu, g, erbNorm;
+		for (int i = 1; i < bufferSize; i++)
+		{
+			// Filter constants calculation
+			fhz = ((float)i)*(float)samplingRate / (2.0f * (float)bufferSize);
+			erbhz = 24.7f * ((fhz * 0.00437f) + 1.0f);
+			pl = 4.0f * fhz / (erbhz * (float)lowerSideBroadening);
+			pu = 4.0f * fhz / (erbhz * (float)upperSideBroadening);
+			erbNorm = erbhz * ((float)lowerSideBroadening + (float)upperSideBroadening) / (49.4f);
+			
+			// Filling row i 
+			for (int j = 0; j < bufferSize; j++)
+			{
+				g = abs((float) (i - j)) / (float) i;
+
+				if (j < i)	auditoryFilter[i][j] = ((1.0f + pl*g)*exp(-pl*g)) / erbNorm;	// Lower side
+				else		auditoryFilter[i][j] = ((1.0f + pu*g)*exp(-pu*g)) / erbNorm;	// Upper side
+			}
+
+		}
+
+		return auditoryFilter;
+		
+	}
+
+	CMonoBuffer<CMonoBuffer<float>> CFrequencySmearing::ExtendMatrix(CMonoBuffer<CMonoBuffer<float>>& inputMatrix)
+	{
+		// Output matrix will be a copy of the input matrix with extra zeros at the end of each row
+		CMonoBuffer<CMonoBuffer<float>> outputMatrix = inputMatrix;
+		int size = outputMatrix.size();
+		
+		// Adding size/2 zeros at the end of each row
+		for (int i = 0; i < size; i++) {
+			outputMatrix[i].resize(3 * size / 2);		// First the row must be resized
+			for (int j = size; j < 3 * size / 2; j++) 
+				outputMatrix[i][j] = 0.0f;				// Initialized with zeros
+		}
+
+		return outputMatrix;
+	}
+
+	CMonoBuffer<CMonoBuffer<float>> CFrequencySmearing::Solve(CMonoBuffer<CMonoBuffer<float>>& matrixA, CMonoBuffer<CMonoBuffer<float>>& matrixB)
+	{
+		//TODO: return A\B 
+		return matrixB;
+	}
+
+	void CFrequencySmearing::CalculateSmearingMatrix()
+	{
+		CMonoBuffer<CMonoBuffer<float>> normalMatrix = CalculateAuditoryFilter(1, 1);
+		CMonoBuffer<CMonoBuffer<float>> widenMatrix = CalculateAuditoryFilter(downwardSmearing_Hz+200, upwardSmearing_Hz+200);
+		CMonoBuffer<CMonoBuffer<float>> normalMatrixExtended = ExtendMatrix(normalMatrix);
+		
+		// Completing right part of the auditory filters in extended part of the matrix
+		for (int i = bufferSize / 2; i < bufferSize; i++)
+		{
+			for (int j = 0; j < min(2 * i - 1, bufferSize / 2); j++)
+			{
+				normalMatrixExtended[i][bufferSize + j] = normalMatrix[i][i-j-1];
+			}
+		}
+
+		// smearingMatrix = normalMatrixExtended \ widenMatrix; 
+		smearingMatrix = Solve(normalMatrixExtended, widenMatrix);
+		
+		// Discarding extended part of the matrix
+		for (int i = 0; i < bufferSize; i++) smearingMatrix[i].resize(bufferSize);
+		
+	}
+
 	void CFrequencySmearing::CalculateSmearingWindow()
 	{			
 		//// Compute left and right buffer size 
@@ -501,6 +597,22 @@ namespace HAHLSimulation {
 		storageBuffer.resize(bufferSize);
 	}
 
+	void CFrequencySmearing::ProcessSmearingComplexConvolution(CMonoBuffer<float> &inputBuffer, CMonoBuffer<float> &outputBuffer)
+	{
+		ASSERT(inputBuffer.size() == outputBuffer.size(), RESULT_ERROR_BADSIZE, "Smearing convolution process requires output buffer to be of the same size of input source signal", "");
+
+		// Each frequency is convolved with a different smearing window
+		for (int n = 0; n < inputBuffer.size(); n++)
+		{
+			// Initialize sample in zero
+			outputBuffer[n] = 0.0f;
+
+			// Adding to sample the contributions of the corresponding row
+			for (int m = 0; m < inputBuffer.size(); m++) outputBuffer[n] += inputBuffer[m] * smearingMatrix[n][m];
+			
+		}
+	}
+	
 	void CFrequencySmearing::ProcessSmearingConvolution(CMonoBuffer<float> &inputBuffer, CMonoBuffer<float> &outputBuffer)
 	{
 		ASSERT(inputBuffer.size() == outputBuffer.size(), RESULT_ERROR_BADSIZE, "Smearing convolution process requires output buffer to be of the same size of input source signal", "");

@@ -139,6 +139,8 @@ namespace HAHLSimulation {
 		// Generate the smearing window used for convolution
 		void CalculateSmearingWindow();
 
+		void CalculateSmearingMatrix();
+
 		// Calculate probability for a single value following a gaussian distribution
 		float CalculateGaussianProbability(float mean, float deviation, float value);
 
@@ -158,6 +160,19 @@ namespace HAHLSimulation {
 		// To achieve same size, convolution starts from the zero point of the smearing window and ends at the same point.
 		void ProcessSmearingConvolution(CMonoBuffer<float> &inputBuffer, CMonoBuffer<float> &outputBuffer);
 
+		// Processes input buffer with different smearing window for each frequency value, with output size equal to input size.
+		// To achieve same size, convolution starts from the zero point of the smearing window and ends at the same point.
+		void ProcessSmearingComplexConvolution(CMonoBuffer<float> &inputBuffer, CMonoBuffer<float> &outputBuffer);
+
+		// Calculates an auditory filter matrix given frequency's lower and upper sides broadening values
+		CMonoBuffer<CMonoBuffer<float>> CalculateAuditoryFilter(int lowerSideBroadening, int upperSideBroadening);
+
+		// Extends a matrix by adding all-zeros columns, getting an output matrix of size (originalSize, 3*originalSize/2)
+		CMonoBuffer<CMonoBuffer<float>> ExtendMatrix(CMonoBuffer<CMonoBuffer<float>>& inputMatrix);
+
+		// Returns A\B (matrix left division)
+		CMonoBuffer<CMonoBuffer<float>> Solve(CMonoBuffer<CMonoBuffer<float>>& matrixA, CMonoBuffer<CMonoBuffer<float>>& matrixB);
+
 		///////////////
 		// ATTRIBUTES	
 		///////////////
@@ -169,14 +184,15 @@ namespace HAHLSimulation {
 		CMonoBuffer<float> storageBuffer;					//To store partial results of the convolution from previous buffer
 		CMonoBuffer<float> storageLastBuffer[3];			//To store needed partial results of the convolution from last buffer
 		CMonoBuffer<float> hannWindowBuffer;				//To store the hann window
-		CMonoBuffer<float> smearingWindow;					//To store the smearing window		
+		CMonoBuffer<float> smearingWindow;					//To store the smearing window	
+		CMonoBuffer<CMonoBuffer<float>> smearingMatrix;		//To store the smearing matrix
 
 		// Configurable parameters		
-		int downwardSmearingBufferSize;		// Size of downward section of smearing window, in number of samples
-		int upwardSmearingBufferSize;		// Size of upward section of smearing window, in number of samples
-		float downwardSmearing_Hz;			// Amount of smearing (standard deviation) of downward section of smearing window, in Hz
-		float upwardSmearing_Hz;			// Amount of smearing (standard deviation) of upward section of smearing window, in Hz
-		SmearingAlgorithm smearingAlgorithm;
+		int downwardSmearingBufferSize;		 // Size of downward section of smearing window, in number of samples
+		int upwardSmearingBufferSize;		 // Size of upward section of smearing window, in number of samples
+		float downwardSmearing_Hz;			 // Amount of smearing (standard deviation) of downward section of smearing window, in Hz
+		float upwardSmearing_Hz;			 // Amount of smearing (standard deviation) of upward section of smearing window, in Hz
+		SmearingAlgorithm smearingAlgorithm; // Smearing algorithm, either the classic algorithm or subframe algorithm
 	};
 }
 #endif
