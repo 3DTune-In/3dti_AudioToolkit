@@ -39,6 +39,7 @@ using namespace Eigen;
 
 #define DEFAULT_SMEARING_SECTION_SIZE 1
 #define DEFAULT_SMEARING_HZ 0.0f
+#define MIN_SMEARING_BROADENING_FACTOR 1.01f
 
 namespace HAHLSimulation {
 
@@ -101,6 +102,18 @@ namespace HAHLSimulation {
 		*   \eh On error, an error code is reported to the error handler.
 		*/
 		void SetUpwardSmearing_Hz(float upwardSmearing);
+
+		/** \brief Set the amount of smearing (standard deviation) for the downward section of the smearing window, in Hz
+		*	\param [in] downwardSmearing amount of smearing, in Hz
+		*   \eh On error, an error code is reported to the error handler.
+		*/
+		void SetDownwardBroadeningFactor(float _downwardBroadeningFactor);
+
+		/** \brief Set the amount of smearing (standard deviation) for the upward section of the smearing window, in Hz
+		*	\param [in] upwardSmearing amount of smearing, in Hz
+		*   \eh On error, an error code is reported to the error handler.
+		*/
+		void SetUpwardBroadeningFactor(float _upwardBroadeningFactor);
 
 		/** \brief Get a (frequency-domain) buffer containing the smearing window
 		*	\retval smearingWindow smearing window buffer, in frequency domain

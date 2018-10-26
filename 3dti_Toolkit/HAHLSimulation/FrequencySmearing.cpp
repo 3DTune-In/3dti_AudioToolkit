@@ -62,6 +62,8 @@ namespace HAHLSimulation {
 			upwardSmearingBufferSize = DEFAULT_SMEARING_SECTION_SIZE;			
 			downwardSmearing_Hz = DEFAULT_SMEARING_HZ;
 			upwardSmearing_Hz = DEFAULT_SMEARING_HZ;			
+			downwardBroadeningFactor = MIN_SMEARING_BROADENING_FACTOR;
+			upwardBroadeningFactor = MIN_SMEARING_BROADENING_FACTOR;
 
 			SmearingWindowSetup();
 
@@ -609,6 +611,27 @@ namespace HAHLSimulation {
 	{
 		ASSERT(upwardSmearing >= 0.0f, RESULT_ERROR_OUTOFRANGE, "Smearing amount must be a positive (or zero) value in Hz", "");
 		upwardSmearing_Hz = upwardSmearing;
+		SmearingWindowSetup();
+	}
+
+	void CFrequencySmearing::SetDownwardBroadeningFactor(float _downwardBroadeningFactor)
+	{
+
+		if (_downwardBroadeningFactor > MIN_SMEARING_BROADENING_FACTOR)
+			downwardBroadeningFactor = _downwardBroadeningFactor;
+		else
+			downwardBroadeningFactor = MIN_SMEARING_BROADENING_FACTOR;
+
+		SmearingWindowSetup();
+	}
+
+	void CFrequencySmearing::SetUpwardBroadeningFactor(float _upwardBroadeningFactor)
+	{
+		if (_upwardBroadeningFactor > MIN_SMEARING_BROADENING_FACTOR)
+			upwardBroadeningFactor = _upwardBroadeningFactor;
+		else
+			upwardBroadeningFactor = MIN_SMEARING_BROADENING_FACTOR;
+
 		SmearingWindowSetup();
 	}
 
