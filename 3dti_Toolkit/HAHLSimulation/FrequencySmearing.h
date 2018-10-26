@@ -29,6 +29,10 @@
 #include <Common/Buffer.h>
 #include <Common/Fprocessor.h>
 
+#include <Eigen/QR>
+
+using namespace Eigen;
+
 #ifndef FSMEARING_THRESHOLD
 #define FSMEARING_THRESHOLD 0.0000001f
 #endif
@@ -37,6 +41,9 @@
 #define DEFAULT_SMEARING_HZ 0.0f
 
 namespace HAHLSimulation {
+
+	// Bidimensional Float CMonoBuffer type definition
+	typedef CMonoBuffer<CMonoBuffer<float>> BidimensionalFloatMonoBuffer;
 
 	/** \details This class implements frequency smearing, which simulates the broadening of auditory filters in sensorineural hearing loss
 	*/
@@ -139,6 +146,7 @@ namespace HAHLSimulation {
 		// Generate the smearing window used for convolution
 		void CalculateSmearingWindow();
 
+		// Generate the smearing matrix used for convolution
 		void CalculateSmearingMatrix();
 
 		// Calculate probability for a single value following a gaussian distribution
@@ -165,13 +173,17 @@ namespace HAHLSimulation {
 		void ProcessSmearingComplexConvolution(CMonoBuffer<float> &inputBuffer, CMonoBuffer<float> &outputBuffer);
 
 		// Calculates an auditory filter matrix given frequency's lower and upper sides broadening values
-		CMonoBuffer<CMonoBuffer<float>> CalculateAuditoryFilter(int lowerSideBroadening, int upperSideBroadening);
+		BidimensionalFloatMonoBuffer CalculateAuditoryFilter(float lowerSideBroadening, float upperSideBroadening);
 
 		// Extends a matrix by adding all-zeros columns, getting an output matrix of size (originalSize, 3*originalSize/2)
-		CMonoBuffer<CMonoBuffer<float>> ExtendMatrix(CMonoBuffer<CMonoBuffer<float>>& inputMatrix);
+		BidimensionalFloatMonoBuffer ExtendMatrix(BidimensionalFloatMonoBuffer& inputMatrix);
 
+		MatrixXf BidimensionalCMonoBufferToEigenMatrix(BidimensionalFloatMonoBuffer& input);
+
+		BidimensionalFloatMonoBuffer EigenMatrixToBidimensionalCMonoBuffer(MatrixXf& input);
+		
 		// Returns A\B (matrix left division)
-		CMonoBuffer<CMonoBuffer<float>> Solve(CMonoBuffer<CMonoBuffer<float>>& matrixA, CMonoBuffer<CMonoBuffer<float>>& matrixB);
+		BidimensionalFloatMonoBuffer Solve(BidimensionalFloatMonoBuffer& matrixA, BidimensionalFloatMonoBuffer& matrixB);
 
 		///////////////
 		// ATTRIBUTES	
@@ -185,13 +197,15 @@ namespace HAHLSimulation {
 		CMonoBuffer<float> storageLastBuffer[3];			//To store needed partial results of the convolution from last buffer
 		CMonoBuffer<float> hannWindowBuffer;				//To store the hann window
 		CMonoBuffer<float> smearingWindow;					//To store the smearing window	
-		CMonoBuffer<CMonoBuffer<float>> smearingMatrix;		//To store the smearing matrix
+		BidimensionalFloatMonoBuffer smearingMatrix;		//To store the smearing matrix
 
 		// Configurable parameters		
-		int downwardSmearingBufferSize;		 // Size of downward section of smearing window, in number of samples
-		int upwardSmearingBufferSize;		 // Size of upward section of smearing window, in number of samples
-		float downwardSmearing_Hz;			 // Amount of smearing (standard deviation) of downward section of smearing window, in Hz
-		float upwardSmearing_Hz;			 // Amount of smearing (standard deviation) of upward section of smearing window, in Hz
+		int downwardSmearingBufferSize;		 // Size of downward section of smearing window, in number of samples, for classic algorithm
+		int upwardSmearingBufferSize;		 // Size of upward section of smearing window, in number of samples, for classic algorithm
+		float downwardSmearing_Hz;			 // Amount of smearing (standard deviation) of downward section of smearing window, in Hz, for classic algorithm
+		float upwardSmearing_Hz;			 // Amount of smearing (standard deviation) of upward section of smearing window, in Hz, for classic algorithm
+		float downwardBroadeningFactor;		 // Downward broadening factor for subframe algorithm
+		float upwardBroadeningFactor;		 // Upward broadening factor for subframe algorithm
 		SmearingAlgorithm smearingAlgorithm; // Smearing algorithm, either the classic algorithm or subframe algorithm
 	};
 }

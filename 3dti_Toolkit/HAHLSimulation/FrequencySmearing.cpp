@@ -24,6 +24,8 @@
 #include <Common/ErrorHandler.h>
 #include <cmath>
 
+using namespace Eigen;
+
 // 1 / (sqrt(2*PI))
 #ifndef INVERSE_SQRT_2PI
 #define INVERSE_SQRT_2PI 0.39894228f
@@ -254,18 +256,15 @@ namespace HAHLSimulation {
 	}
 
 	void CFrequencySmearing::SmearingWindowSetup() {
-		
-		if (smearingAlgorithm == SmearingAlgorithm::CLASSIC) {
-			CalculateSmearingWindow();					//Calculate smearing window with actual parameters			
-			hannWindowBuffer.resize(bufferSize * 2);		//Reserve space to store hann window depending on algorithm		
-		}
-		else {
-			smearingMatrix.resize(bufferSize);
-			for (int i = 0; i < bufferSize; i++) smearingMatrix[i].resize(bufferSize);
-			CalculateSmearingMatrix();
-			hannWindowBuffer.resize(bufferSize);		//Reserve space to store hann window depending on algorithm		
-		}
-		CalculateHannWindow();						//Calculate hann window to this buffer size
+
+		//Reserve space to store hann window depending on algorithm		
+		hannWindowBuffer.resize(smearingAlgorithm == SmearingAlgorithm::CLASSIC ? bufferSize * 2 : bufferSize);	
+
+		//Calculate Smearing Function depending on algorithm
+		smearingAlgorithm == SmearingAlgorithm::CLASSIC ? CalculateSmearingWindow() : CalculateSmearingMatrix();
+
+		//Calculate Hann window to this buffer size
+		CalculateHannWindow();						
 	}
 
 	void CFrequencySmearing::CalculateHannWindow()
@@ -386,9 +385,9 @@ namespace HAHLSimulation {
 		else{ return number;}
 	}
 	
-	CMonoBuffer<CMonoBuffer<float>> CFrequencySmearing::CalculateAuditoryFilter(int lowerSideBroadening, int upperSideBroadening)
+	BidimensionalFloatMonoBuffer CFrequencySmearing::CalculateAuditoryFilter(float lowerSideBroadening, float upperSideBroadening)
 	{
-		CMonoBuffer<CMonoBuffer<float>> auditoryFilter;
+		BidimensionalFloatMonoBuffer auditoryFilter;
 		auditoryFilter.resize(bufferSize);
 
 		// Initializing all-zeros (bufferSize, bufferSize) matrix
@@ -399,7 +398,7 @@ namespace HAHLSimulation {
 		}
 
 		// First row is all-zeros except first number, calculated independently to avoid division by zero
-		auditoryFilter[0][0] = 1.0f / (((float)lowerSideBroadening + (float)upperSideBroadening) / 2.0f);
+		auditoryFilter[0][0] = 1.0f / ((lowerSideBroadening + upperSideBroadening) / 2.0f);
 		
 		// Remaining rows are calculated element-by-element
 		float fhz, erbhz, pl, pu, g, erbNorm;
@@ -408,9 +407,9 @@ namespace HAHLSimulation {
 			// Filter constants calculation
 			fhz = ((float)i)*(float)samplingRate / (2.0f * (float)bufferSize);
 			erbhz = 24.7f * ((fhz * 0.00437f) + 1.0f);
-			pl = 4.0f * fhz / (erbhz * (float)lowerSideBroadening);
-			pu = 4.0f * fhz / (erbhz * (float)upperSideBroadening);
-			erbNorm = erbhz * ((float)lowerSideBroadening + (float)upperSideBroadening) / (49.4f);
+			pl = 4.0f * fhz / (erbhz * lowerSideBroadening);
+			pu = 4.0f * fhz / (erbhz * upperSideBroadening);
+			erbNorm = erbhz * (lowerSideBroadening + upperSideBroadening) / (49.4f);
 			
 			// Filling row i 
 			for (int j = 0; j < bufferSize; j++)
@@ -427,10 +426,10 @@ namespace HAHLSimulation {
 		
 	}
 
-	CMonoBuffer<CMonoBuffer<float>> CFrequencySmearing::ExtendMatrix(CMonoBuffer<CMonoBuffer<float>>& inputMatrix)
+	BidimensionalFloatMonoBuffer CFrequencySmearing::ExtendMatrix(BidimensionalFloatMonoBuffer& inputMatrix)
 	{
 		// Output matrix will be a copy of the input matrix with extra zeros at the end of each row
-		CMonoBuffer<CMonoBuffer<float>> outputMatrix = inputMatrix;
+		BidimensionalFloatMonoBuffer outputMatrix = inputMatrix;
 		int size = outputMatrix.size();
 		
 		// Adding size/2 zeros at the end of each row
@@ -443,17 +442,64 @@ namespace HAHLSimulation {
 		return outputMatrix;
 	}
 
-	CMonoBuffer<CMonoBuffer<float>> CFrequencySmearing::Solve(CMonoBuffer<CMonoBuffer<float>>& matrixA, CMonoBuffer<CMonoBuffer<float>>& matrixB)
+	MatrixXf CFrequencySmearing::BidimensionalCMonoBufferToEigenMatrix(BidimensionalFloatMonoBuffer& input)
 	{
-		//TODO: return A\B 
-		return matrixB;
+		MatrixXf output(input.size(), input[0].size());
+
+		for (int i = 0; i < input.size(); i++)
+		{
+			for (int j = 0; j < input[i].size(); j++)
+			{
+				output(i, j) = input[i][j];
+			}
+		}
+
+		return output;
+	}
+
+	BidimensionalFloatMonoBuffer CFrequencySmearing::EigenMatrixToBidimensionalCMonoBuffer(MatrixXf& input)
+	{
+		BidimensionalFloatMonoBuffer output;
+		output.resize(input.rows());
+
+		for (int i = 0; i < input.rows(); i++)
+		{
+			output[i].resize(input.cols());
+			for (int j = 0; j < input.cols(); j++)
+			{
+				output[i][j] = input(i, j);
+			}
+		}
+
+		return output;
+	}
+
+	BidimensionalFloatMonoBuffer CFrequencySmearing::Solve(BidimensionalFloatMonoBuffer& matrixA, BidimensionalFloatMonoBuffer& matrixB)
+	{
+		// Declaration of Eigen's dynamic float matrices A, B and X, where X = A\B
+		MatrixXf a(matrixA.size(), matrixA[0].size());
+		MatrixXf b(matrixB.size(), matrixB[0].size());
+		MatrixXf x(max(matrixA.size(), matrixB.size()), max(matrixA[0].size(), matrixB[0].size()));
+
+		// Conversion of matrices A and B to Eigen's dynamic float matrix format
+		a = BidimensionalCMonoBufferToEigenMatrix(matrixA);
+		b = BidimensionalCMonoBufferToEigenMatrix(matrixB);
+
+		// Calculation of X = A\B
+		x = a.colPivHouseholderQr().solve(b).eval();
+
+		// Return X converted to bidimensional float CMonoBuffer
+		return EigenMatrixToBidimensionalCMonoBuffer(x);
 	}
 
 	void CFrequencySmearing::CalculateSmearingMatrix()
 	{
-		CMonoBuffer<CMonoBuffer<float>> normalMatrix = CalculateAuditoryFilter(1, 1);
-		CMonoBuffer<CMonoBuffer<float>> widenMatrix = CalculateAuditoryFilter(downwardSmearing_Hz+200, upwardSmearing_Hz+200);
-		CMonoBuffer<CMonoBuffer<float>> normalMatrixExtended = ExtendMatrix(normalMatrix);
+		smearingMatrix.resize(bufferSize);
+		for (int i = 0; i < bufferSize; i++) smearingMatrix[i].resize(bufferSize);
+
+		BidimensionalFloatMonoBuffer normalMatrix = CalculateAuditoryFilter(1, 1);
+		BidimensionalFloatMonoBuffer widenMatrix = CalculateAuditoryFilter(downwardBroadeningFactor, upwardBroadeningFactor);
+		BidimensionalFloatMonoBuffer normalMatrixExtended = ExtendMatrix(normalMatrix);
 		
 		// Completing right part of the auditory filters in extended part of the matrix
 		for (int i = bufferSize / 2; i < bufferSize; i++)
@@ -483,7 +529,7 @@ namespace HAHLSimulation {
 		float valueAtMean = 0.0f;
 		
 		// Special case: both smearing amounts are 0 -> single impulse
-		if (IsCloseToZero(downwardSmearing_Hz) && IsCloseToZero(upwardSmearing_Hz))
+		if (smearingAlgorithm == SmearingAlgorithm::CLASSIC && IsCloseToZero(downwardSmearing_Hz) && IsCloseToZero(upwardSmearing_Hz))
 		{
 			smearingWindow.clear();
 			smearingWindow.assign(downwardSmearingBufferSize + upwardSmearingBufferSize, 0.0f);			
@@ -542,28 +588,28 @@ namespace HAHLSimulation {
 	{
 		ASSERT(downwardSize > 0, RESULT_ERROR_OUTOFRANGE, "Smearing window size must be a positive value", "");
 		downwardSmearingBufferSize = downwardSize;		
-		CalculateSmearingWindow();
+		SmearingWindowSetup();
 	}
 
 	void CFrequencySmearing::SetUpwardSmearingBufferSize(int upwardSize)
 	{
 		ASSERT(upwardSize > 0, RESULT_ERROR_OUTOFRANGE, "Smearing window size must be a positive value", "");
 		upwardSmearingBufferSize = upwardSize;		
-		CalculateSmearingWindow();
+		SmearingWindowSetup();
 	}
 
 	void CFrequencySmearing::SetDownwardSmearing_Hz(float downwardSmearing)
 	{
 		ASSERT(downwardSmearing >= 0.0f, RESULT_ERROR_OUTOFRANGE, "Smearing amount must be a positive (or zero) value in Hz", "");
 		downwardSmearing_Hz = downwardSmearing;
-		CalculateSmearingWindow();
+		SmearingWindowSetup();
 	}
 
 	void CFrequencySmearing::SetUpwardSmearing_Hz(float upwardSmearing)
 	{
 		ASSERT(upwardSmearing >= 0.0f, RESULT_ERROR_OUTOFRANGE, "Smearing amount must be a positive (or zero) value in Hz", "");
 		upwardSmearing_Hz = upwardSmearing;
-		CalculateSmearingWindow();
+		SmearingWindowSetup();
 	}
 
 	CMonoBuffer<float>* CFrequencySmearing::GetSmearingWindow()
@@ -586,6 +632,7 @@ namespace HAHLSimulation {
 			storageBuffer.clear();
 			hannWindowBuffer.clear();
 			smearingWindow.clear();
+			smearingMatrix.clear();
 		}
 		for (int i = 0; i < 3; i++) {
 			storageLastBuffer[i].reserve(bufferSize);
