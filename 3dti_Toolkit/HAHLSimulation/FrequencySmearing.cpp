@@ -683,13 +683,13 @@ namespace HAHLSimulation {
 
 	void CFrequencySmearing::InitializePreviousBuffers()
 	{
-		if (setupDone) {
+		
 			previousBuffer.clear();
 			storageBuffer.clear();
 			hannWindowBuffer.clear();
 			smearingWindow.clear();
 			smearingMatrix.clear();
-		}
+		
 		for (int i = 0; i < 3; i++) {
 			storageLastBuffer[i].reserve(bufferSize);
 			storageLastBuffer[i].insert(storageLastBuffer[i].begin(), bufferSize, 0.0f);
