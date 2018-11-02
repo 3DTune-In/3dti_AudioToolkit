@@ -36,7 +36,7 @@ namespace HAHLSimulation {
 	// CONSTRUCTOR/DESTRUCTOR  //
 	/////////////////////////////
 	CFrequencySmearing::CFrequencySmearing() : bufferSize{ 0 }, setupDone{ false }
-	{		
+	{
 	}
 
 	///////////////////
@@ -47,7 +47,7 @@ namespace HAHLSimulation {
 	void CFrequencySmearing::Setup(int _bufferSize, float _samplingRate, SmearingAlgorithm _smearingAlgorithm)
 	{
 		ASSERT(_bufferSize > 0, RESULT_ERROR_BADSIZE, "Bad buffer size when setting up frequency smearing", "");
-		
+
 		if (_bufferSize > 0)		//In case the error handler is off
 		{
 
@@ -59,17 +59,17 @@ namespace HAHLSimulation {
 			InitializePreviousBuffers();
 
 			downwardSmearingBufferSize = DEFAULT_SMEARING_SECTION_SIZE;
-			upwardSmearingBufferSize = DEFAULT_SMEARING_SECTION_SIZE;			
+			upwardSmearingBufferSize = DEFAULT_SMEARING_SECTION_SIZE;
 			downwardSmearing_Hz = DEFAULT_SMEARING_HZ;
-			upwardSmearing_Hz = DEFAULT_SMEARING_HZ;			
+			upwardSmearing_Hz = DEFAULT_SMEARING_HZ;
 			downwardBroadeningFactor = MIN_SMEARING_BROADENING_FACTOR;
 			upwardBroadeningFactor = MIN_SMEARING_BROADENING_FACTOR;
 
-			SmearingWindowSetup();
+			SmearingFunctionSetup();
 
 			setupDone = true;
 			SET_RESULT(RESULT_OK, "Smearing frequency succesfully set");
-		}				
+		}
 	}//Setup
 
 	CFrequencySmearing::SmearingAlgorithm CFrequencySmearing::GetSmearingAlgorithm()
@@ -79,18 +79,19 @@ namespace HAHLSimulation {
 
 	void CFrequencySmearing::SetSmearingAlgorithm(SmearingAlgorithm _smearingAlgorithm)
 	{
-		smearingAlgorithm = _smearingAlgorithm;
-		InitializePreviousBuffers();
-		SmearingWindowSetup();		
+		if (smearingAlgorithm != _smearingAlgorithm)
+		{
+			setupDone = false;
+			Setup(bufferSize, samplingRate, _smearingAlgorithm);
+		}
 	}
 
 	void CFrequencySmearing::Process(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer)
 	{
-		ASSERT(setupDone, RESULT_ERROR_NOTINITIALIZED, "Setup method should be called before calling Process in Frequency Smearing", "");
 		ASSERT(inputBuffer.size() == bufferSize, RESULT_ERROR_BADSIZE, "Bad input size when setting up frequency smearing", "");
-		
+
 		if (setupDone && (inputBuffer.size() == bufferSize)) //In case the error handler is off
-		{ 			
+		{
 			switch (smearingAlgorithm) {
 			case SmearingAlgorithm::CLASSIC:
 				ProcessClassic(inputBuffer, outputBuffer);
@@ -101,119 +102,132 @@ namespace HAHLSimulation {
 			default:
 				break;
 			}
-		}						
+		}
+		else
+		{
+			outputBuffer.clear();
+			outputBuffer.insert(outputBuffer.end(), bufferSize, 0.0f);
+		}
 	}
-	
-	 /////////////////////
+
+	/////////////////////
 	// Private methods //
 	/////////////////////
 
 	void CFrequencySmearing::ProcessSubframe(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer)
 	{
-		//Merge current buffer and last buffer
-		CMonoBuffer<float> longInputBuffer;
-		longInputBuffer.reserve(previousBuffer.size() + inputBuffer.size());						// preallocate memory
-		longInputBuffer.insert(longInputBuffer.end(), previousBuffer.begin(), previousBuffer.end());
-		longInputBuffer.insert(longInputBuffer.end(), inputBuffer.begin(), inputBuffer.end());
+		ASSERT(inputBuffer.size() == bufferSize, RESULT_ERROR_BADSIZE, "Bad input size when setting up frequency smearing", "");
 
-		CMonoBuffer<float> inputBufferWindow;
-		inputBufferWindow.reserve(bufferSize);
+		if (setupDone && inputBuffer.size() == outputBuffer.size()) {
+			//Merge current buffer and last buffer
+			CMonoBuffer<float> longInputBuffer;
+			longInputBuffer.reserve(previousBuffer.size() + inputBuffer.size());						// preallocate memory
+			longInputBuffer.insert(longInputBuffer.end(), previousBuffer.begin(), previousBuffer.end());
+			longInputBuffer.insert(longInputBuffer.end(), inputBuffer.begin(), inputBuffer.end());
 
-		CMonoBuffer<float> storagePrevBuffer[4];
-		int shift = bufferSize / 4;
+			CMonoBuffer<float> inputBufferWindow;
+			inputBufferWindow.reserve(bufferSize);
 
-		for (int i = 0; i < 4; i++) {
+			CMonoBuffer<float> storagePrevBuffer[4];
+			int shift = bufferSize / 4;
 
-			//Reserve memory for storaging processed buffer
-			storagePrevBuffer[i].reserve(bufferSize);
+			for (int i = 0; i < 4; i++) {
 
-			//
-			inputBufferWindow.clear(); inputBufferWindow.reserve(bufferSize);
-			inputBufferWindow.insert(inputBufferWindow.end(),
-									 longInputBuffer.begin() + i * shift,
-									 longInputBuffer.begin() + i * shift + bufferSize);
+				//Reserve memory for storaging processed buffer
+				storagePrevBuffer[i].reserve(bufferSize);
 
-			//Enveloped using Hann Window
-			CMonoBuffer<float> inputBufferCrossfaded;
-			ProcessHannWindow(inputBufferWindow, inputBufferCrossfaded);
+				//
+				inputBufferWindow.clear(); inputBufferWindow.reserve(bufferSize);
+				inputBufferWindow.insert(inputBufferWindow.end(),
+					longInputBuffer.begin() + i * shift,
+					longInputBuffer.begin() + i * shift + bufferSize);
 
-			//Make FFT 
-			CMonoBuffer<float> inputBufferCrossfaded_FFT;
-			Common::CFprocessor::CalculateFFT(inputBufferCrossfaded, inputBufferCrossfaded_FFT);
+				//Enveloped using Hann Window
+				CMonoBuffer<float> inputBufferCrossfaded;
+				ProcessHannWindow(inputBufferWindow, inputBufferCrossfaded);
 
-			//Split in Module and Phase
-			CMonoBuffer<float> moduleBufferCrossfaded;
-			CMonoBuffer<float> phaseBufferCrossfaded;
-			Common::CFprocessor::ProcessToModulePhase(inputBufferCrossfaded_FFT, moduleBufferCrossfaded, phaseBufferCrossfaded);
+				//Make FFT 
+				CMonoBuffer<float> inputBufferCrossfaded_FFT;
+				Common::CFprocessor::CalculateFFT(inputBufferCrossfaded, inputBufferCrossfaded_FFT);
 
-			// SMEARING
-			CMonoBuffer<float> smearedModuleBufferCrossfaded;
-			ProcessSmearing(moduleBufferCrossfaded, smearedModuleBufferCrossfaded);
+				//Split in Module and Phase
+				CMonoBuffer<float> moduleBufferCrossfaded;
+				CMonoBuffer<float> phaseBufferCrossfaded;
+				Common::CFprocessor::ProcessToModulePhase(inputBufferCrossfaded_FFT, moduleBufferCrossfaded, phaseBufferCrossfaded);
 
-			//Merge Module and Phase
-			CMonoBuffer<float> outputBufferCrossfaded_FFT;
-			Common::CFprocessor::ProcessToRealImaginary(smearedModuleBufferCrossfaded, phaseBufferCrossfaded, outputBufferCrossfaded_FFT);
+				// SMEARING
+				CMonoBuffer<float> smearedModuleBufferCrossfaded;
+				ProcessSmearing(moduleBufferCrossfaded, smearedModuleBufferCrossfaded);
 
-			//IFFT
-			CMonoBuffer<float> outputBufferCrossfaded;
-			Common::CFprocessor::CalculateIFFT(outputBufferCrossfaded_FFT, outputBufferCrossfaded);
+				//Merge Module and Phase
+				CMonoBuffer<float> outputBufferCrossfaded_FFT;
+				Common::CFprocessor::ProcessToRealImaginary(smearedModuleBufferCrossfaded, phaseBufferCrossfaded, outputBufferCrossfaded_FFT);
 
-			//Enveloped again using Hann Window
-			CMonoBuffer<float> outputBufferDoubleCrossfaded;
-			ProcessHannWindow(outputBufferCrossfaded, outputBufferDoubleCrossfaded);
+				//IFFT
+				CMonoBuffer<float> outputBufferCrossfaded;
+				Common::CFprocessor::CalculateIFFT(outputBufferCrossfaded_FFT, outputBufferCrossfaded);
 
-			//Save end result
-			storagePrevBuffer[i].insert(storagePrevBuffer[i].end(), outputBufferDoubleCrossfaded.begin(), outputBufferDoubleCrossfaded.end());
-		}
+				//Enveloped again using Hann Window
+				CMonoBuffer<float> outputBufferDoubleCrossfaded;
+				ProcessHannWindow(outputBufferCrossfaded, outputBufferDoubleCrossfaded);
 
-		// Output buffer sums all contributions for each quarter
-		
-		for (int i = 0; i < 4; i++) {
-			for (int j = 0; j < shift; j++) {
-				switch (i) {
-				case 0: // First quarter
-					outputBuffer[j] =	storageLastBuffer[0][shift * 3 + j] +
-										storageLastBuffer[1][shift * 2 + j] +
-										storageLastBuffer[2][shift + j] +
-										storagePrevBuffer[0][j];
-					break;
-				case 1: // Second quarter
-					outputBuffer[shift + j] =	storageLastBuffer[1][shift * 3 + j] +
-												storageLastBuffer[2][shift * 2 + j] +
-												storagePrevBuffer[0][shift + j] +
-												storagePrevBuffer[1][j];
-					break;
-				case 2: // Third quarter
-					outputBuffer[shift * 2 + j] =	storageLastBuffer[2][shift * 3 + j] +
-													storagePrevBuffer[0][shift * 2 + j] +
-													storagePrevBuffer[1][shift + j] +
-													storagePrevBuffer[2][j];
-					break;
-				case 3: // Fourth quarter
-					outputBuffer[shift * 3 + j] =	storagePrevBuffer[0][shift * 3 + j] +
-													storagePrevBuffer[1][shift * 2 + j] +
-													storagePrevBuffer[2][shift + j] +
-													storagePrevBuffer[3][j];
-					break;
+				//Save end result
+				storagePrevBuffer[i].insert(storagePrevBuffer[i].end(), outputBufferDoubleCrossfaded.begin(), outputBufferDoubleCrossfaded.end());
+			}
+
+			// Output buffer sums all contributions for each quarter
+
+			for (int i = 0; i < 4; i++) {
+				for (int j = 0; j < shift; j++) {
+					switch (i) {
+					case 0: // First quarter
+						outputBuffer[j] = storageLastBuffer[0][shift * 3 + j] +
+							storageLastBuffer[1][shift * 2 + j] +
+							storageLastBuffer[2][shift + j] +
+							storagePrevBuffer[0][j];
+						break;
+					case 1: // Second quarter
+						outputBuffer[shift + j] = storageLastBuffer[1][shift * 3 + j] +
+							storageLastBuffer[2][shift * 2 + j] +
+							storagePrevBuffer[0][shift + j] +
+							storagePrevBuffer[1][j];
+						break;
+					case 2: // Third quarter
+						outputBuffer[shift * 2 + j] = storageLastBuffer[2][shift * 3 + j] +
+							storagePrevBuffer[0][shift * 2 + j] +
+							storagePrevBuffer[1][shift + j] +
+							storagePrevBuffer[2][j];
+						break;
+					case 3: // Fourth quarter
+						outputBuffer[shift * 3 + j] = storagePrevBuffer[0][shift * 3 + j] +
+							storagePrevBuffer[1][shift * 2 + j] +
+							storagePrevBuffer[2][shift + j] +
+							storagePrevBuffer[3][j];
+						break;
+					}
 				}
 			}
+
+			//Update new buffer
+			previousBuffer.clear();
+			previousBuffer.insert(previousBuffer.end(), inputBuffer.begin(), inputBuffer.end());
+
+			//Move storaged processed previous buffer to storaged last buffer
+			for (int i = 0; i < 3; i++) {
+				storageLastBuffer[i].clear();
+				storageLastBuffer[i].insert(storageLastBuffer[i].end(), storagePrevBuffer[i + 1].begin(), storagePrevBuffer[i + 1].end());
+			}
 		}
-
-		//Update new buffer
-		previousBuffer.clear();
-		previousBuffer.insert(previousBuffer.end(), inputBuffer.begin(), inputBuffer.end());
-
-		//Move storaged processed previous buffer to storaged last buffer
-		for (int i = 0; i < 3; i++) {
-			storageLastBuffer[i].clear();
-			storageLastBuffer[i].insert(storageLastBuffer[i].end(), storagePrevBuffer[i + 1].begin(), storagePrevBuffer[i + 1].end());
+		else
+		{
+			outputBuffer.clear();
+			outputBuffer.insert(outputBuffer.end(), bufferSize, 0.0f);
 		}
 	}
 
 	void CFrequencySmearing::ProcessClassic(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer)
 	{
 
-		ASSERT(setupDone, RESULT_ERROR_NOTINITIALIZED, "Setup method should be called before calling Process in Frequency Smearing", "");
 		ASSERT(inputBuffer.size() == bufferSize, RESULT_ERROR_BADSIZE, "Bad input size when setting up frequency smearing", "");
 
 		if (setupDone && (inputBuffer.size() == bufferSize)) //In case the error handler is off
@@ -238,9 +252,9 @@ namespace HAHLSimulation {
 			Common::CFprocessor::ProcessToModulePhase(longInputBufferWindowed_FFT, moduleBuffer, phaseBuffer);
 
 			// SMEARING
-			CMonoBuffer<float> smearingModuleBuffer;			
+			CMonoBuffer<float> smearingModuleBuffer;
 			ProcessSmearing(moduleBuffer, smearingModuleBuffer);
-			
+
 			//Merge Module and Phase
 			CMonoBuffer<float> longOutputBuffer_FFT;
 			Common::CFprocessor::ProcessToRealImaginary(smearingModuleBuffer, phaseBuffer, longOutputBuffer_FFT);
@@ -253,25 +267,31 @@ namespace HAHLSimulation {
 			ProcessOutputBuffer_OverlapAddMethod(longOutputBuffer, outputBuffer);
 
 			//Update new buffer
-			previousBuffer = inputBuffer;		
-		}						
+			previousBuffer = inputBuffer;
+		}
+		else
+		{
+			outputBuffer.clear();
+			outputBuffer.insert(outputBuffer.end(), bufferSize, 0.0f);
+		}
 	}
 
-	void CFrequencySmearing::SmearingWindowSetup() {
+	void CFrequencySmearing::SmearingFunctionSetup() {
 
 		//Reserve space to store hann window depending on algorithm		
-		hannWindowBuffer.resize(smearingAlgorithm == SmearingAlgorithm::CLASSIC ? bufferSize * 2 : bufferSize);	
+		hannWindowBuffer.resize(smearingAlgorithm == SmearingAlgorithm::CLASSIC ? bufferSize * 2 : bufferSize);
 
 		//Calculate Smearing Function depending on algorithm
 		smearingAlgorithm == SmearingAlgorithm::CLASSIC ? CalculateSmearingWindow() : CalculateSmearingMatrix();
 
 		//Calculate Hann window to this buffer size
-		CalculateHannWindow();						
+		CalculateHannWindow();
+
 	}
 
 	void CFrequencySmearing::CalculateHannWindow()
 	{
-		float powerFactor = smearingAlgorithm == CFrequencySmearing::SmearingAlgorithm::SUBFRAME ? (1/sqrt(1.5)) : 1;
+		float powerFactor = smearingAlgorithm == CFrequencySmearing::SmearingAlgorithm::SUBFRAME ? (1 / sqrt(1.5)) : 1;
 		int hannWindowSize = hannWindowBuffer.size();
 		for (int i = 0; i< hannWindowSize; i++) {
 			float temp = (2 * M_PI * i) / (hannWindowSize - 1);
@@ -279,22 +299,22 @@ namespace HAHLSimulation {
 		}
 	}
 
-	void CFrequencySmearing::ProcessHannWindow(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer) 
+	void CFrequencySmearing::ProcessHannWindow(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer)
 	{
 		ASSERT(inputBuffer.size() == hannWindowBuffer.size(), RESULT_ERROR_BADSIZE, "The input buffer size has to be equal to hann window buffer size", "");
-		
+
 		if (inputBuffer.size() == hannWindowBuffer.size())		//Just in case the error handler is off
-		{			
+		{
 			outputBuffer.resize(inputBuffer.size());	//resize output buffer
-			//Process hann window
+														//Process hann window
 			for (int i = 0; i< inputBuffer.size(); i++) {
 				outputBuffer[i] = inputBuffer[i] * hannWindowBuffer[i];
 			}
-		}		
+		}
 	}
-	
+
 	void CFrequencySmearing::ProcessSmearing(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer)
-	{		
+	{
 		// TO DO: ASSERT for inputBuffer.size == outputBuffer.size ??
 
 		// TEST
@@ -317,12 +337,12 @@ namespace HAHLSimulation {
 
 		// 1. Get left section [0, PI] of symmetric input buffer for convolution
 		// Note: if input buffer size is even, this might have undefined behavior
-		CMonoBuffer<float> leftInputBuffer(inputBuffer.begin(), inputBuffer.begin() + inputBuffer.size()/2 + 1);	// Get left side		
+		CMonoBuffer<float> leftInputBuffer(inputBuffer.begin(), inputBuffer.begin() + inputBuffer.size() / 2 + 1);	// Get left side		
 
-		// 2. Process convolution between smearing window or matrix and left section of input
+																													// 2. Process convolution between smearing window or matrix and left section of input
 		outputBuffer.clear();
 		outputBuffer.assign(leftInputBuffer.size(), 0.0f);
-		if (smearingAlgorithm == SmearingAlgorithm::CLASSIC)	ProcessSmearingConvolution(leftInputBuffer, outputBuffer);		
+		if (smearingAlgorithm == SmearingAlgorithm::CLASSIC)	ProcessSmearingConvolution(leftInputBuffer, outputBuffer);
 		else													ProcessSmearingComplexConvolution(leftInputBuffer, outputBuffer);
 
 		// 3. Copy inverted convolved buffer to right side of symmetric output (except for last sample)		
@@ -341,16 +361,16 @@ namespace HAHLSimulation {
 	}
 
 	void CFrequencySmearing::ProcessOutputBuffer_OverlapAddMethod(std::vector<float>& input_ConvResultBuffer, std::vector<float>& outBuffer)
-	{			
+	{
 		if (outBuffer.size() < bufferSize) { outBuffer.resize(bufferSize); }	//Prepare the outbuffer		
-		//Check buffer sizes	
+																				//Check buffer sizes	
 		ASSERT(outBuffer.size() == bufferSize, RESULT_ERROR_BADSIZE, "OutBuffer size has to be zero or equal to the input size indicated by the setup method", "");
 
 		if (outBuffer.size() == bufferSize) //Just in case error handler is off
 		{
 			int outBufferSize = bufferSize;	//Locar var to move throught the outbuffer
 
-			//Fill out the output signal buffer
+											//Fill out the output signal buffer
 			for (int i = 0; i < outBufferSize; i++)
 			{
 				if (i < storageBuffer.size()) {
@@ -377,16 +397,16 @@ namespace HAHLSimulation {
 				}
 			}
 			storageBuffer.swap(temp);				//To use in C++03
-			//storageBuffer = std::move(temp);			//To use in C++11
-		}		
+													//storageBuffer = std::move(temp);			//To use in C++11
+		}
 	}
 
 	double CFrequencySmearing::CalculateRoundToZero(double number)
 	{
-		if (std::abs(number) < FSMEARING_THRESHOLD) {	return 0.0f;}
-		else{ return number;}
+		if (std::abs(number) < FSMEARING_THRESHOLD) { return 0.0f; }
+		else { return number; }
 	}
-	
+
 	BidimensionalFloatMonoBuffer CFrequencySmearing::CalculateAuditoryFilter(float lowerSideBroadening, float upperSideBroadening)
 	{
 		BidimensionalFloatMonoBuffer auditoryFilter;
@@ -401,7 +421,7 @@ namespace HAHLSimulation {
 
 		// First row is all-zeros except first number, calculated independently to avoid division by zero
 		auditoryFilter[0][0] = 1.0f / ((lowerSideBroadening + upperSideBroadening) / 2.0f);
-		
+
 		// Remaining rows are calculated element-by-element
 		float fhz, erbhz, pl, pu, g, erbNorm;
 		for (int i = 1; i < bufferSize; i++)
@@ -412,11 +432,11 @@ namespace HAHLSimulation {
 			pl = 4.0f * fhz / (erbhz * lowerSideBroadening);
 			pu = 4.0f * fhz / (erbhz * upperSideBroadening);
 			erbNorm = erbhz * (lowerSideBroadening + upperSideBroadening) / (49.4f);
-			
+
 			// Filling row i 
 			for (int j = 0; j < bufferSize; j++)
 			{
-				g = abs((float) (i - j)) / (float) i;
+				g = abs((float)(i - j)) / (float)i;
 
 				if (j < i)	auditoryFilter[i][j] = ((1.0f + pl*g)*exp(-pl*g)) / erbNorm;	// Lower side
 				else		auditoryFilter[i][j] = ((1.0f + pu*g)*exp(-pu*g)) / erbNorm;	// Upper side
@@ -425,7 +445,7 @@ namespace HAHLSimulation {
 		}
 
 		return auditoryFilter;
-		
+
 	}
 
 	BidimensionalFloatMonoBuffer CFrequencySmearing::ExtendMatrix(BidimensionalFloatMonoBuffer& inputMatrix)
@@ -433,11 +453,11 @@ namespace HAHLSimulation {
 		// Output matrix will be a copy of the input matrix with extra zeros at the end of each row
 		BidimensionalFloatMonoBuffer outputMatrix = inputMatrix;
 		int size = outputMatrix.size();
-		
+
 		// Adding size/2 zeros at the end of each row
 		for (int i = 0; i < size; i++) {
 			outputMatrix[i].resize(3 * size / 2);		// First the row must be resized
-			for (int j = size; j < 3 * size / 2; j++) 
+			for (int j = size; j < 3 * size / 2; j++)
 				outputMatrix[i][j] = 0.0f;				// Initialized with zeros
 		}
 
@@ -502,52 +522,52 @@ namespace HAHLSimulation {
 		BidimensionalFloatMonoBuffer normalMatrix = CalculateAuditoryFilter(1, 1);
 		BidimensionalFloatMonoBuffer widenMatrix = CalculateAuditoryFilter(downwardBroadeningFactor, upwardBroadeningFactor);
 		BidimensionalFloatMonoBuffer normalMatrixExtended = ExtendMatrix(normalMatrix);
-		
+
 		// Completing right part of the auditory filters in extended part of the matrix
 		for (int i = bufferSize / 2; i < bufferSize; i++)
 		{
 			for (int j = 0; j < min(2 * i - 1, bufferSize / 2); j++)
 			{
-				normalMatrixExtended[i][bufferSize + j] = normalMatrix[i][i-j-1];
+				normalMatrixExtended[i][bufferSize + j] = normalMatrix[i][i - j - 1];
 			}
 		}
 
 		// smearingMatrix = normalMatrixExtended \ widenMatrix; 
 		smearingMatrix = Solve(normalMatrixExtended, widenMatrix);
-		
+
 		// Discarding extended part of the matrix
 		for (int i = 0; i < bufferSize; i++) smearingMatrix[i].resize(bufferSize);
-		
+
 	}
 
 	void CFrequencySmearing::CalculateSmearingWindow()
-	{			
+	{
 		//// Compute left and right buffer size 
 		//int leftSize = leftSmearingWindowBandwidth / oneSampleBandwidth;
 		//int rightSize = rightSmearingWindowBandwidth / oneSampleBandwidth;				
 
 		// Init values
-		float totalArea = 0.0f;	
+		float totalArea = 0.0f;
 		float valueAtMean = 0.0f;
-		
+
 		// Special case: both smearing amounts are 0 -> single impulse
 		if (smearingAlgorithm == SmearingAlgorithm::CLASSIC && IsCloseToZero(downwardSmearing_Hz) && IsCloseToZero(upwardSmearing_Hz))
 		{
 			smearingWindow.clear();
-			smearingWindow.assign(downwardSmearingBufferSize + upwardSmearingBufferSize, 0.0f);			
+			smearingWindow.assign(downwardSmearingBufferSize + upwardSmearingBufferSize, 0.0f);
 			smearingWindow[downwardSmearingBufferSize] = 1.0f;	// This is the impulse
 			return;
 		}
 
 		// Build downward section
 		smearingWindow.clear();
-		for (int i = downwardSmearingBufferSize-1; i >= 0; i--)
+		for (int i = downwardSmearingBufferSize - 1; i >= 0; i--)
 		{
 			float scaledValue = (float)i * oneSampleBandwidth;	// Value in Hz
 			float gaussianValue = CalculateGaussianProbability(0.0f, downwardSmearing_Hz, scaledValue);
-			smearingWindow.push_back(gaussianValue);			
+			smearingWindow.push_back(gaussianValue);
 			totalArea += gaussianValue; // Add new value to total area									
-		}		
+		}
 		valueAtMean = smearingWindow[downwardSmearingBufferSize - 1];
 
 		// Build upward section
@@ -569,7 +589,7 @@ namespace HAHLSimulation {
 
 		// Concatenate downward and upward buffers and normalize wrt total area		
 		smearingWindow.insert(smearingWindow.end(), upwardSmearingWindow.begin(), upwardSmearingWindow.end());
-		smearingWindow.ApplyGain(1.0f / totalArea);		
+		smearingWindow.ApplyGain(1.0f / totalArea);
 	}
 
 	float CFrequencySmearing::CalculateGaussianProbability(float mean, float deviation, float value)
@@ -589,29 +609,37 @@ namespace HAHLSimulation {
 	void CFrequencySmearing::SetDownwardSmearingBufferSize(int downwardSize)
 	{
 		ASSERT(downwardSize > 0, RESULT_ERROR_OUTOFRANGE, "Smearing window size must be a positive value", "");
-		downwardSmearingBufferSize = downwardSize;		
-		SmearingWindowSetup();
+		downwardSmearingBufferSize = downwardSize;
+		setupDone = false;
+		SmearingFunctionSetup();
+		setupDone = true;
 	}
 
 	void CFrequencySmearing::SetUpwardSmearingBufferSize(int upwardSize)
 	{
 		ASSERT(upwardSize > 0, RESULT_ERROR_OUTOFRANGE, "Smearing window size must be a positive value", "");
-		upwardSmearingBufferSize = upwardSize;		
-		SmearingWindowSetup();
+		upwardSmearingBufferSize = upwardSize;
+		setupDone = false;
+		SmearingFunctionSetup();
+		setupDone = true;
 	}
 
 	void CFrequencySmearing::SetDownwardSmearing_Hz(float downwardSmearing)
 	{
 		ASSERT(downwardSmearing >= 0.0f, RESULT_ERROR_OUTOFRANGE, "Smearing amount must be a positive (or zero) value in Hz", "");
 		downwardSmearing_Hz = downwardSmearing;
-		SmearingWindowSetup();
+		setupDone = false;
+		SmearingFunctionSetup();
+		setupDone = true;
 	}
 
 	void CFrequencySmearing::SetUpwardSmearing_Hz(float upwardSmearing)
 	{
 		ASSERT(upwardSmearing >= 0.0f, RESULT_ERROR_OUTOFRANGE, "Smearing amount must be a positive (or zero) value in Hz", "");
 		upwardSmearing_Hz = upwardSmearing;
-		SmearingWindowSetup();
+		setupDone = false;
+		SmearingFunctionSetup();
+		setupDone = true;
 	}
 
 	void CFrequencySmearing::SetDownwardBroadeningFactor(float _downwardBroadeningFactor)
@@ -622,7 +650,9 @@ namespace HAHLSimulation {
 		else
 			downwardBroadeningFactor = MIN_SMEARING_BROADENING_FACTOR;
 
-		SmearingWindowSetup();
+		setupDone = false;
+		SmearingFunctionSetup();
+		setupDone = true;
 	}
 
 	void CFrequencySmearing::SetUpwardBroadeningFactor(float _upwardBroadeningFactor)
@@ -632,7 +662,10 @@ namespace HAHLSimulation {
 		else
 			upwardBroadeningFactor = MIN_SMEARING_BROADENING_FACTOR;
 
-		SmearingWindowSetup();
+		setupDone = false;
+		SmearingFunctionSetup();
+		setupDone = true;
+
 	}
 
 	CMonoBuffer<float>* CFrequencySmearing::GetSmearingWindow()
@@ -661,10 +694,9 @@ namespace HAHLSimulation {
 			storageLastBuffer[i].reserve(bufferSize);
 			storageLastBuffer[i].insert(storageLastBuffer[i].begin(), bufferSize, 0.0f);
 		}
-		previousBuffer.insert(previousBuffer.begin(), bufferSize, 0.0f);
-
-		previousBuffer.resize(bufferSize);
-		storageBuffer.resize(bufferSize);
+		previousBuffer.insert(previousBuffer.end(), bufferSize, 0.0f);
+		storageBuffer.insert(storageBuffer.end(), bufferSize, 0.0f);
+		hannWindowBuffer.insert(hannWindowBuffer.end(), smearingAlgorithm == SmearingAlgorithm::CLASSIC ? bufferSize * 2 : bufferSize, 0.0f);
 	}
 
 	void CFrequencySmearing::ProcessSmearingComplexConvolution(CMonoBuffer<float> &inputBuffer, CMonoBuffer<float> &outputBuffer)
@@ -679,10 +711,10 @@ namespace HAHLSimulation {
 
 			// Adding to sample the contributions of the corresponding row
 			for (int m = 0; m < inputBuffer.size(); m++) outputBuffer[n] += inputBuffer[m] * smearingMatrix[n][m];
-			
+
 		}
 	}
-	
+
 	void CFrequencySmearing::ProcessSmearingConvolution(CMonoBuffer<float> &inputBuffer, CMonoBuffer<float> &outputBuffer)
 	{
 		ASSERT(inputBuffer.size() == outputBuffer.size(), RESULT_ERROR_BADSIZE, "Smearing convolution process requires output buffer to be of the same size of input source signal", "");
@@ -704,10 +736,10 @@ namespace HAHLSimulation {
 			for (int m = 0; m < inputBuffer.size(); m++)
 			{
 				int smearingWindowIndex = n - m + downwardSmearingBufferSize;
-				if ( (smearingWindowIndex >= 0) && (smearingWindowIndex < smearingWindow.size()) )
+				if ((smearingWindowIndex >= 0) && (smearingWindowIndex < smearingWindow.size()))
 					outputBuffer[n] += inputBuffer[m] * smearingWindow[smearingWindowIndex];
 			}
 		}
 	}
-	
+
 }//end namespace
