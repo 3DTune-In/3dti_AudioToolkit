@@ -535,7 +535,8 @@ namespace HAHLSimulation {
 		// smearingMatrix = normalMatrixExtended \ widenMatrix; 
 		smearingMatrix = Solve(normalMatrixExtended, widenMatrix);
 
-		// Discarding extended part of the matrix
+		// Resizing output matrix
+		smearingMatrix.resize(bufferSize);
 		for (int i = 0; i < bufferSize; i++) smearingMatrix[i].resize(bufferSize);
 
 	}
