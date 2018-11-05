@@ -526,9 +526,9 @@ namespace HAHLSimulation {
 		// Completing right part of the auditory filters in extended part of the matrix
 		for (int i = bufferSize / 2; i < bufferSize; i++)
 		{
-			for (int j = 0; j < min(2 * i - 1, bufferSize / 2); j++)
+			for (int j = 0; j < min(2 * i - bufferSize + 1, bufferSize / 2); j++)
 			{
-				normalMatrixExtended[i][bufferSize + j] = normalMatrix[i][i - j - 1];
+				normalMatrixExtended[i][bufferSize + j] = normalMatrix[i][2 * i - bufferSize - j];
 			}
 		}
 
