@@ -407,9 +407,9 @@ namespace HAHLSimulation {
 		else { return number; }
 	}
 
-	BidimensionalFloatMonoBuffer CFrequencySmearing::CalculateAuditoryFilter(float lowerSideBroadening, float upperSideBroadening)
+	BidimensionalDoubleMonoBuffer CFrequencySmearing::CalculateAuditoryFilter(float lowerSideBroadening, float upperSideBroadening)
 	{
-		BidimensionalFloatMonoBuffer auditoryFilter;
+		BidimensionalDoubleMonoBuffer auditoryFilter;
 		auditoryFilter.resize(bufferSize);
 
 		// Initializing all-zeros (bufferSize, bufferSize) matrix
@@ -423,11 +423,11 @@ namespace HAHLSimulation {
 		auditoryFilter[0][0] = 1.0f / ((lowerSideBroadening + upperSideBroadening) / 2.0f);
 
 		// Remaining rows are calculated element-by-element
-		float fhz, erbhz, pl, pu, g, erbNorm;
+		double fhz, erbhz, pl, pu, g, erbNorm;
 		for (int i = 1; i < bufferSize; i++)
 		{
 			// Filter constants calculation
-			fhz = ((float)i)*(float)samplingRate / (2.0f * (float)bufferSize);
+			fhz = ((double)i)*(double)samplingRate / (2.0f * (double)bufferSize);
 			erbhz = 24.7f * ((fhz * 0.00437f) + 1.0f);
 			pl = 4.0f * fhz / (erbhz * lowerSideBroadening);
 			pu = 4.0f * fhz / (erbhz * upperSideBroadening);
@@ -448,10 +448,10 @@ namespace HAHLSimulation {
 
 	}
 
-	BidimensionalFloatMonoBuffer CFrequencySmearing::ExtendMatrix(BidimensionalFloatMonoBuffer& inputMatrix)
+	BidimensionalDoubleMonoBuffer CFrequencySmearing::ExtendMatrix(BidimensionalDoubleMonoBuffer& inputMatrix)
 	{
 		// Output matrix will be a copy of the input matrix with extra zeros at the end of each row
-		BidimensionalFloatMonoBuffer outputMatrix = inputMatrix;
+		BidimensionalDoubleMonoBuffer outputMatrix = inputMatrix;
 		int size = outputMatrix.size();
 
 		// Adding size/2 zeros at the end of each row
@@ -464,9 +464,9 @@ namespace HAHLSimulation {
 		return outputMatrix;
 	}
 
-	MatrixXf CFrequencySmearing::BidimensionalCMonoBufferToEigenMatrix(BidimensionalFloatMonoBuffer& input)
+	MatrixXd CFrequencySmearing::BidimensionalCMonoBufferToEigenMatrix(BidimensionalDoubleMonoBuffer& input)
 	{
-		MatrixXf output(input.size(), input[0].size());
+		MatrixXd output(input.size(), input[0].size());
 
 		for (int i = 0; i < input.size(); i++)
 		{
@@ -479,9 +479,9 @@ namespace HAHLSimulation {
 		return output;
 	}
 
-	BidimensionalFloatMonoBuffer CFrequencySmearing::EigenMatrixToBidimensionalCMonoBuffer(MatrixXf& input)
+	BidimensionalDoubleMonoBuffer CFrequencySmearing::EigenMatrixToBidimensionalCMonoBuffer(MatrixXd& input)
 	{
-		BidimensionalFloatMonoBuffer output;
+		BidimensionalDoubleMonoBuffer output;
 		output.resize(input.rows());
 
 		for (int i = 0; i < input.rows(); i++)
@@ -496,12 +496,12 @@ namespace HAHLSimulation {
 		return output;
 	}
 
-	BidimensionalFloatMonoBuffer CFrequencySmearing::Solve(BidimensionalFloatMonoBuffer& matrixA, BidimensionalFloatMonoBuffer& matrixB)
+	BidimensionalDoubleMonoBuffer CFrequencySmearing::Solve(BidimensionalDoubleMonoBuffer& matrixA, BidimensionalDoubleMonoBuffer& matrixB)
 	{
 		// Declaration of Eigen's dynamic float matrices A, B and X, where X = A\B
-		MatrixXf a(matrixA.size(), matrixA[0].size());
-		MatrixXf b(matrixB.size(), matrixB[0].size());
-		MatrixXf x(max(matrixA.size(), matrixB.size()), max(matrixA[0].size(), matrixB[0].size()));
+		MatrixXd a(matrixA.size(), matrixA[0].size());
+		MatrixXd b(matrixB.size(), matrixB[0].size());
+		MatrixXd x(max(matrixA.size(), matrixB.size()), max(matrixA[0].size(), matrixB[0].size()));
 
 		// Conversion of matrices A and B to Eigen's dynamic float matrix format
 		a = BidimensionalCMonoBufferToEigenMatrix(matrixA);
@@ -519,9 +519,9 @@ namespace HAHLSimulation {
 		smearingMatrix.resize(bufferSize);
 		for (int i = 0; i < bufferSize; i++) smearingMatrix[i].resize(bufferSize);
 
-		BidimensionalFloatMonoBuffer normalMatrix = CalculateAuditoryFilter(1, 1);
-		BidimensionalFloatMonoBuffer widenMatrix = CalculateAuditoryFilter(downwardBroadeningFactor, upwardBroadeningFactor);
-		BidimensionalFloatMonoBuffer normalMatrixExtended = ExtendMatrix(normalMatrix);
+		BidimensionalDoubleMonoBuffer normalMatrix = CalculateAuditoryFilter(1, 1);
+		BidimensionalDoubleMonoBuffer widenMatrix = CalculateAuditoryFilter(downwardBroadeningFactor, upwardBroadeningFactor);
+		BidimensionalDoubleMonoBuffer normalMatrixExtended = ExtendMatrix(normalMatrix);
 
 		// Completing right part of the auditory filters in extended part of the matrix
 		for (int i = bufferSize / 2; i < bufferSize; i++)
