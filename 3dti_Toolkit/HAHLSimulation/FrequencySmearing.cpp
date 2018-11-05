@@ -608,6 +608,7 @@ namespace HAHLSimulation {
 
 	void CFrequencySmearing::SetDownwardSmearingBufferSize(int downwardSize)
 	{
+		if (smearingAlgorithm != SmearingAlgorithm::CLASSIC) return;
 		ASSERT(downwardSize > 0, RESULT_ERROR_OUTOFRANGE, "Smearing window size must be a positive value", "");
 		downwardSmearingBufferSize = downwardSize;
 		setupDone = false;
@@ -617,6 +618,7 @@ namespace HAHLSimulation {
 
 	void CFrequencySmearing::SetUpwardSmearingBufferSize(int upwardSize)
 	{
+		if (smearingAlgorithm != SmearingAlgorithm::CLASSIC) return;
 		ASSERT(upwardSize > 0, RESULT_ERROR_OUTOFRANGE, "Smearing window size must be a positive value", "");
 		upwardSmearingBufferSize = upwardSize;
 		setupDone = false;
@@ -626,6 +628,7 @@ namespace HAHLSimulation {
 
 	void CFrequencySmearing::SetDownwardSmearing_Hz(float downwardSmearing)
 	{
+		if (smearingAlgorithm != SmearingAlgorithm::CLASSIC) return;
 		ASSERT(downwardSmearing >= 0.0f, RESULT_ERROR_OUTOFRANGE, "Smearing amount must be a positive (or zero) value in Hz", "");
 		downwardSmearing_Hz = downwardSmearing;
 		setupDone = false;
@@ -635,6 +638,7 @@ namespace HAHLSimulation {
 
 	void CFrequencySmearing::SetUpwardSmearing_Hz(float upwardSmearing)
 	{
+		if (smearingAlgorithm != SmearingAlgorithm::CLASSIC) return;
 		ASSERT(upwardSmearing >= 0.0f, RESULT_ERROR_OUTOFRANGE, "Smearing amount must be a positive (or zero) value in Hz", "");
 		upwardSmearing_Hz = upwardSmearing;
 		setupDone = false;
@@ -645,6 +649,7 @@ namespace HAHLSimulation {
 	void CFrequencySmearing::SetDownwardBroadeningFactor(float _downwardBroadeningFactor)
 	{
 
+		if (smearingAlgorithm != SmearingAlgorithm::SUBFRAME) return;
 		if (_downwardBroadeningFactor > MIN_SMEARING_BROADENING_FACTOR)
 			downwardBroadeningFactor = _downwardBroadeningFactor;
 		else
@@ -657,6 +662,7 @@ namespace HAHLSimulation {
 
 	void CFrequencySmearing::SetUpwardBroadeningFactor(float _upwardBroadeningFactor)
 	{
+		if (smearingAlgorithm != SmearingAlgorithm::SUBFRAME) return;
 		if (_upwardBroadeningFactor > MIN_SMEARING_BROADENING_FACTOR)
 			upwardBroadeningFactor = _upwardBroadeningFactor;
 		else
