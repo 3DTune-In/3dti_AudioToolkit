@@ -151,13 +151,13 @@ namespace HAHLSimulation {
 				Common::CFprocessor::CalculateFFT(inputBufferCrossfaded, inputBufferCrossfaded_FFT);
 
 				//Split in Module and Phase
-				CMonoBuffer<float> moduleBufferCrossfaded;
+				CMonoBuffer<float> powerBufferCrossfaded;
 				CMonoBuffer<float> phaseBufferCrossfaded;
-				Common::CFprocessor::ProcessToModulePhase(inputBufferCrossfaded_FFT, moduleBufferCrossfaded, phaseBufferCrossfaded);
+				Common::CFprocessor::ProcessToPowerPhase(inputBufferCrossfaded_FFT, powerBufferCrossfaded, phaseBufferCrossfaded);
 
 				// SMEARING
 				CMonoBuffer<float> smearedModuleBufferCrossfaded;
-				ProcessSmearing(moduleBufferCrossfaded, smearedModuleBufferCrossfaded);
+				ProcessSmearing(powerBufferCrossfaded, smearedModuleBufferCrossfaded);
 
 				//Merge Module and Phase
 				CMonoBuffer<float> outputBufferCrossfaded_FFT;
@@ -719,6 +719,10 @@ namespace HAHLSimulation {
 			// Adding to sample the contributions of the corresponding row
 			for (int m = 0; m < inputBuffer.size(); m++) outputBuffer[n] += inputBuffer[m] * smearingMatrix[n][m];
 
+			// Power to module
+			double moduleSample = std::sqrt(outputBuffer[n]);
+			isnormal(moduleSample) ? outputBuffer[n] = moduleSample : outputBuffer[n] = 0.0f;
+			
 		}
 	}
 
