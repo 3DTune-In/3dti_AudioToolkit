@@ -222,6 +222,27 @@ namespace Common {
 		}		
 	}
  
+	void CFprocessor::ProcessToPowerPhase(const std::vector<float>& inputBuffer, std::vector<float>& powerBuffer, std::vector<float>& phaseBuffer)
+	{
+		ASSERT(inputBuffer.size() > 0, RESULT_ERROR_BADSIZE, "Bad input size", "");
+
+		if (inputBuffer.size() > 0) {
+
+			powerBuffer.clear();
+			phaseBuffer.clear();
+
+			int end = (int)(inputBuffer.size()*0.5);
+
+			for (int i = 0; i < end; i++)
+			{
+				float real = inputBuffer[2 * i];
+				float img = inputBuffer[2 * i + 1];
+
+				powerBuffer.push_back(real*real + img*img);
+				phaseBuffer.push_back(std::atan2(img, real));
+			}
+		}
+	}
 
 	void CFprocessor::ProcessToRealImaginary(const std::vector<float>& moduleBuffer, const std::vector<float>& phaseBuffer, std::vector<float>& outputBuffer)
 	{
