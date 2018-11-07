@@ -150,7 +150,7 @@ namespace HAHLSimulation {
 				CMonoBuffer<float> inputBufferCrossfaded_FFT;
 				Common::CFprocessor::CalculateFFT(inputBufferCrossfaded, inputBufferCrossfaded_FFT);
 
-				//Split in Module and Phase
+				//Split in Power and Phase
 				CMonoBuffer<float> powerBufferCrossfaded;
 				CMonoBuffer<float> phaseBufferCrossfaded;
 				Common::CFprocessor::ProcessToPowerPhase(inputBufferCrossfaded_FFT, powerBufferCrossfaded, phaseBufferCrossfaded);
@@ -291,11 +291,11 @@ namespace HAHLSimulation {
 
 	void CFrequencySmearing::CalculateHannWindow()
 	{
-		float powerFactor = smearingAlgorithm == CFrequencySmearing::SmearingAlgorithm::SUBFRAME ? (1 / sqrt(1.5)) : 1;
+		double powerFactor = smearingAlgorithm == CFrequencySmearing::SmearingAlgorithm::SUBFRAME ? (1.0 / sqrt(1.5)) : 1.0;
 		int hannWindowSize = hannWindowBuffer.size();
 		for (int i = 0; i< hannWindowSize; i++) {
-			float temp = (2 * M_PI * i) / (hannWindowSize - 1);
-			hannWindowBuffer[i] = CalculateRoundToZero(0.5f * (1 - std::cos(temp))) * powerFactor;
+			double temp = (2.0 * M_PI * (double)i) / ((double)hannWindowSize - 1.0);
+			hannWindowBuffer[i] = CalculateRoundToZero(0.5 * (1.0 - std::cos(temp))) * powerFactor;
 		}
 	}
 
@@ -427,19 +427,19 @@ namespace HAHLSimulation {
 		for (int i = 1; i < bufferSize; i++)
 		{
 			// Filter constants calculation
-			fhz = ((double)i)*(double)samplingRate / (2.0f * (double)bufferSize);
-			erbhz = 24.7f * ((fhz * 0.00437f) + 1.0f);
-			pl = 4.0f * fhz / (erbhz * lowerSideBroadening);
-			pu = 4.0f * fhz / (erbhz * upperSideBroadening);
-			erbNorm = erbhz * (lowerSideBroadening + upperSideBroadening) / (49.4f);
+			fhz = ((double)i)*(double)samplingRate / (2.0 * (double)bufferSize);
+			erbhz = 24.7 * ((fhz * 0.00437) + 1.0);
+			pl = 4.0 * fhz / (erbhz * lowerSideBroadening);
+			pu = 4.0 * fhz / (erbhz * upperSideBroadening);
+			erbNorm = erbhz * (lowerSideBroadening + upperSideBroadening) / (49.4);
 
 			// Filling row i 
 			for (int j = 0; j < bufferSize; j++)
 			{
-				g = abs((float)(i - j)) / (float)i;
+				g = abs((double)(i - j)) / (double)i;
 
-				if (j < i)	auditoryFilter[i][j] = ((1.0f + pl*g)*exp(-pl*g)) / erbNorm;	// Lower side
-				else		auditoryFilter[i][j] = ((1.0f + pu*g)*exp(-pu*g)) / erbNorm;	// Upper side
+				if (j < i)	auditoryFilter[i][j] = ((1.0 + pl*g)*exp(-pl*g)) / erbNorm;	// Lower side
+				else		auditoryFilter[i][j] = ((1.0 + pu*g)*exp(-pu*g)) / erbNorm;	// Upper side
 			}
 
 		}
