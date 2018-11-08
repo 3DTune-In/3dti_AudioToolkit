@@ -30,7 +30,7 @@
 
 namespace HAHLSimulation {
 
-	void CHearingLossSim::Setup(int samplingRate, float Calibration_dBs_SPL_for_0_dBs_fs, float iniFreq_Hz, int bandsNumber, int filtersPerBand, int bufferSize)
+	void CHearingLossSim::Setup(int samplingRate, float Calibration_dBs_SPL_for_0_dBs_fs, float iniFreq_Hz, int bandsNumber, int filtersPerBand, int bufferSize, CFrequencySmearing::SmearingAlgorithm smearingAlgorithm)
 	{
 		// Set default switches for each independent process
 		enableHearingLossSimulation.left = true;
@@ -56,8 +56,8 @@ namespace HAHLSimulation {
 		// Setup frequency smearing
 		//ERRORHANDLER3DTI.AddVariableWatch(WV_BUFFER_TEST);
 		//ERRORHANDLER3DTI.SetWatcherLogFile(WV_BUFFER_TEST, "smearingFOutput.txt");
-		frequencySmearers.left.Setup(bufferSize, samplingRate);
-		frequencySmearers.right.Setup(bufferSize, samplingRate);
+		frequencySmearers.left.Setup(bufferSize, samplingRate, smearingAlgorithm);
+		frequencySmearers.right.Setup(bufferSize, samplingRate, smearingAlgorithm);
 		frequencySmearingBypassDelay.left.Setup(bufferSize);
 		frequencySmearingBypassDelay.right.Setup(bufferSize);
 	}
