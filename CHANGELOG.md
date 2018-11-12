@@ -3,6 +3,43 @@ All notable changes to the 3DTuneIn Toolkit will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [Unreleased]
+
+### HAHLSimulation
+A new frequency smearing algorithm is implemented, based on Moore's algorithm. The developer can choose between this new algorithm or the old one and configure them independently for each ear.
+
+`Added`
+ - New enum type SmearingAlgorithm. Contains: 
+     * CLASSIC, that represents the old algorithm
+     * SUBFRAME, that represents the new algorithm
+ - New function GetSmearingAlgorithm, returns the smearing algorithm configured
+     * SmearingAlgorithm CFrequencySmearing::GetSmearingAlgorithm();
+ - New method SetSmearingAlgorithm lets the developer toggle between frequency smearing algorithms
+     * void CFrequencySmearing::SetSmearingAlgorithm(SmearingAlgorithm _smearingAlgorithm);
+ - New methods SetDownwardBroadeningFactor and SetUpwardBroadeningFactor let the developer configure Moore's frequency smearing algorithm
+     * void CFrequencySmearing::SetDownwardBroadeningFactor(float _downwardBroadeningFactor);
+     * void CFrequencySmearing::SetUpwardBroadeningFactor(float _upwardBroadeningFactor);
+
+`Modified`
+ - Hearing Loss Sim Setup function now has smearing algorithm enum as an input
+     * old: void CHearingLossSim::Setup(int samplingRate, float Calibration_dBs_SPL_for_0_dBs_fs, float iniFreq_Hz, int bandsNumber, int filtersPerBand, int bufferSize);
+     * new: void CHearingLossSim::Setup(int samplingRate, float Calibration_dBs_SPL_for_0_dBs_fs, float iniFreq_Hz, int bandsNumber, int filtersPerBand, int bufferSize, **CFrequencySmearing::SmearingAlgorithm _smearingAlgorithm**);
+
+ - Frequency Smearing Setup function now has smearing algorithm enum as an input
+     * old:  void CFrequencySmearing::Setup(int _bufferSize, float _samplingRate);
+     * new:  void CFrequencySmearing::Setup(int _bufferSize, float _samplingRate**, SmearingAlgorithm _smearingAlgorithm**);
+
+### Common
+`Added`
+ - New method in CFProcessor, ProcessToPowerPhase. It provides power and phase from a FFT:
+    * void CFProcessor::ProcessToPowerPhase(const std::vector<float>& inputBuffer, std::vector<float>& powerBuffer, std::vector<float>& phaseBuffer)
+    
+
+### Resource Manager
+`Added`
+ - Eigen added to third party libraries. It is used in Moore's frequency smearing algorithm.
+
+
 ## [M20181003] - AudioToolkit_v1.3_20181003
 
 ### Binaural
