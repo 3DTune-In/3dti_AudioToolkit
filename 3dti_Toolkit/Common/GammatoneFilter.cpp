@@ -15,6 +15,7 @@
 * \b Contact: areyes@uma.es and l.picinali@imperial.ac.uk
 *
 * \b Contributions: (additional authors/contributors can be added here)
+* \b The gammatone filter was implemented by Michael Krzyzaniak: m.krzyzaniak@surrey.ac.uk
 *
 * \b Project: 3DTI (3D-games for TUNing and lEarnINg about hearing aids) ||
 * \b Website: http://3d-tune-in.eu/
@@ -40,23 +41,20 @@
 #define M_TWO_PI (2 * M_PI)
 #endif
 
+#define MAX_ORDER 30
 #define DEFAULT_SAMPLING_RATE 44100
-#define DEFAULT_ORDER 4
 #define DEFAULT_SIN_FUNCTION sin
 #define DEFAULT_COS_FUNCTION cos
 #define DEFAULT_SQRT_FUNCTION sqrt
 #define DEFAULT_POW_FUNCTION pow
 #define DEFAULT_EXP_FUNCTION exp
-#define DEFAULT_FACTORIAL_FUNCTION Factorial
 
 namespace Common {
 
 	//////////////////////////////////////////////
 	CGammatoneFilter::CGammatoneFilter(unsigned _order, float _centerFrequency)
 	{
-		//the upper bound is limited by the factorial function in the calculation of an.
-		//an should be precomputed for, say 20 filter orders, and that should be the upper bound here
-		if ((_order < 1) || (_order > 7))
+		if ((_order < 1) || (_order > MAX_ORDER))
 		{
 			SET_RESULT(RESULT_ERROR_BADSIZE, "Gammatone filter needs to be constructed with a order greater than 0 (try 4 for modelling the basilar membrane)");
 			return;
@@ -75,7 +73,7 @@ namespace Common {
 		generalGain = 1.0f;
 
 		phase = 0;
-		// error handler: Trust in SetSamplingFreq for result
+		// error handler: these will set success or failure
 		SetSamplingFreq(DEFAULT_SAMPLING_RATE);
 		SetFrequencyUsingERBOfHumanAuditoryFilter(_centerFrequency);
 	}
@@ -99,31 +97,18 @@ namespace Common {
 
 		//SET_RESULT(RESULT_OK, "Biquad filter process succesfull");
 
-		//todo: make these instance variables and decleare them at filter creation time?
-		//ok, but what if the buffer size changes?
-		//CMonoBuffer<float> z_real(size);
-		//CMonoBuffer<float> z_imag(size);
-		float* z_real = new float[size]();
-		float* z_imag = new float[size]();
-		//todo: check that we got the memory without stack overflow?
-	
-		//todo: implement data-doubling to avoid ailising for high freqs > 11 kHz
+		//todo: implement data-doubling to avoid ailising for high freqs > 11kHz
+		float w_real, w_imag, z_real, z_imag, sin_phase, cos_phase;
 		double phase_increment = this->f0 * M_TWO_PI / this->samplingFreq;
-	
-		//constant 1-e^(-2PI*b*t), for middle parenthesis term of eq 10
-		//could be calculated when bandwidth or samplingFreq are calculated
-		double constant = 1.0 - DEFAULT_EXP_FUNCTION(-M_TWO_PI * this->b / this->samplingFreq);
-	
-		//extra storage for intermediate computations
-		float w_real, w_imag, sin_phase, cos_phase;
-	
+		double constant = this->equation_11_constant;
+
 		for (int k = 0; k < size; k++)
 		{
+			//eq. 9 frequency shifting by -f0 Hz
 			cos_phase = DEFAULT_COS_FUNCTION(this->phase);
 			sin_phase = DEFAULT_SIN_FUNCTION(this->phase);
-			//eq. 9 frequency shifting by -f0 Hz
-			z_real[k] = cos_phase * buffer[k];
-			z_imag[k] = -sin_phase * buffer[k];
+			z_real = cos_phase * buffer[k];
+			z_imag = -sin_phase * buffer[k];
 
 			//eq. 10 recursive 1st order filter
 			for (int n = 0; n < this->order; n++)
@@ -131,32 +116,30 @@ namespace Common {
 				//last parenthesis
 				w_real = this->prev_z_real[n] - this->prev_w_real[n];
 				w_imag = this->prev_z_imag[n] - this->prev_w_imag[n];
-			
+
 				//second term
 				w_real *= constant;
 				w_imag *= constant;
-			
+
 				//first term
 				w_real += this->prev_w_real[n];
 				w_imag += this->prev_w_imag[n];
-				
-				this->prev_z_real[n] = z_real[k];
-				this->prev_z_imag[n] = z_imag[k];
-				this->prev_w_real[n] = z_real[k] = w_real;
-				this->prev_w_imag[n] = z_imag[k] = w_imag;
-				z_real[k] = w_real;
-				z_imag[k] = w_imag;
+
+				this->prev_z_real[n] = z_real;
+				this->prev_z_imag[n] = z_imag;
+				this->prev_w_real[n] = z_real = w_real;
+				this->prev_w_imag[n] = z_imag = w_imag;
 			}
-	 
+
 			//equation 11 frequency shifting by +f0 Hz
-			buffer[k] = cos_phase*z_real[k] - sin_phase*z_imag[k];
+			buffer[k] = cos_phase*z_real - sin_phase*z_imag;
 			buffer[k] *= this->generalGain;
-		
+
 			this->phase += phase_increment;
 			if(this->phase > M_TWO_PI)
 				this->phase -= M_TWO_PI;
 		}
-		//todo: this delayed the signal by half of the sampling period...
+	//todo: this delayed the signal by half of the sampling period...
 	}
 	
 	//////////////////////////////////////////////
@@ -170,6 +153,7 @@ namespace Common {
 
 		SET_RESULT(RESULT_OK, "Sampling frequency for gammatone filter succesfully set");
 		samplingFreq = _samplingFreq;
+		UpdateEq11Constant();
 	}
 
 	//////////////////////////////////////////////
@@ -200,6 +184,7 @@ namespace Common {
 	void CGammatoneFilter::Set3dBBandwidth(float _bw)
 	{
 		b = _bw / cn;
+		UpdateEq11Constant();
 	}
 	
 	//////////////////////////////////////////////
@@ -212,6 +197,7 @@ namespace Common {
 	void CGammatoneFilter::SetERBBandwidth(float _erb)
 	{
 		b = _erb / an;
+		UpdateEq11Constant();
 	}
 	
 	//////////////////////////////////////////////
@@ -259,45 +245,69 @@ namespace Common {
 	
 		return result;
 	}
-	
+
 	//////////////////////////////////////////////
-	//constructor ensures that x (filter order) is 1 to 12
-	unsigned CGammatoneFilter::Factorial(unsigned x)
+	void CGammatoneFilter::UpdateEq11Constant()
 	{
-		unsigned result = 1;
-	
-		while(x > 1)
-			result *= x--;
-	
-		return result;
+		equation_11_constant = 1.0 - DEFAULT_EXP_FUNCTION(-M_TWO_PI * b / samplingFreq);
 	}
-	
+		
 	//////////////////////////////////////////////
 	double CGammatoneFilter::CalculateAn(unsigned _order)
 	{
-		if (_order < 1)
+		if ((_order < 1) || (_order > MAX_ORDER))
 		{
-			SET_RESULT(RESULT_ERROR_BADSIZE, "ERB of Gammatone filter needs an order greater than 0");
+			SET_RESULT(RESULT_ERROR_BADSIZE, "Calculate filter An -- an order out of bounds");
 			return 1;
 		}
-		SET_RESULT(RESULT_OK, "OrderToEquivalentRectangularBandwidth OK");
-	
-		//equation 6
-		//todo: precompute an using bignums, and here just look it up in a table and return it.
-		long double two_n_minus_two	 = (2.0 * _order) - 2.0;
-		long double two_n_minus_two_WOW = DEFAULT_FACTORIAL_FUNCTION(two_n_minus_two);
-		long double two_to_the_neg_x		= DEFAULT_POW_FUNCTION(2.0, -two_n_minus_two);
-		long double numerator			= M_PI * two_n_minus_two_WOW * two_to_the_neg_x;
-		long double denominator		 = DEFAULT_FACTORIAL_FUNCTION(_order-1);
-		denominator *= denominator;
-	
-		if(denominator == 0)
+		SET_RESULT(RESULT_OK, "Calculate filter An -- OK");
+		
+		//precomputed using python3's builtin bignums
+		double an_table[] = 
 		{
-			SET_RESULT(RESULT_ERROR_BADSIZE, "Numerical error while setting bandwidth of gammatone filter (is the filter order too high?)");
-			return 1.0;
-		}
-	
-		return numerator / denominator;
+			0, //there is no zero order filter, but pad this for ease of access
+			3.141592653589793,
+			1.5707963267948966,
+			1.1780972450961724,
+			0.9817477042468103,
+			0.8590292412159591, //notice there is a mistake in the paper here
+			0.7731263170943632,
+			0.7086991240031661,
+			0.65807775800294,
+			0.6169478981277563,
+			0.5826730148984365,
+			0.5535393641535147,
+			0.5283784839647185,
+			0.5063627137995219,
+			0.48688722480723273,
+			0.4694983953498315,
+			0.45384844883817044,
+			0.43966568481197754,
+			0.4267343411410371,
+			0.414880609442675,
+			0.4039626986678677,
+			0.393863631201171,
+			0.38448592569638124,
+			0.3757476092032817,
+			0.3675791829162538,
+			0.35992128327216516,
+			0.35272285760672184,
+			0.3459397257296695,
+			0.33953343451245344,
+			0.3334703374675882,
+			0.3277208488905608,
+		};
+		
+		return an_table[_order];
+		
+		////equation 6
+		//long double two_n_minus_two     = (2.0 * _order) - 2.0;
+		//long double two_n_minus_two_WOW = DEFAULT_FACTORIAL_FUNCTION(two_n_minus_two);
+		//long double two_to_the_neg_x    = DEFAULT_POW_FUNCTION(2.0, -two_n_minus_two);
+		//long double numerator           = M_PI * two_n_minus_two_WOW * two_to_the_neg_x;
+		//long double denominator         = DEFAULT_FACTORIAL_FUNCTION(_order-1);
+		//denominator *= denominator;
+		//return numerator / denominator;
 	}
 	
 	//////////////////////////////////////////////

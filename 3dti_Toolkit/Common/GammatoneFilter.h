@@ -151,23 +151,23 @@ namespace Common {
 		////////////////////
 		// PRIVATE METHODS
 		///////////////////
+		void UpdateEq11Constant();
 		static double CalculateAn(unsigned _order);
 		static double CalculateCn(unsigned _order);
-		static unsigned Factorial(unsigned x);
 	
 		////////////////
 		// ATTRIBUTES
 		////////////////
-		float generalGain;                                              // Gain applied to every sample obtained with Process
-
-		double samplingFreq;                                            // Keep the sampling rate at which audio samples were taken
-		unsigned order;                                                 // Keep the filter order
-		double b;                                                       // scale param of gamma distribution
-		double an;
-		double cn;
-		double f0;                                                      // center freq in Hz (also freq of impulse response tone)
-		double phase;                                                   // phase of the filter
-		float* prev_z_real;                                             // store previous samples between audio buffers
+		float generalGain;                // Gain applied to every sample obtained with Process
+		double samplingFreq;              // Keep the sampling rate at which audio samples were taken
+		unsigned order;                   // Keep the filter order
+		double b;                         // scale param of gamma distribution
+		double an;                        // filter impluse response proportinality constant
+		double cn;                        //
+		double f0;                        // center freq in Hz (also freq of impulse response tone)
+		double phase;                     // phase of the filter
+		double equation_11_constant;      // term in the center parenthesis of eq 11
+		float* prev_z_real;               // store previous samples between audio buffers
 		float* prev_z_imag;
 		float* prev_w_real;
 		float* prev_w_imag;
