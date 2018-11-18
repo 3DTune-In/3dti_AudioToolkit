@@ -9,7 +9,6 @@
 * \b Contact: areyes@uma.es and l.picinali@imperial.ac.uk
 *
 * \b Contributions: (additional authors/contributors can be added here)
-* \b The gammatone filter was implemented by Michael Krzyzaniak: m.krzyzaniak@surrey.ac.uk
 *
 * \b Project: 3DTI (3D-games for TUNing and lEarnINg about hearing aids) ||
 * \b Website: http://3d-tune-in.eu/
@@ -51,6 +50,13 @@ namespace Common {
 		*/
 		CGammatoneFilter(unsigned _order, float _centerFrequency);
 
+		/** \brief Set the sampling frequency at which audio samples were acquired
+		*	\param [in] _samplingFreq sampling frequency, in Hertzs
+		*   \eh On success, RESULT_OK is reported to the error handler.
+		*       On error, an error code is reported to the error handler.
+		*/
+		void SetSamplingFreq(float _samplingFreq);
+
 		/** \brief Filter the input data according to the filter setup.
 		*	\param [in] inBuffer input buffer
 		*	\param [out] outBuffer output buffer
@@ -58,26 +64,13 @@ namespace Common {
 		*	\pre Input and output buffers must have the same size, which should be greater than 0.
 		*   \eh On error, an error code is reported to the error handler.
 		*/
-		//void Process(CMonoBuffer<float> &inBuffer, CMonoBuffer<float> & outBuffer, bool addResult = false);
+		void Process(CMonoBuffer<float> &inBuffer, CMonoBuffer<float> & outBuffer, bool addResult = false);
 
 		/**
 		\overload
 		*/
 		void Process(CMonoBuffer<float> &buffer);
 
-    /** \brief Set the sampling frequency at which audio samples were acquired
-    *  \param [in] _samplingFreq sampling frequency, in Hertzs
-    *   \eh On success, RESULT_OK is reported to the error handler.
-    *       On error, an error code is reported to the error handler.
-    */
-    void SetSamplingFreq(float _samplingFreq);
-
-    /** \brief Get the sample rate, in Hz, of the filter
-    *  \retval freq filter sampling frequency
-    *   \eh Nothing is reported to the error handler.
-    */
-    float GetSamplingFreq();
-  
 		/** \brief Set the gain of the filter 
 		*	\param [in] _gain filter gain 
 		*   \eh Nothing is reported to the error handler.
@@ -143,7 +136,7 @@ namespace Common {
     *  \retval erb equivalent rectangular bandwidth (ERB) for the given center frequency
     *   \eh Nothing is reported to the error handler.
     */
-    static float GetERBOfHumanAuditoryFilter(float _freq);
+    static float GetERBOfHumanAudirotyFilter(float _freq);
 
 
 
@@ -153,7 +146,6 @@ namespace Common {
 		///////////////////
     static double CalculateAn(unsigned _order);
     static double CalculateCn(unsigned _order);
-    static unsigned Factorial(unsigned x);
   
 		////////////////
 		// ATTRIBUTES
@@ -166,7 +158,7 @@ namespace Common {
     double an;
     double cn;
     double f0;                                                      // center freq in Hz (also freq of impulse response tone)
-    double phase;                                                   // phase of the filter
+    double phase                                                    // phase of the filter
     float* prev_z_real;                                             // store previous samples between audio buffers
     float* prev_z_imag;
     float* prev_w_real;
