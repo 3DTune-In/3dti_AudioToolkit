@@ -30,7 +30,6 @@
 #define _USE_MATH_DEFINES // TODO: Test in windows! Might also be problematic for other platforms??
 #include <cmath>
 #include <Common/GammatoneFilter.h>
-#include "GammatoneFilter.h"
 #include <iomanip>
 
 #ifndef M_PI 
@@ -69,6 +68,7 @@ namespace Common {
 		prev_w_real = new float[order]();
 		prev_w_imag = new float[order]();
 		//todo: check that we got the memory without stack overflow?
+    //todo: are these leaking when this object is deleted?
 
 		sin_phase = 0;
 		cos_phase = 1;
