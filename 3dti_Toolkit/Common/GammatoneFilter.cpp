@@ -74,7 +74,6 @@ namespace Common {
 		cos_phase = 1;
 		generalGain = 1.0f;
 
-		phase = 0;
 		// error handler: these will set success or failure
 		SetSamplingFreq(DEFAULT_SAMPLING_RATE);
 		SetFrequencyUsingERBOfHumanAuditoryFilter(_centerFrequency);
