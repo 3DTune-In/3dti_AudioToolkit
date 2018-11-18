@@ -51,6 +51,11 @@ namespace Common {
 		*/
 		CGammatoneFilter(unsigned _order, float _centerFrequency);
 
+		/** \brief Default destructor.
+		*	\details None
+		*/
+		~CGammatoneFilter();
+
 		/** \brief Filter the input data according to the filter setup.
 		*	\param [in] inBuffer input buffer
 		*	\param [out] outBuffer output buffer
@@ -58,7 +63,7 @@ namespace Common {
 		*	\pre Input and output buffers must have the same size, which should be greater than 0.
 		*   \eh On error, an error code is reported to the error handler.
 		*/
-		//void Process(CMonoBuffer<float> &inBuffer, CMonoBuffer<float> & outBuffer, bool addResult = false);
+		void Process(CMonoBuffer<float> &inBuffer, CMonoBuffer<float> &outBuffer, bool addResult = false);
 
 		/**
 		\overload
@@ -152,6 +157,7 @@ namespace Common {
 		// PRIVATE METHODS
 		///////////////////
 		void UpdateEq11Constant();
+		void UpdatePhaseIncrement();
 		static double CalculateAn(unsigned _order);
 		static double CalculateCn(unsigned _order);
 	
@@ -163,10 +169,12 @@ namespace Common {
 		unsigned order;                   // Keep the filter order
 		double b;                         // scale param of gamma distribution
 		double an;                        // filter impluse response proportinality constant
-		double cn;                        //
+		double cn;                        // constant for bandwidth calculation
 		double f0;                        // center freq in Hz (also freq of impulse response tone)
 		double sin_phase;                 // phase of the filter
 		double cos_phase;                 // phase of the filter
+		double cos_phase_increment;       // phase increment of the filter
+		double sin_phase_increment;       // phase increment of the filter
 		double equation_11_constant;      // term in the center parenthesis of eq 11
 		float* prev_z_real;               // store previous samples between audio buffers
 		float* prev_z_imag;

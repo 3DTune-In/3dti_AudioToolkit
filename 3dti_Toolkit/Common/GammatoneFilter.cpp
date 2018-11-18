@@ -3,7 +3,7 @@
 *
 * \brief Definition of GammatoneFilter class.
 *
-* Class to implement a Biquad Digital Filter.
+* Class to implement a Gammatone Digital Filter.
 * Equation numnber throughout this code refer to the following paper:
 * Implementing a GammaTone Filter Bank
 * Annex C of the SVOS Final Report (Part A: The Auditory Filter Bank)
@@ -60,16 +60,19 @@ namespace Common {
 		}
 	
 		order = _order;
-		an = CalculateAn(order);
-		cn = CalculateCn(order);
-	
 		prev_z_real = new float[order]();
 		prev_z_imag = new float[order]();
 		prev_w_real = new float[order]();
 		prev_w_imag = new float[order]();
-		//todo: check that we got the memory without stack overflow?
-    //todo: are these leaking when this object is deleted?
+	
+		if(!(prev_z_real && prev_z_imag && prev_w_real && prev_w_imag))
+		{
+			SET_RESULT(RESULT_ERROR_BADSIZE, "stack overflow while allocating gammatone filter");
+			return;
+		}
 
+		an = CalculateAn(order);
+		cn = CalculateCn(order);
 		sin_phase = 0;
 		cos_phase = 1;
 		generalGain = 1.0f;
@@ -80,37 +83,37 @@ namespace Common {
 	}
 
 	//////////////////////////////////////////////
-	//void CGammatoneFilter::Process(CMonoBuffer<float> &inBuffer, CMonoBuffer<float> & outBuffer, bool addResult)
-	//{
-	//	SET_RESULT(RESULT_ERROR_BADSIZE, "I haven't implemented this yet. Is it needed?");
-	//}
-
+	CGammatoneFilter::~CGammatoneFilter()
+	{
+		if(prev_z_real) delete[] prev_z_real;
+		if(prev_z_imag) delete[] prev_z_imag;
+		if(prev_w_real) delete[] prev_w_real;
+		if(prev_w_imag) delete[] prev_w_imag;
+	}
+	
 	//////////////////////////////////////////////
-	void CGammatoneFilter::Process(CMonoBuffer<float> &buffer)
+	void CGammatoneFilter::Process(CMonoBuffer<float> &inBuffer, CMonoBuffer<float> &outBuffer, bool addResult)
 	{
 		int size = buffer.size();
 
 		if (size <= 0)
 		{
-			SET_RESULT(RESULT_ERROR_BADSIZE, "Attempt to process a biquad filter with an empty input buffer");
+			SET_RESULT(RESULT_ERROR_BADSIZE, "Attempt to process a Gammatone filter with an empty input buffer");
 			return;
 		}
 
-		//SET_RESULT(RESULT_OK, "Biquad filter process succesfull");
+		//SET_RESULT(RESULT_OK, "Gammatone filter process succesfull");
 
 		//todo: implement data-doubling to avoid ailising for high freqs > 11kHz
-		float w_real, w_imag, z_real, z_imag;
-		double phase_increment = this->f0 * M_TWO_PI / this->samplingFreq;
-		double cos_phase_increment = DEFAULT_COS_FUNCTION(phase_increment);
-		double sin_phase_increment = DEFAULT_SIN_FUNCTION(phase_increment);
-		double constant = this->equation_11_constant;
+		float w_real, w_imag, z_real, z_imag, sample;
 		double temp;
+		double constant = this->equation_11_constant;
 
 		for (int k = 0; k < size; k++)
 		{
 			//eq. 9 frequency shifting by -f0 Hz
-			z_real =  this->cos_phase * buffer[k];
-			z_imag = -this->sin_phase * buffer[k];
+			z_real =  this->cos_phase * inBuffer[k];
+			z_imag = -this->sin_phase * inBuffer[k];
 
 			//eq. 10 recursive 1st order filter
 			for (int n = 0; n < this->order; n++)
@@ -134,14 +137,21 @@ namespace Common {
 			}
 
 			//equation 11 frequency shifting by +f0 Hz
-			buffer[k] = this->cos_phase*z_real - this->sin_phase*z_imag;
-			buffer[k] *= this->generalGain;
+			sample = this->cos_phase*z_real - this->sin_phase*z_imag;
+			sample *= this->generalGain;
+			outBuffer[k] = (addResult) ? (outBuffer[k] + sample) : sample;
 
 			temp = this->cos_phase;
-			this->cos_phase = cos_phase_increment * this->cos_phase + sin_phase_increment * this->sin_phase;
-			this->sin_phase = cos_phase_increment * this->sin_phase - sin_phase_increment * temp;
+			this->cos_phase = this->cos_phase_increment * this->cos_phase + this->sin_phase_increment * this->sin_phase;
+			this->sin_phase = this->cos_phase_increment * this->sin_phase - this->sin_phase_increment * temp;
 		}
 		//todo: this delayed the signal by half of the sampling period...
+	}
+
+	//////////////////////////////////////////////
+	void CGammatoneFilter::Process(CMonoBuffer<float> &buffer)
+	{
+		Process(buffer, buffer, false);
 	}
 	
 	//////////////////////////////////////////////
@@ -156,6 +166,7 @@ namespace Common {
 		SET_RESULT(RESULT_OK, "Sampling frequency for gammatone filter succesfully set");
 		samplingFreq = _samplingFreq;
 		UpdateEq11Constant();
+		UpdatePhaseIncrement();
 	}
 
 	//////////////////////////////////////////////
@@ -212,6 +223,7 @@ namespace Common {
 	void CGammatoneFilter::SetCenterFrequency(float _freq)
 	{
 		f0 = _freq;
+		UpdatePhaseIncrement();
 	}
 	
 	//////////////////////////////////////////////
@@ -253,7 +265,15 @@ namespace Common {
 	{
 		equation_11_constant = 1.0 - DEFAULT_EXP_FUNCTION(-M_TWO_PI * b / samplingFreq);
 	}
-		
+
+	//////////////////////////////////////////////
+	void CGammatoneFilter::UpdatePhaseIncrement()
+	{
+		double phase_increment = f0 * M_TWO_PI / samplingFreq;
+		cos_phase_increment = DEFAULT_COS_FUNCTION(phase_increment);
+		sin_phase_increment = DEFAULT_SIN_FUNCTION(phase_increment);
+	}
+
 	//////////////////////////////////////////////
 	double CGammatoneFilter::CalculateAn(unsigned _order)
 	{
@@ -320,7 +340,7 @@ namespace Common {
 			SET_RESULT(RESULT_ERROR_BADSIZE, "ERB of Gammatone filter needs an order greater than 0");
 			return 1.0;
 		}
-		SET_RESULT(RESULT_OK, "OrderToEquivalentRectangularBandwidth OK");
+		SET_RESULT(RESULT_OK, "Calculate c_n OK");
 	
 		//equation 7
 		return 2.0 * DEFAULT_SQRT_FUNCTION(DEFAULT_POW_FUNCTION(2, 1.0/(double)_order) - 1.0);
