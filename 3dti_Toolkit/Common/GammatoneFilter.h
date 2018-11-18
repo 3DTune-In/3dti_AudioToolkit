@@ -165,7 +165,8 @@ namespace Common {
 		double an;                        // filter impluse response proportinality constant
 		double cn;                        //
 		double f0;                        // center freq in Hz (also freq of impulse response tone)
-		double phase;                     // phase of the filter
+		double sin_phase;                 // phase of the filter
+		double cos_phase;                 // phase of the filter
 		double equation_11_constant;      // term in the center parenthesis of eq 11
 		float* prev_z_real;               // store previous samples between audio buffers
 		float* prev_z_imag;

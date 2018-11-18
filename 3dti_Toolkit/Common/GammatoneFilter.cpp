@@ -70,6 +70,8 @@ namespace Common {
 		prev_w_imag = new float[order]();
 		//todo: check that we got the memory without stack overflow?
 
+		sin_phase = 0;
+		cos_phase = 1;
 		generalGain = 1.0f;
 
 		phase = 0;
@@ -98,17 +100,18 @@ namespace Common {
 		//SET_RESULT(RESULT_OK, "Biquad filter process succesfull");
 
 		//todo: implement data-doubling to avoid ailising for high freqs > 11kHz
-		float w_real, w_imag, z_real, z_imag, sin_phase, cos_phase;
+		float w_real, w_imag, z_real, z_imag;
 		double phase_increment = this->f0 * M_TWO_PI / this->samplingFreq;
+		double cos_phase_increment = DEFAULT_COS_FUNCTION(phase_increment);
+		double sin_phase_increment = DEFAULT_SIN_FUNCTION(phase_increment);
 		double constant = this->equation_11_constant;
+		double temp;
 
 		for (int k = 0; k < size; k++)
 		{
 			//eq. 9 frequency shifting by -f0 Hz
-			cos_phase = DEFAULT_COS_FUNCTION(this->phase);
-			sin_phase = DEFAULT_SIN_FUNCTION(this->phase);
-			z_real = cos_phase * buffer[k];
-			z_imag = -sin_phase * buffer[k];
+			z_real =  this->cos_phase * buffer[k];
+			z_imag = -this->sin_phase * buffer[k];
 
 			//eq. 10 recursive 1st order filter
 			for (int n = 0; n < this->order; n++)
@@ -132,14 +135,14 @@ namespace Common {
 			}
 
 			//equation 11 frequency shifting by +f0 Hz
-			buffer[k] = cos_phase*z_real - sin_phase*z_imag;
+			buffer[k] = this->cos_phase*z_real - this->sin_phase*z_imag;
 			buffer[k] *= this->generalGain;
 
-			this->phase += phase_increment;
-			if(this->phase > M_TWO_PI)
-				this->phase -= M_TWO_PI;
+			temp = this->cos_phase;
+			this->cos_phase = cos_phase_increment * this->cos_phase + sin_phase_increment * this->sin_phase;
+			this->sin_phase = cos_phase_increment * this->sin_phase - sin_phase_increment * temp;
 		}
-	//todo: this delayed the signal by half of the sampling period...
+		//todo: this delayed the signal by half of the sampling period...
 	}
 	
 	//////////////////////////////////////////////
