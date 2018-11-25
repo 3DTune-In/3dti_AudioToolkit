@@ -51,7 +51,7 @@
 namespace Common {
 
 	//////////////////////////////////////////////
-	CGammatoneFilter::CGammatoneFilter(unsigned _order, float _centerFrequency)
+	CGammatoneFilter::CGammatoneFilter(unsigned _order, float _centerFrequency, float _erbBandwidth)
 	{
 		if ((_order < 1) || (_order > MAX_ORDER))
 		{
@@ -79,7 +79,8 @@ namespace Common {
 
 		// error handler: these will set success or failure
 		SetSamplingFreq(DEFAULT_SAMPLING_RATE);
-		SetFrequencyUsingERBOfHumanAuditoryFilter(_centerFrequency);
+		SetCenterFrequency(_centerFrequency);
+		SetERBBandwidth(_erbBandwidth);
 	}
 
 	//////////////////////////////////////////////
@@ -101,8 +102,6 @@ namespace Common {
 			SET_RESULT(RESULT_ERROR_BADSIZE, "Attempt to process a Gammatone filter with an empty input buffer");
 			return;
 		}
-
-		//SET_RESULT(RESULT_OK, "Gammatone filter process succesfull");
 
 		//todo: implement data-doubling to avoid ailising for high freqs > 11kHz
 		float w_real, w_imag, z_real, z_imag, sample;
@@ -232,34 +231,6 @@ namespace Common {
 		return f0;
 	}
 	
-	//////////////////////////////////////////////
-	void CGammatoneFilter::SetFrequencyUsingERBOfHumanAuditoryFilter(float _freq)
-	{
-		float erb = GetERBOfHumanAuditoryFilter(_freq);
-		SetCenterFrequency(_freq);
-		SetERBBandwidth(erb);
-	}
-	
-	//////////////////////////////////////////////
-	float CGammatoneFilter::GetERBOfHumanAuditoryFilter(float _freq)
-	{
-		float result = 0;
-	
-		/* equation 7 */
-		/* this is supposedly valid from 100 to 10000 Hz. I don't know above 10000Hz */
-		/* NB, Wikipedia s.v. "ERB" give the wrong coefficients (missing order of magnitude terms) */
-		if(_freq > 100)
-			result = (6.23e-6 * _freq * _freq) + (93.39e-3 * _freq) + 28.52;
-	
-		/* this is supposedly valid for frequencies ~ 0.1 to 10 Hz. I don't know from 10 to 100 Hz */
-		//todo: check the coefficients against Moore and Glassberg 1983
-		//B.C.J. Moore and B.R. Glasberg, "Suggested formulae for calculating auditory-filter bandwidths and excitation patterns" Journal of the Acoustical Society of America 74: 750-753, 1983
-		else
-			result = 24.7 * (4.37*_freq+1);
-	
-		return result;
-	}
-
 	//////////////////////////////////////////////
 	void CGammatoneFilter::UpdateEq11Constant()
 	{
