@@ -67,12 +67,9 @@ namespace Common {
 		num_filters = -(ear_q * log(_lowFreq	+ ear_q_min_bw)) / stepfactor;
 		num_filters += (ear_q * log(_highFreq + ear_q_min_bw)) / stepfactor;
 	
-		//round to 2 decimal places to get rid of small numerical errors
-		num_filters *= 100;
-		num_filters = round(num_filters);
-		num_filters *= 0.01;
-  
-		num_filters = ceil(num_filters);
+    //round to 2 decimal places to get rid of small numerical errors
+		num_filters = round(num_filters * 100) * 0.01;
+    num_filters = ceil(num_filters);
 	
 		for(int i = 0; i <= num_filters; i++)
 		{
@@ -93,7 +90,7 @@ namespace Common {
 		double ear_q, min_bandwidth, ear_q_min_bw;
 		GetEarModel(&ear_q, &min_bandwidth, &ear_q_min_bw, _earModel);
 	
-		_numFilters -= 1; //add one because we are not going to use the filter at the Nyquist freq.
+		_numFilters -= 1; //there will be an extra one at the nyquist freq
 		double stepfactor = log(_highFreq + ear_q_min_bw) - log(_lowFreq + ear_q_min_bw);
 		stepfactor *= ear_q / _numFilters;
 		double overlap = 1-stepfactor;
@@ -239,8 +236,7 @@ namespace Common {
 
 			if (f != nullptr)
 			{
-				f->Process(inBuffer, outBuffer, size, addResult);
-				//f->Process(inBuffer, outBuffer, addResult);
+				f->Process(inBuffer, outBuffer, addResult);
 				addResult = true;
 			}
 		}
