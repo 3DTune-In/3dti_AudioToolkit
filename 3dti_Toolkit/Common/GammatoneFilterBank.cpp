@@ -67,9 +67,9 @@ namespace Common {
 		num_filters = -(ear_q * log(_lowFreq	+ ear_q_min_bw)) / stepfactor;
 		num_filters += (ear_q * log(_highFreq + ear_q_min_bw)) / stepfactor;
 	
-    //round to 2 decimal places to get rid of small numerical errors
+		//round to 2 decimal places to get rid of small numerical errors
 		num_filters = round(num_filters * 100) * 0.01;
-    num_filters = ceil(num_filters);
+		num_filters = ceil(num_filters);
 	
 		for(int i = 0; i <= num_filters; i++)
 		{
