@@ -132,7 +132,7 @@ namespace Common {
 				*ear_q = 8;
 				*min_bandwidth = 125;
 				break;
-			case EAR_MODEL_GLASSBERG: /* cascade */
+			case EAR_MODEL_GLASBERG: /* cascade */
 			default:
 				*ear_q = 9.26449;
 				*min_bandwidth = 24.7;
@@ -147,6 +147,7 @@ namespace Common {
 		try
 		{
 			shared_ptr<Common::CGammatoneFilter> newFilter(new Common::CGammatoneFilter(_order, _freq, _erb));
+      newFilter->SetSamplingFreq(this->GetSamplingFreq());
 			filters.push_back(newFilter);
 
 			SET_RESULT(RESULT_OK, "Filter added to filter bank succesfully");

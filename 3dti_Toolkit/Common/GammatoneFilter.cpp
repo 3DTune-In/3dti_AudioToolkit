@@ -95,7 +95,7 @@ namespace Common {
 	//////////////////////////////////////////////
 	void CGammatoneFilter::Process(CMonoBuffer<float> &inBuffer, CMonoBuffer<float> &outBuffer, bool addResult)
 	{
-		int size = buffer.size();
+		int size = inBuffer.size();
 
 		if (size <= 0)
 		{
@@ -107,12 +107,22 @@ namespace Common {
 		float w_real, w_imag, z_real, z_imag, sample;
 		double temp;
 		double constant = this->equation_11_constant;
+    int k_index;
+
+#if defined CGAMMATONE_USE_ANTIAILIAING
+    size <<= 1;
+#endif
 
 		for (int k = 0; k < size; k++)
 		{
+      k_index = k;
+#if defined CGAMMATONE_USE_ANTIAILIAING
+      /*upsample by repeating each input value*/
+      k_index >>= 1;
+#endif
 			//eq. 9 frequency shifting by -f0 Hz
-			z_real =  this->cos_phase * inBuffer[k];
-			z_imag = -this->sin_phase * inBuffer[k];
+			z_real =  this->cos_phase * inBuffer[k_index];
+			z_imag = -this->sin_phase * inBuffer[k_index];
 
 			//eq. 10 recursive 1st order filter
 			for (int n = 0; n < this->order; n++)
@@ -135,16 +145,20 @@ namespace Common {
 				this->prev_w_imag[n] = z_imag = w_imag;
 			}
 
-			//equation 11 frequency shifting by +f0 Hz
-			sample = this->cos_phase*z_real - this->sin_phase*z_imag;
-			sample *= this->generalGain;
-			outBuffer[k] = (addResult) ? (outBuffer[k] + sample) : sample;
-
+#if defined CGAMMATONE_USE_ANTIAILIAING
+      /*downsample by decimation*/
+      if(k & 0x01)
+#endif
+        {
+			    sample = this->cos_phase*z_real - this->sin_phase*z_imag;
+			    sample *= this->generalGain;
+			    outBuffer[k_index] = (addResult) ? (outBuffer[k_index] + sample) : sample;
+        }
+    
 			temp = this->cos_phase;
 			this->cos_phase = this->cos_phase_increment * this->cos_phase + this->sin_phase_increment * this->sin_phase;
 			this->sin_phase = this->cos_phase_increment * this->sin_phase - this->sin_phase_increment * temp;
 		}
-		//todo: this delayed the signal by half of the sampling period...
 	}
 
 	//////////////////////////////////////////////
@@ -163,7 +177,11 @@ namespace Common {
 		}
 
 		SET_RESULT(RESULT_OK, "Sampling frequency for gammatone filter succesfully set");
-		samplingFreq = _samplingFreq;
+#if defined CGAMMATONE_USE_ANTIAILIAING
+		samplingFreq = _samplingFreq * 2;
+#else
+    samplingFreq = _samplingFreq;
+#endif
 		UpdateEq11Constant();
 		UpdatePhaseIncrement();
 	}
@@ -171,7 +189,11 @@ namespace Common {
 	//////////////////////////////////////////////
 	float CGammatoneFilter::GetSamplingFreq()
 	{
-		return samplingFreq;
+#if defined CGAMMATONE_USE_ANTIAILIAING
+		return samplingFreq * 0.5;
+#else
+    return samplingFreq;
+#endif
 	}
 	
 	//////////////////////////////////////////////

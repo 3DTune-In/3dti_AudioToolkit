@@ -24,6 +24,11 @@
 #ifndef _CGAMMATONEFILTER_H_
 #define _CGAMMATONEFILTER_H_
 
+//uncomment this to do the anti-ailising thing
+//described in Section 5 of the cited paper,
+//I'm not sure that this is correct
+//#define CGAMMATONE_USE_ANTIAILIAING
+
 #include <Common/Buffer.h>
 #include "CommonDefinitions.h"
 

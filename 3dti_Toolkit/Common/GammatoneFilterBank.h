@@ -58,10 +58,10 @@ namespace Common {
 		*/
 		enum T_earModel
 		{
-			EAR_MODEL_GLASSBERG,
+			EAR_MODEL_GLASBERG,
 			EAR_MODEL_LYON,
 			EAR_MODEL_GREENWOOD,
-			EAR_MODEL_DEFAULT = EAR_MODEL_GLASSBERG,
+			EAR_MODEL_DEFAULT = EAR_MODEL_GLASBERG,
 		};
 
 		////////////////////
@@ -81,29 +81,29 @@ namespace Common {
 
 		/** \brief Remove of all of the current filters and replace them with new ones, spaced according to some perceptual model.
 		*	This starts at the Nyquist freq and works its way down. The first filter added to the bank will EQUAL TO
-		*	_nyquistFreq, and the lowest one added will be the first whose frequency is LESS THAN OR EQUAL TO _lowFreq.
+		*	_highFreq, and the lowest one added will be the first whose frequency is LESS THAN OR EQUAL TO _lowFreq.
 		*	\param [_lowFreq] lower bound of the desired range
-		*	\param [_nyquistFreq] highest frequency in the deisred range
+		*	\param [_highFreq] highest frequency in the deisred range
 		*	\param [_overlap] how much adjacent filters should overlap. 0 menas no overlap and 1 would mean 100% overlap (must be less than 1). Negative overlap means not all frequencies are covered by the equivalent rectangular filters.
-		*	\param [_earModel] one of EAR_MODEL_DEFAULT, EAR_MODEL_GLASSBERG, EAR_MODEL_LYON, EAR_MODEL_GREENWOOD
+		*	\param [_earModel] one of EAR_MODEL_DEFAULT, EAR_MODEL_GLASBERG, EAR_MODEL_LYON, EAR_MODEL_GREENWOOD
 		*	\retval n number of filters that was needed to sample the frequency range with the given overlap. -1 on error
 		*/
-		unsigned InitWithFreqRangeOverlap(double _lowFreq, double _nyquistFreq, double _overlap, T_earModel _earModel);
+		unsigned InitWithFreqRangeOverlap(double _lowFreq, double _highFreq, double _overlap, T_earModel _earModel);
 
 		/** \brief Remove of all of the current filters and replace them with new ones, spaced according to some perceptual model
 		*	This starts at the Nyquist freq and works its way down. The first filter added to the bank will be EQUAL TO
-		*	_nyquistFreq, and the last one will be EQUAL TO _lowFreq, exactly respecting the specified number of filters.
+		*	_highFreq, and the last one will be EQUAL TO _lowFreq, exactly respecting the specified number of filters.
 		*	\param [_lowFreq] lower bound of the desired range
-		*	\param [_nyquistFreq] highest frequency in the deisred range
+		*	\param [_highFreq] highest frequency in the deisred range
 		*	\param [_numFilters] how many filters to use to cover the frequency range
-		*	\param [_earModel] one of EAR_MODEL_DEFAULT, EAR_MODEL_GLASSBERG, EAR_MODEL_LYON, EAR_MODEL_GREENWOOD
+		*	\param [_earModel] one of EAR_MODEL_DEFAULT, EAR_MODEL_GLASBERG, EAR_MODEL_LYON, EAR_MODEL_GREENWOOD
 		*	\retval overlap the filter overlap coefficient used to cover the frequency range with the given number of filters
 		*/
-		double InitWithFreqRangeNumFilters(double _lowFreq, double _nyquistFreq, unsigned _numFilters, T_earModel _earModel);
+		double InitWithFreqRangeNumFilters(double _lowFreq, double _highFreq, unsigned _numFilters, T_earModel _earModel);
 
 		/** \brief Get the bandwidth of the human auditory filter
 		*	\param [_lowFreq] index ID of the filter within the bank
-		*	\param [_earModel] one of EAR_MODEL_DEFAULT, EAR_MODEL_GLASSBERG, EAR_MODEL_LYON, EAR_MODEL_GREENWOOD
+		*	\param [_earModel] one of EAR_MODEL_DEFAULT, EAR_MODEL_GLASBERG, EAR_MODEL_LYON, EAR_MODEL_GREENWOOD
 		*	\retval ERB the bandwidth, in Hz, of the auditory filter at the given frequency, using the given model
 		*/
 		double GetERBOfHumanAuditoryFilter(double _centerFreq, T_earModel _earModel);
