@@ -107,18 +107,18 @@ namespace Common {
 		float w_real, w_imag, z_real, z_imag, sample;
 		double temp;
 		double constant = this->equation_11_constant;
-    int k_index;
+		int k_index;
 
 #if defined CGAMMATONE_USE_ANTIAILIAING
-    size <<= 1;
+		size <<= 1;
 #endif
 
 		for (int k = 0; k < size; k++)
 		{
-      k_index = k;
+			k_index = k;
 #if defined CGAMMATONE_USE_ANTIAILIAING
-      /*upsample by repeating each input value*/
-      k_index >>= 1;
+			/*upsample by repeating each input value*/
+			k_index >>= 1;
 #endif
 			//eq. 9 frequency shifting by -f0 Hz
 			z_real =  this->cos_phase * inBuffer[k_index];
@@ -146,14 +146,14 @@ namespace Common {
 			}
 
 #if defined CGAMMATONE_USE_ANTIAILIAING
-      /*downsample by decimation*/
-      if(k & 0x01)
+			/*downsample by decimation*/
+			if(k & 0x01)
 #endif
-        {
+			{
 			    sample = this->cos_phase*z_real - this->sin_phase*z_imag;
 			    sample *= this->generalGain;
 			    outBuffer[k_index] = (addResult) ? (outBuffer[k_index] + sample) : sample;
-        }
+			}
     
 			temp = this->cos_phase;
 			this->cos_phase = this->cos_phase_increment * this->cos_phase + this->sin_phase_increment * this->sin_phase;
@@ -180,7 +180,7 @@ namespace Common {
 #if defined CGAMMATONE_USE_ANTIAILIAING
 		samplingFreq = _samplingFreq * 2;
 #else
-    samplingFreq = _samplingFreq;
+		samplingFreq = _samplingFreq;
 #endif
 		UpdateEq11Constant();
 		UpdatePhaseIncrement();
@@ -192,7 +192,7 @@ namespace Common {
 #if defined CGAMMATONE_USE_ANTIAILIAING
 		return samplingFreq * 0.5;
 #else
-    return samplingFreq;
+		return samplingFreq;
 #endif
 	}
 	
