@@ -152,7 +152,7 @@ namespace Common {
 		{
 			shared_ptr<Common::CGammatoneFilter> newFilter(new Common::CGammatoneFilter(_order, _freq, _erb));
 			newFilter->SetSamplingFreq(this->GetSamplingFreq());
-			filters.push_back(newFilter);
+			filters.insert(filters.begin(), newFilter);
 
 			SET_RESULT(RESULT_OK, "Filter added to filter bank succesfully");
 			return newFilter;
