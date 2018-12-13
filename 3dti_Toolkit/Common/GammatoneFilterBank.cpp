@@ -32,6 +32,10 @@ namespace Common {
 	//////////////////////////////////////////////
 	// CONSTRUCTOR/DESTRUCTOR
 
+	CGammatoneFilterBank::CGammatoneFilterBank()
+	{
+	}
+
 	CGammatoneFilterBank::CGammatoneFilterBank(double _samplingFreq)
 	{
 		 SetSamplingFreq(_samplingFreq);

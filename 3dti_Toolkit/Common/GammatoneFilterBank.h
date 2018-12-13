@@ -68,6 +68,11 @@ namespace Common {
 		// PUBLIC METHODS
 		///////////////////
 
+		/** \brief Default empty constructor
+		*	\eh Nothing is reported to the error handler.
+		*/
+		CGammatoneFilterBank();
+
 		/** \brief Default constructor
 		*	\param [_samplingFreq] the desired audio sample rate, in Hz.
 		*	\eh Nothing is reported to the error handler.
