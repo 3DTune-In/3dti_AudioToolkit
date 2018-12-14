@@ -30,7 +30,7 @@
 
 namespace HAHLSimulation {
 
-	void CHearingLossSim::Setup(int samplingRate, float Calibration_dBs_SPL_for_0_dBs_fs, float iniFreq_Hz, int bandsNumber, int filtersPerBand, int bufferSize, CFrequencySmearing::SmearingAlgorithm smearingAlgorithm)
+	void CHearingLossSim::Setup(int samplingRate, float Calibration_dBs_SPL_for_0_dBs_fs, float iniFreq_Hz, int bandsNumber, int bufferSize, CFrequencySmearing::SmearingAlgorithm smearingAlgorithm)
 	{
 		// Set default switches for each independent process
 		enableHearingLossSimulation.left = true;
@@ -42,8 +42,8 @@ namespace HAHLSimulation {
 
 		// Setup multiband expander
 		dBs_SPL_for_0_dBs_fs = Calibration_dBs_SPL_for_0_dBs_fs;
-		multibandExpanders.left.Setup(samplingRate, iniFreq_Hz, bandsNumber, filtersPerBand);
-		multibandExpanders.right.Setup(samplingRate, iniFreq_Hz, bandsNumber, filtersPerBand);
+		multibandExpanders.left.Setup(samplingRate, iniFreq_Hz, bandsNumber);
+		multibandExpanders.right.Setup(samplingRate, iniFreq_Hz, bandsNumber);
 		audiometries.left.assign(bandsNumber, 0.0f);
 		audiometries.right.assign(bandsNumber, 0.0f);
 

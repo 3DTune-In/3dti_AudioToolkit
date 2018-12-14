@@ -25,6 +25,7 @@
 #define _CMULTIBAND_EXPANDER_H_
 
 #include <Common/FiltersBank.h>
+#include <Common/GammatoneFilterBank.h>
 #include <Common/EnvelopeDetector.h>
 #include <Common/CommonDefinitions.h>
 #include <Common/BiquadFilter.h>
@@ -52,11 +53,10 @@ namespace HAHLSimulation {
 		*	\param [in] samplingRate sampling rate in samples per second
 		*	\param [in] iniFreq_Hz initial frequency, in Hertzs
 		*	\param [in] bandsNumber number of frequency bands
-		*	\param [in] filtersPerBand specifies the number of filters per band.
 		*	\pre parameter filtersPerBand must be an odd number.
 		*   \eh On error, an error code is reported to the error handler.
 		*/
-		void Setup(int samplingRate, float iniFreq_Hz, int bandsNumber, int filtersPerBand);
+		void Setup(int samplingRate, float iniFreq_Hz, int bandsNumber);
 
 		/** \brief Process an input buffer
 		*	\details The input buffer is processed by the multiband expander. The result is returned in the output buffer
@@ -115,11 +115,23 @@ namespace HAHLSimulation {
 		// Calculate factor to multiply to the samples, from a (positive) attenuation value in decibels
 		float CalculateAttenuationFactor(float attenuation);
 
+		// Calculate the corresponding gain for each filter
+		float GetFilterGain(float filterIndex);
+
+		// Calculate frequency and index of immediately lower band to the specified filter
+		float GetLowerBandFrequency(float filterFrequency, int &lowerBandIndex);
+
+		// Calculate frequency and index of immediately higher band to the specified filter
+		float GetHigherBandFrequency(float filterFrequency, int &lowerBandIndex);
+
 		vector<Common::CDynamicExpanderMono*> bandExpanders;	// Dynamic expanders for each band		
 		vector<float> bandFrequencies_Hz;				// Center frequencies for each equalizer band, in Hertzs	
 		vector<float> bandGains_dB;					// Gains for each equalizer band, in decibels
-		Common::CFiltersBank filterBank;				// Filter Bank to proccess the data	
-
+		vector<float> lowerBandFactors;				// Factor for the attenuation linear interpolation for each filter regarding the immediately lower band's attenuation
+		vector<float> higherBandFactors;			// Factor for the attenuation linear interpolation for each filter regarding the immediately higher band's attenuation
+		vector<int> lowerBandIndices;				// Index of the immediately lower bands' attenuation for each filter
+		vector<int> higherBandIndices;				// Index of the immediately higher bands' attenuation for each filter
+		Common::CGammatoneFilterBank filterBank;		// Filter bank to process the data
 		vector<float> bandAttenuations;					// Attenuation applied after expander for each band
 	};
 }// end namespace HAHLSimulation
