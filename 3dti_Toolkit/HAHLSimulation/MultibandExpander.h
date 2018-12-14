@@ -106,12 +106,6 @@ namespace HAHLSimulation {
 
 	private:
 
-		// Get the first and last index in the filter bank for the internal filters corresponding to a given band index
-		void GetBandFiltersFirstAndLastIndex(int bandIndex, int &firstFilterIndex, int &lastFilterIndex);
-
-		// Get configured number of filters per band, to increase bandwidth
-		int GetNumberOfFiltersPerBand();
-
 		// Calculate factor to multiply to the samples, from a (positive) attenuation value in decibels
 		float CalculateAttenuationFactor(float attenuation);
 

@@ -26,14 +26,6 @@
 
 namespace HAHLSimulation {
 
-	//////////////////////////////////////////////
-	// CONSTRUCTOR/DESTRUCTOR
-
-	//CMultibandExpander::CMultibandExpander()
-	//{
-	//}
-
-	////////////////////////////////////////////////
 	void CMultibandExpander::Setup(int samplingRate, float iniFreq_Hz, int bandsNumber)
 	{
 		bandFrequencies_Hz.clear();
@@ -102,28 +94,12 @@ namespace HAHLSimulation {
 
 	}
 
-	//////////////////////////////////////////////
-	// Get the first and last index in the filter bank for the internal bands corresponding to a given band index
-	void CMultibandExpander::GetBandFiltersFirstAndLastIndex(int bandIndex, int &firstInternalBand, int &lastInternalBand)
-	{
-		int centralInternalBand = bandIndex * GetNumberOfFiltersPerBand() + trunc(GetNumberOfFiltersPerBand() / 2);
-		firstInternalBand = centralInternalBand - trunc(GetNumberOfFiltersPerBand() / 2);
-		lastInternalBand = centralInternalBand + trunc(GetNumberOfFiltersPerBand() / 2);
-	}
 
-	//////////////////////////////////////////////
-	// Get configured number of filters per band, to increase bandwidth
-	int CMultibandExpander::GetNumberOfFiltersPerBand()
-	{
-		return (filterBank.GetNumFilters() / bandFrequencies_Hz.size());
-	}
-
-	//////////////////////////////////////////////
 	void CMultibandExpander::Process(CMonoBuffer<float> &  inputBuffer, CMonoBuffer<float> & outputBuffer)
 	{
 		// Initialization of output buffer
 		outputBuffer.Fill(outputBuffer.size(), 0.0f);
-		////////////////////////////////////////////////////////////////// vvv---- esto es porque mike hace un filtro más del que reporta!!!!!
+
 		for (int filterIndex = 0; filterIndex < filterBank.GetNumFilters(); filterIndex++)
 		{
 			// Declaration of buffer for each filter output
@@ -144,53 +120,6 @@ namespace HAHLSimulation {
 
 	}
 
-	//////////////////////////////////////////////
-	// Specifies the gain for each band in dB
-	//void CMultibandExpander::SetGains_dB(vector<float> gains_dB)
-	//{
-	//	if (gains_dB.size() != bandFrequencies_Hz.size())
-	//	{
-	//		SET_RESULT(RESULT_ERROR_INVALID_PARAM, "number of elements must agree ( gains_dB Vs number of bands in the equalizer)");
-	//		return;
-	//	}
-	//
-	//	SET_RESULT(RESULT_OK, "");
-	//
-	//	for (int c = 0; c < gains_dB.size(); c++)
-	//		SetBandGain_dB(c, gains_dB[c]);
-	//}
-
-	//--------------------------------------------------------------
-	// Specifies the gain for each band in dB
-	//void CMultibandExpander::ResetGains_dB()
-	//{
-	//	for (int c = 0; c < bandGains_dB.size(); c++)
-	//		SetBandGain_dB(c, 0.0f);
-	//}
-
-	//--------------------------------------------------------------
-	//void CMultibandExpander::SetBandGain_dB(int bandIndex, float gain_dB)
-	//{
-	//	if (bandIndex < 0 || bandIndex >= bandFrequencies_Hz.size())
-	//	{
-	//		SET_RESULT(RESULT_ERROR_INVALID_PARAM, "bad band index");
-	//		return;
-	//	}
-	//
-	//	SET_RESULT(RESULT_OK, "");
-	//	bandGains_dB[bandIndex] = gain_dB;
-	//
-	//	// Set gain for all internal bands	
-	//	float gain = pow(10.0, gain_dB / 20.0);
-	//	int firstInternalBand, lastInternalBand;
-	//	GetBandFiltersFirstAndLastIndex(bandIndex, firstInternalBand, lastInternalBand);
-	//	for (int i=firstInternalBand; i < lastInternalBand; i++)
-	//	{
-	//		filterBank.GetFilter(i)->generalGain = gain;
-	//	}
-	//}
-
-	//--------------------------------------------------------------
 	float CMultibandExpander::GetBandFrequency(int bandIndex)
 	{
 		if (bandIndex < 0 || bandIndex >= bandFrequencies_Hz.size())
@@ -202,19 +131,6 @@ namespace HAHLSimulation {
 		return bandFrequencies_Hz[bandIndex];
 	}
 
-	//////////////////////////////////////////////
-	//float CMultibandExpander::GetBandGain_dB(int bandIndex)
-	//{
-	//	if (bandIndex < 0 || bandIndex >= bandFrequencies_Hz.size())
-	//	{
-	//		SET_RESULT(RESULT_ERROR_INVALID_PARAM, "bad band index");
-	//		return 0.0f;
-	//	}
-	//	SET_RESULT(RESULT_OK, "");
-	//	return bandGains_dB[bandIndex];
-	//}
-
-	//////////////////////////////////////////////
 	void CMultibandExpander::SetAttenuationForBand(int bandIndex, float attenuation)
 	{
 		if (bandIndex < 0 || bandIndex >= bandAttenuations.size())
@@ -238,7 +154,6 @@ namespace HAHLSimulation {
 		return bandAttenuations[bandIndex];
 	}
 
-	//////////////////////////////////////////////
 	float CMultibandExpander::CalculateAttenuationFactor(float attenuation)
 	{
 		return std::pow(10.0f, -attenuation / 20.0f);
