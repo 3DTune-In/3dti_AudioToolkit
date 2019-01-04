@@ -491,9 +491,9 @@ namespace Binaural {
 		ProcessILDSpatialization(leftBuffer, rightBuffer, distance, interauralAzimuth);		//ILD spatialization
 					
 		//Apply the ITD attenuation
-		float attenuationITD =  std::pow(10.0f, ownerCore->GetListener()->GetILDAttenutaion() * 0.05f);
-		leftBuffer.ApplyGain(attenuationITD);
-		rightBuffer.ApplyGain(attenuationITD);
+		float attenuationILD =  std::pow(10.0f, ownerCore->GetListener()->GetILDAttenutaion() * 0.05f);
+		leftBuffer.ApplyGain(attenuationILD);
+		rightBuffer.ApplyGain(attenuationILD);
 
 		//Add ITD customized to the outbuffer if it is activated
 		if (ownerCore->GetListener()->IsCustomizedITDEnabled())
