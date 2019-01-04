@@ -87,7 +87,7 @@ class CHRTF;
 		*/
 		CILD* GetILD() const;
 			
-		/** \brief Set ILD attenuation of listener for HighPerformance Spatialization
+		/** \brief Set ILD attenuation of listener for HighPerformance Spatialization. If no attenuation is set, -6dB are applied by default
 		*	\param [in] _listenerILDAttenutationDB new listener ILD attenuation, in dB		
 		*   \eh Nothing is reported to the error handler.
 		*/
