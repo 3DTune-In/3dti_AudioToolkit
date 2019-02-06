@@ -73,13 +73,13 @@ namespace HAHLSimulation {
 		*   \eh On success, RESULT_OK is reported to the error handler.
 		*       On error, an error code is reported to the error handler.
 		*/
-		float GetBandFrequency(int bandIndex);
-
+		float GetOctaveBandFrequency(int bandIndex);
+		float GetExpanderBandFrequency(int bandIndex);
 		/** \brief Get the current number of bands in the equalizer.
 		*	\retval n number of bands in the equalizer.
 		*   \eh Nothing is reported to the error handler.
 		*/
-		int GetNumBands() { return bandFrequencies_Hz.size(); }
+		int GetNumBands() { return octaveBandFrequencies_Hz.size(); }
 
 		/** \brief Returns a reference to the expander object of one band.
 		*	\param [in] bandIndex band index for which the expander will be returned
@@ -94,7 +94,7 @@ namespace HAHLSimulation {
 		*   \eh On success, RESULT_OK is reported to the error handler.
 		*       On error, an error code is reported to the error handler.
 		*/
-		void SetAttenuationForBand(int bandIndex, float attenuation);
+		void SetAttenuationForOctaveBand(int bandIndex, float attenuation);
 
 		/** \brief Get attenuation applied after the expander of one band.
 		*	\param[in] bandIndex index of the band
@@ -102,24 +102,28 @@ namespace HAHLSimulation {
 		*   \eh On success, RESULT_OK is reported to the error handler.
 		*       On error, an error code is reported to the error handler.
 		*/
-		float GetAttenuationForBand(int bandIndex);
+		float GetAttenuationForOctaveBand(int bandIndex);
 
+
+		// Calculate the corresponding gain for each filter
+		float GetFilterGain(int filterIndex);
+		float GetFilterGainDB(int filterIndex);
+
+		float GetNumFilters();
 	private:
 
 		// Calculate factor to multiply to the samples, from a (positive) attenuation value in decibels
 		float CalculateAttenuationFactor(float attenuation);
 
-		// Calculate the corresponding gain for each filter
-		float GetFilterGain(float filterIndex);
-
 		// Calculate frequency and index of immediately lower band to the specified filter
-		float GetLowerBandFrequency(float filterFrequency, int &lowerBandIndex);
+		float GetLowerOctaveBandFrequency(float filterFrequency, int &lowerBandIndex);
 
 		// Calculate frequency and index of immediately higher band to the specified filter
-		float GetHigherBandFrequency(float filterFrequency, int &lowerBandIndex);
+		float GetHigherOctaveBandFrequency(float filterFrequency, int &lowerBandIndex);
 
 		vector<Common::CDynamicExpanderMono*> bandExpanders;	// Dynamic expanders for each band		
-		vector<float> bandFrequencies_Hz;				// Center frequencies for each equalizer band, in Hertzs	
+		vector<float> octaveBandFrequencies_Hz;				// Center frequencies for each equalizer band, in Hertzs
+		vector<float> expanderBandFrequencies_Hz;
 		vector<float> bandGains_dB;					// Gains for each equalizer band, in decibels
 		vector<float> lowerBandFactors;				// Factor for the attenuation linear interpolation for each filter regarding the immediately lower band's attenuation
 		vector<float> higherBandFactors;			// Factor for the attenuation linear interpolation for each filter regarding the immediately higher band's attenuation

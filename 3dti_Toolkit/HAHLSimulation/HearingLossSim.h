@@ -189,6 +189,8 @@ namespace HAHLSimulation {
 		*/
 		CFrequencySmearing* GetFrequencySmearingSimulator(Common::T_ear ear);
 
+		CMultibandExpander* GetMultibandExpander(Common::T_ear ear);
+
 		/** \brief Enable hearing loss simulation (global switch for all internal processes)
 		*	\param[in] ear for which ear we want to enable hearing loss simulation
 		*   \eh Nothing is reported to the error handler.
@@ -247,6 +249,11 @@ namespace HAHLSimulation {
 
 		//Calculate band attenuation corresponding to one hearing level in dBHL
 		float CalculateAttenuationFromDBHL(float dBHL);
+
+		float CalculateDBHLFromAttenuation(float attenuation);
+
+		void SetMultibandExpanderParameters(CMultibandExpander* multibandExpander, int bandIndex);
+
 
 	private:                                                           // PRIVATE ATTRIBUTES
 
