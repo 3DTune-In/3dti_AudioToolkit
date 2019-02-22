@@ -40,15 +40,15 @@ namespace HRTF
 	*	\param [out] listener affected by the hrtf
 	*   \eh On error, an error code is reported to the error handler.
 	*/
-	bool CreateFromSofa(const std::string & sofafile, shared_ptr<Binaural::CListener> listener);
+	bool CreateFromSofa(const std::string & sofafile, shared_ptr<Binaural::CListener> listener, bool & specifiedDelays);
 
 	/** \brief Loads an HRTF from SOFA file so a 3DTI file can be created later
 	*	\param [in] path of the sofa file
 	*	\param [out] listener affected by the hrtf
 	*   \eh On error, an error code is reported to the error handler. */
-	bool Create3DTIFromSofa(const std::string & sofafile, shared_ptr<Binaural::CListener> listener);
+	bool Create3DTIFromSofa(const std::string & sofafile, shared_ptr<Binaural::CListener> listener, bool & specifiedDelays);
 
-	bool LoadHRTFTableFromSOFA(const std::string & sofafile, shared_ptr<Binaural::CListener> listener);
+	bool LoadHRTFTableFromSOFA(const std::string & sofafile, shared_ptr<Binaural::CListener> listener, bool & specifiedDelays);
 
     //static CHRTF CreateFromListen(const std::vector<std::string> & listenFiles);
 };
