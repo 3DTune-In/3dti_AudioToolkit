@@ -41,6 +41,8 @@
 
 namespace HAHLSimulation {
 
+	enum TFilterBank {BUTTERWORTH, GAMMATONE};
+
 	/** \details This class implements a multiband equalizer where each band has an	independent envelope follower and expander. 
 	*	This is used for simulation of non-linear attenuation in hearing loss.
 	*/
@@ -53,10 +55,34 @@ namespace HAHLSimulation {
 		*	\param [in] samplingRate sampling rate in samples per second
 		*	\param [in] iniFreq_Hz initial frequency, in Hertzs
 		*	\param [in] bandsNumber number of frequency bands
+		*	\param [in] filtersPerBand specifies the number of filters per band
+		*	\param [in] _filterBank specifies which type of filterbank to use: butterworth or gammatone
 		*	\pre parameter filtersPerBand must be an odd number.
 		*   \eh On error, an error code is reported to the error handler.
 		*/
-		void Setup(int samplingRate, float iniFreq_Hz, int bandsNumber);
+		void Setup(int samplingRate, float iniFreq_Hz, int bandsNumber, int filtersPerBand, TFilterBank _filterBank);
+
+		/** \brief Setup the multiband expander
+		*	\details Specifies the bands (number, initial frequency and number of internal filters per band, to increase bandwidth).
+		*	\param [in] samplingRate sampling rate in samples per second
+		*	\param [in] iniFreq_Hz initial frequency, in Hertzs
+		*	\param [in] bandsNumber number of frequency bands
+		*	\param [in] filtersPerBand specifies the number of filters per band
+		*	\pre parameter filtersPerBand must be an odd number.
+		*   \eh On error, an error code is reported to the error handler.
+		*/
+		void SetupButterworth(int samplingRate, float iniFreq_Hz, int bandsNumber, int filtersPerBand);
+
+		/** \brief Setup the multiband expander
+		*	\details Specifies the bands (number, initial frequency and number of internal filters per band, to increase bandwidth).
+		*	\param [in] samplingRate sampling rate in samples per second
+		*	\param [in] iniFreq_Hz initial frequency, in Hertzs
+		*	\param [in] bandsNumber number of frequency bands
+		*	\pre parameter filtersPerBand must be an odd number.
+		*   \eh On error, an error code is reported to the error handler.
+		*/
+		void SetupGammatone(int samplingRate, float iniFreq_Hz, int bandsNumber);
+
 
 		/** \brief Process an input buffer
 		*	\details The input buffer is processed by the multiband expander. The result is returned in the output buffer
@@ -105,6 +131,8 @@ namespace HAHLSimulation {
 		float GetAttenuationForOctaveBand(int bandIndex);
 
 
+		TFilterBank GetFilterBankType();
+
 		// Calculate the corresponding gain for each filter
 		float GetFilterGain(int filterIndex);
 		float GetFilterGainDB(int filterIndex);
@@ -121,6 +149,10 @@ namespace HAHLSimulation {
 		// Calculate frequency and index of immediately higher band to the specified filter
 		float GetHigherOctaveBandFrequency(float filterFrequency, int &lowerBandIndex);
 
+		int GetNumberOfButterworthFiltersPerBand();
+
+		void GetOctaveBandButterworthFiltersFirstAndLastIndex(int bandIndex, int &firstInternalBand, int &lastInternalBand);
+
 		vector<Common::CDynamicExpanderMono*> bandExpanders;	// Dynamic expanders for each band		
 		vector<float> octaveBandFrequencies_Hz;				// Center frequencies for each equalizer band, in Hertzs
 		vector<float> expanderBandFrequencies_Hz;
@@ -129,8 +161,13 @@ namespace HAHLSimulation {
 		vector<float> higherBandFactors;			// Factor for the attenuation linear interpolation for each filter regarding the immediately higher band's attenuation
 		vector<int> lowerBandIndices;				// Index of the immediately lower bands' attenuation for each filter
 		vector<int> higherBandIndices;				// Index of the immediately higher bands' attenuation for each filter
-		Common::CGammatoneFilterBank filterBank;		// Filter bank to process the data
+		
+		TFilterBank filterBankUsed;
+
+		Common::CGammatoneFilterBank gammatoneFilterBank;		// Filter bank to process the data
+		Common::CFiltersBank butterworthFilterBank;
 		vector<float> bandAttenuations;					// Attenuation applied after expander for each band
+
 	};
 }// end namespace HAHLSimulation
 #endif

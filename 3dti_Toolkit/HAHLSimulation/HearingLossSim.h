@@ -67,12 +67,14 @@ namespace HAHLSimulation {
 		*	\param [in] Calibration_dBs_SPL_for_0_dBs_fs equivalence between 0 dBFS and X dBSPL, coming from external calibration
 		*	\param [in] iniFreq_Hz initial frequency, in Hertzs
 		*	\param [in] bandsNumber number of frequency bands
+		*	\param [in] filtersPerBand specifies the number of filters per band
+		*	\param [in] _filterBank specifies which type of filterbank to use: butterworth or gammatone
 		*	\param [in] bufferSize size of buffers to be processed
 		*	\param [in] smearingAlgorithm algorithm used in frequency smearing processing
 		*	\pre parameter filtersPerBand must be an odd number.
 		*   \eh Nothing is reported to the error handler.
 		*/
-		void Setup(int samplingRate, float Calibration_dBs_SPL_for_0_dBs_fs, float iniFreq_Hz, int bandsNumber, int bufferSize, CFrequencySmearing::SmearingAlgorithm _smearingAlgorithm);
+		void Setup(int samplingRate, float Calibration_dBs_SPL_for_0_dBs_fs, float iniFreq_Hz, int bandsNumber, int filtersPerBand, TFilterBank filterBank, int bufferSize, CFrequencySmearing::SmearingAlgorithm _smearingAlgorithm);
 
 		/** \brief Set the hearing loss simulator calibration
 		*	\details Specifies the equivalence between 0 dBFS and X dBSPL, coming from external calibration
@@ -252,7 +254,7 @@ namespace HAHLSimulation {
 
 		float CalculateDBHLFromAttenuation(float attenuation);
 
-		void SetMultibandExpanderParameters(CMultibandExpander* multibandExpander, int bandIndex, TAudiometry audiometry);
+		void SetGammatoneMultibandExpanderParameters(CMultibandExpander* multibandExpander, int bandIndex, TAudiometry audiometry);
 
 
 	private:                                                           // PRIVATE ATTRIBUTES

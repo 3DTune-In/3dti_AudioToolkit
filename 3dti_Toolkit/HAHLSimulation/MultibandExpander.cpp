@@ -25,9 +25,78 @@
 #include <Common/ErrorHandler.h>
 #include <iostream>
 #include <iomanip>
-namespace HAHLSimulation {
 
-	void CMultibandExpander::Setup(int samplingRate, float iniFreq_Hz, int bandsNumber)
+namespace HAHLSimulation {
+	void CMultibandExpander::Setup(int samplingRate, float iniFreq_Hz, int bandsNumber, int filtersPerBand, TFilterBank _filterBank)
+	{
+		switch (_filterBank)
+		{
+		case TFilterBank::GAMMATONE:
+			SetupGammatone(samplingRate, iniFreq_Hz, bandsNumber);
+			break;
+		case TFilterBank::BUTTERWORTH:
+			SetupButterworth(samplingRate, iniFreq_Hz, bandsNumber, filtersPerBand);
+			break;
+		default:
+			SET_RESULT(RESULT_ERROR_CASENOTDEFINED, "Filterbank options are Gammatone and Butterworth");
+		}
+	}
+
+	void CMultibandExpander::SetupButterworth(int samplingRate, float iniFreq_Hz, int bandsNumber, int filtersPerBand)
+	{
+		if ((filtersPerBand % 2) == 0)
+		{
+			SET_RESULT(RESULT_ERROR_BADSIZE, "Filters per band for multiband expander must be an odd number.");
+			return;
+		}
+
+		octaveBandFrequencies_Hz.clear();
+		bandExpanders.clear();
+		bandGains_dB.clear();
+		bandAttenuations.clear();
+
+		// Setup equalizer	
+		float bandsPerOctave = 1.0f;	// Currently fixed to one band per octave, but could be a parameter
+		float bandFrequencyStep = std::pow(2, 1.0f / (float)bandsPerOctave);
+		float filterFrequencyStep = std::pow(2, 1.0f / (bandsPerOctave*filtersPerBand));
+		float bandFrequency = iniFreq_Hz;
+		float filterFrequency = bandFrequency / ((float)(trunc(filtersPerBand / 2))*filterFrequencyStep);
+
+		// Compute Q for all filters
+		float octaveStep = 1.0f / ((float)filtersPerBand * bandsPerOctave);
+		float octaveStepPow = std::pow(2.0f, octaveStep);
+		float Q_BPF = std::sqrt(octaveStepPow) / (octaveStepPow - 1.0f);
+
+		// Create and setup all bands
+		butterworthFilterBank.RemoveFilters();
+		for (int band = 0; band < bandsNumber; band++)
+		{
+			// Create filters
+			for (int filter = 0; filter < filtersPerBand; filter++)
+			{
+				butterworthFilterBank.AddFilter()->Setup(samplingRate, filterFrequency, Q_BPF, Common::T_filterType::BANDPASS);
+				filterFrequency *= filterFrequencyStep;
+			}
+
+			// Add band to list of frequencies and gains
+			octaveBandFrequencies_Hz.push_back(bandFrequency);
+			bandGains_dB.push_back(0.0f);
+			bandFrequency *= bandFrequencyStep;
+
+			// Setup expanders
+			Common::CDynamicExpanderMono* expander = new Common::CDynamicExpanderMono();
+			expander->Setup(samplingRate, DEFAULT_RATIO, DEFAULT_THRESHOLD, DEFAULT_ATTACK, DEFAULT_RELEASE);
+			bandExpanders.push_back(expander);
+
+			// Create atenuation for band
+			bandAttenuations.push_back(0.0f);
+		}
+
+		filterBankUsed = BUTTERWORTH;
+	}
+
+
+	void CMultibandExpander::SetupGammatone(int samplingRate, float iniFreq_Hz, int bandsNumber)
 	{
 		octaveBandFrequencies_Hz.clear();
 		bandExpanders.clear();
@@ -55,18 +124,18 @@ namespace HAHLSimulation {
 			bandAttenuations.push_back(0.0f);
 		}
 
-		filterBank.RemoveFilters();
-		filterBank.SetSamplingFreq(samplingRate);
-		filterBank.InitWithFreqRangeOverlap(20, 20000, 0.0, Common::CGammatoneFilterBank::EAR_MODEL_DEFAULT);
+		gammatoneFilterBank.RemoveFilters();
+		gammatoneFilterBank.SetSamplingFreq(samplingRate);
+		gammatoneFilterBank.InitWithFreqRangeOverlap(20, 20000, 0.0, Common::CGammatoneFilterBank::EAR_MODEL_DEFAULT);
 		
 		// Setup expanders
-		for (int filterIndex = 0; filterIndex < filterBank.GetNumFilters(); filterIndex++)
+		for (int filterIndex = 0; filterIndex < gammatoneFilterBank.GetNumFilters(); filterIndex++)
 		{
 			Common::CDynamicExpanderMono* expander = new Common::CDynamicExpanderMono();
 			expander->Setup(samplingRate, DEFAULT_RATIO, DEFAULT_THRESHOLD, DEFAULT_ATTACK, DEFAULT_RELEASE);
 			bandExpanders.push_back(expander);
 
-			float filterFrequency = filterBank.GetFilter(filterIndex)->GetCenterFrequency();
+			float filterFrequency = gammatoneFilterBank.GetFilter(filterIndex)->GetCenterFrequency();
 			expanderBandFrequencies_Hz.push_back(filterFrequency);
 
 			int lowerBandIndex, higherBandIndex;
@@ -99,6 +168,24 @@ namespace HAHLSimulation {
 
 		}
 
+		filterBankUsed = GAMMATONE;
+	}
+
+	//////////////////////////////////////////////
+	// Get configured number of filters per band, to increase bandwidth
+	int CMultibandExpander::GetNumberOfButterworthFiltersPerBand()
+	{
+		return (butterworthFilterBank.GetNumFilters() / octaveBandFrequencies_Hz.size());
+	}
+
+
+	//////////////////////////////////////////////
+	// Get the first and last index in the filter bank for the internal bands corresponding to a given band index
+	void CMultibandExpander::GetOctaveBandButterworthFiltersFirstAndLastIndex(int bandIndex, int &firstInternalBand, int &lastInternalBand)
+	{
+		int centralInternalBand = bandIndex * GetNumberOfButterworthFiltersPerBand() + trunc(GetNumberOfButterworthFiltersPerBand() / 2);
+		firstInternalBand = centralInternalBand - trunc(GetNumberOfButterworthFiltersPerBand() / 2);
+		lastInternalBand = centralInternalBand + trunc(GetNumberOfButterworthFiltersPerBand() / 2);
 	}
 
 
@@ -107,22 +194,52 @@ namespace HAHLSimulation {
 		// Initialization of output buffer
 		outputBuffer.Fill(outputBuffer.size(), 0.0f);
 
-		for (int filterIndex = 0; filterIndex < filterBank.GetNumFilters(); filterIndex++)
+		if (filterBankUsed == TFilterBank::GAMMATONE) {
+
+			for (int filterIndex = 0; filterIndex < gammatoneFilterBank.GetNumFilters(); filterIndex++)
+			{
+				// Declaration of buffer for each filter output
+				CMonoBuffer<float> oneFilterBuffer(inputBuffer.size(), 0.0f);
+
+				// Process input buffer for each filter
+				gammatoneFilterBank.GetFilter(filterIndex)->Process(inputBuffer, oneFilterBuffer);
+
+				// Process expander for each filter
+				bandExpanders[filterIndex]->Process(oneFilterBuffer);
+
+				// Apply attenuation for each filter
+				oneFilterBuffer.ApplyGain(GetFilterGain(filterIndex));
+
+				// Mix into output buffer
+				outputBuffer += oneFilterBuffer;
+			}
+		}
+		else
 		{
-			// Declaration of buffer for each filter output
-			CMonoBuffer<float> oneFilterBuffer(inputBuffer.size(), 0.0f);
+			for (int band = 0; band < octaveBandFrequencies_Hz.size(); band++)
+			{
+				CMonoBuffer<float> oneBandBuffer(inputBuffer.size(), 0.0f);
 
-			// Process input buffer for each filter
-			filterBank.GetFilter(filterIndex)->Process(inputBuffer, oneFilterBuffer);
+				// Process eq for each band, mixing eq process of all internal band filters
+				int firstBandFilter, lastBandFilter;
+				GetOctaveBandButterworthFiltersFirstAndLastIndex(band, firstBandFilter, lastBandFilter);
+				for (int i = firstBandFilter; i <= lastBandFilter; i++)
+				{
+					CMonoBuffer<float> oneFilterOutputBuffer(inputBuffer.size());
+					butterworthFilterBank.GetFilter(i)->Process(inputBuffer, oneFilterOutputBuffer);
+					oneBandBuffer += oneFilterOutputBuffer;
+				}
 
-			// Process expander for each filter
-			bandExpanders[filterIndex]->Process(oneFilterBuffer);
-			
-			// Apply attenuation for each filter
-			oneFilterBuffer.ApplyGain(GetFilterGain(filterIndex));
+				// Process expander for each band
+				bandExpanders[band]->Process(oneBandBuffer);
 
-			// Mix into output buffer
-			outputBuffer += oneFilterBuffer;
+				// Apply attenuation for each band
+				oneBandBuffer.ApplyGain(CalculateAttenuationFactor(bandAttenuations[band]));
+
+				// Mix into output buffer
+				outputBuffer += oneBandBuffer;
+			}
+
 		}
 	}
 
@@ -163,6 +280,11 @@ namespace HAHLSimulation {
 		}
 		SET_RESULT(RESULT_OK, "");
 		return bandAttenuations[bandIndex];
+	}
+
+	TFilterBank CMultibandExpander::GetFilterBankType()
+	{
+		return filterBankUsed;
 	}
 
 
