@@ -213,6 +213,9 @@ namespace HAHLSimulation {
 				// Mix into output buffer
 				outputBuffer += oneFilterBuffer;
 			}
+
+			outputBuffer.ApplyGain(LINEAR_GAIN_CORRECTION_GAMMATONE);
+
 		}
 		else
 		{
@@ -239,6 +242,8 @@ namespace HAHLSimulation {
 				// Mix into output buffer
 				outputBuffer += oneBandBuffer;
 			}
+
+			outputBuffer.ApplyGain(LINEAR_GAIN_CORRECTION_BUTTERWORTH);
 
 		}
 	}

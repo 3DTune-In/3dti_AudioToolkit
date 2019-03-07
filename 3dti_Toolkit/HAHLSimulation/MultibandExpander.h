@@ -38,6 +38,8 @@
 #define DEFAULT_THRESHOLD 0
 #define DEFAULT_ATTACK 20
 #define DEFAULT_RELEASE 100
+#define LINEAR_GAIN_CORRECTION_GAMMATONE 4					// equivalent to 12dB gain
+#define LINEAR_GAIN_CORRECTION_BUTTERWORTH 0.70710678118	// sqrt(2)/2, equivalent to 3dB attenuation
 
 namespace HAHLSimulation {
 
@@ -56,14 +58,14 @@ namespace HAHLSimulation {
 		*	\param [in] iniFreq_Hz initial frequency, in Hertzs
 		*	\param [in] bandsNumber number of frequency bands
 		*	\param [in] filtersPerBand specifies the number of filters per band
-		*	\param [in] _filterBank specifies which type of filterbank to use: butterworth or gammatone
+		*	\param [in] _filterBank specifies which type of filterbank to use: butterworth or gammatone. Output gain will be corrected to achieve homogeneous gain
 		*	\pre parameter filtersPerBand must be an odd number.
 		*   \eh On error, an error code is reported to the error handler.
 		*/
 		void Setup(int samplingRate, float iniFreq_Hz, int bandsNumber, int filtersPerBand, TFilterBank _filterBank);
 
-		/** \brief Setup the multiband expander
-		*	\details Specifies the bands (number, initial frequency and number of internal filters per band, to increase bandwidth).
+		/** \brief Setup the multiband expander using a Butterworth filterbank
+		*	\details Specifies the bands (number, initial frequency and number of internal filters per band, to increase bandwidth). Using Butterworth filterbank results in a -3dB gain correction.
 		*	\param [in] samplingRate sampling rate in samples per second
 		*	\param [in] iniFreq_Hz initial frequency, in Hertzs
 		*	\param [in] bandsNumber number of frequency bands
@@ -73,12 +75,11 @@ namespace HAHLSimulation {
 		*/
 		void SetupButterworth(int samplingRate, float iniFreq_Hz, int bandsNumber, int filtersPerBand);
 
-		/** \brief Setup the multiband expander
-		*	\details Specifies the bands (number, initial frequency and number of internal filters per band, to increase bandwidth).
+		/** \brief Setup the multiband expander using a Gammatone Filterbank
+		*	\details Specifies number of bands and initial frequency. Using Gammatone filterbank results in a +12dB gain correction.
 		*	\param [in] samplingRate sampling rate in samples per second
 		*	\param [in] iniFreq_Hz initial frequency, in Hertzs
 		*	\param [in] bandsNumber number of frequency bands
-		*	\pre parameter filtersPerBand must be an odd number.
 		*   \eh On error, an error code is reported to the error handler.
 		*/
 		void SetupGammatone(int samplingRate, float iniFreq_Hz, int bandsNumber);
