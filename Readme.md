@@ -4,6 +4,10 @@
 
 The 3DTI Toolkit is a standard C++ library for audio spatialisation and simulation using  headphones developed within the 3D Tune-In (3DTI) project (http://www.3d-tune-in.eu), which aims at using 3D sound and simulating hearing loss and hearing aids within virtual environments and games. The Toolkit allows the design and rendering of highly realistic and immersive 3D audio, and the simulation of virtual hearing aid devices and of different typologies of hearing loss.
 
+Technical details about the 3D Tune-In Toolkit spatialiser are described in:
+
+Cuevas-Rodríguez M, Picinali L, González-Toledo D, Garre C, de la Rubia-Cuestas E, et al. (2019) 3D Tune-In Toolkit: An open-source library for real-time binaural spatialisation. PLOS ONE 14(3): e0211899. https://doi.org/10.1371/journal.pone.0211899
+
 **The structure of the repository is as follows:**
 ```
 3dti_AudioToolkit
