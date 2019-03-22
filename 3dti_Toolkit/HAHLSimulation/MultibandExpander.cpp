@@ -52,10 +52,7 @@ namespace HAHLSimulation {
 			return;
 		}
 
-		octaveBandFrequencies_Hz.clear();
 		bandExpanders.clear();
-		bandGains_dB.clear();
-		bandAttenuations.clear();
 
 		// Setup equalizer	
 		float bandsPerOctave = 1.0f;	// Currently fixed to one band per octave, but could be a parameter
@@ -69,8 +66,12 @@ namespace HAHLSimulation {
 		float octaveStepPow = std::pow(2.0f, octaveStep);
 		float Q_BPF = std::sqrt(octaveStepPow) / (octaveStepPow - 1.0f);
 
+		bool calculateFrequenciesGains = octaveBandFrequencies_Hz.empty() || bandGains_dB.empty();
+		bool calculateBandAttenuations = bandAttenuations.empty();
+
 		// Create and setup all bands
 		butterworthFilterBank.RemoveFilters();
+
 		for (int band = 0; band < bandsNumber; band++)
 		{
 			// Create filters
@@ -80,18 +81,22 @@ namespace HAHLSimulation {
 				filterFrequency *= filterFrequencyStep;
 			}
 
-			// Add band to list of frequencies and gains
-			octaveBandFrequencies_Hz.push_back(bandFrequency);
-			bandGains_dB.push_back(0.0f);
-			bandFrequency *= bandFrequencyStep;
+			if (calculateFrequenciesGains) {
+				// Add band to list of frequencies and gains
+				octaveBandFrequencies_Hz.push_back(bandFrequency);
+				bandGains_dB.push_back(0.0f);
+				bandFrequency *= bandFrequencyStep;
+			}
 
 			// Setup expanders
 			Common::CDynamicExpanderMono* expander = new Common::CDynamicExpanderMono();
 			expander->Setup(samplingRate, DEFAULT_RATIO, DEFAULT_THRESHOLD, DEFAULT_ATTACK, DEFAULT_RELEASE);
 			bandExpanders.push_back(expander);
 
-			// Create atenuation for band
-			bandAttenuations.push_back(0.0f);
+			if (calculateBandAttenuations) {
+				// Create atenuation for band
+				bandAttenuations.push_back(0.0f);
+			}
 		}
 
 		filterBankUsed = BUTTERWORTH;
@@ -100,74 +105,71 @@ namespace HAHLSimulation {
 
 	void CMultibandExpander::SetupGammatone(int samplingRate, float iniFreq_Hz, int bandsNumber)
 	{
-		octaveBandFrequencies_Hz.clear();
+
 		bandExpanders.clear();
-		bandGains_dB.clear();
-		bandAttenuations.clear();
-		lowerBandFactors.clear();
-		higherBandFactors.clear();
-		expanderBandFrequencies_Hz.clear();
-		lowerBandIndices.clear();
-		higherBandIndices.clear();
 
 		// Setup equalizer	
 		float bandsPerOctave = 1.0f;	// Currently fixed to one band per octave, but could be a parameter
 		float bandFrequencyStep = std::pow(2, 1.0f / (float)bandsPerOctave);
 		float bandFrequency = iniFreq_Hz;
-		
-		for (int band = 0; band < bandsNumber; band++)
-		{
-			// Add band to list of frequencies and gains
-			octaveBandFrequencies_Hz.push_back(bandFrequency);
-			bandGains_dB.push_back(0.0f);
-			bandFrequency *= bandFrequencyStep;
 
-			// Create atenuation for band
-			bandAttenuations.push_back(0.0f);
+		if (octaveBandFrequencies_Hz.empty() || bandGains_dB.empty() || bandAttenuations.empty()) {
+			for (int band = 0; band < bandsNumber; band++)
+			{
+				// Add band to list of frequencies and gains
+				octaveBandFrequencies_Hz.push_back(bandFrequency);
+				bandGains_dB.push_back(0.0f);
+				bandFrequency *= bandFrequencyStep;
+
+				// Create atenuation for band
+				bandAttenuations.push_back(0.0f);
+			}
 		}
 
 		gammatoneFilterBank.RemoveFilters();
 		gammatoneFilterBank.SetSamplingFreq(samplingRate);
 		gammatoneFilterBank.InitWithFreqRangeOverlap(20, 20000, 0.0, Common::CGammatoneFilterBank::EAR_MODEL_DEFAULT);
 		
+		bool calculateFrequenciesIndicesFactors = (expanderBandFrequencies_Hz.empty() || lowerBandIndices.empty() || higherBandIndices.empty() || lowerBandFactors.empty() || higherBandFactors.empty());
 		// Setup expanders
 		for (int filterIndex = 0; filterIndex < gammatoneFilterBank.GetNumFilters(); filterIndex++)
 		{
 			Common::CDynamicExpanderMono* expander = new Common::CDynamicExpanderMono();
 			expander->Setup(samplingRate, DEFAULT_RATIO, DEFAULT_THRESHOLD, DEFAULT_ATTACK, DEFAULT_RELEASE);
 			bandExpanders.push_back(expander);
-
-			float filterFrequency = gammatoneFilterBank.GetFilter(filterIndex)->GetCenterFrequency();
-			expanderBandFrequencies_Hz.push_back(filterFrequency);
-
-			int lowerBandIndex, higherBandIndex;
-			float lowerBandFrequency = GetLowerOctaveBandFrequency(filterFrequency, lowerBandIndex);
-			lowerBandIndices.push_back(lowerBandIndex);
-			float higherBandFrequency = GetHigherOctaveBandFrequency(filterFrequency, higherBandIndex);
-			higherBandIndices.push_back(higherBandIndex);
-			float frequencyDistance = higherBandFrequency - lowerBandFrequency;
-			float lowerBandFactor, higherBandFactor;
-			if (lowerBandFrequency <= 20.0f)
+			if(calculateFrequenciesIndicesFactors)
 			{
-				lowerBandFactor = -1.0f;
-			}
-			else
-			{
-				lowerBandFactor = (higherBandFrequency - filterFrequency) / frequencyDistance;
-			}
+				float filterFrequency = gammatoneFilterBank.GetFilter(filterIndex)->GetCenterFrequency();
+				expanderBandFrequencies_Hz.push_back(filterFrequency);
 
-			if (higherBandFrequency >= 20000.0f)
-			{
-				higherBandFactor = -1.0f;
-			}
-			else
-			{
-				higherBandFactor = (filterFrequency - lowerBandFrequency) / frequencyDistance;
-			}
+				int lowerBandIndex, higherBandIndex;
+				float lowerBandFrequency = GetLowerOctaveBandFrequency(filterFrequency, lowerBandIndex);
+				lowerBandIndices.push_back(lowerBandIndex);
+				float higherBandFrequency = GetHigherOctaveBandFrequency(filterFrequency, higherBandIndex);
+				higherBandIndices.push_back(higherBandIndex);
+				float frequencyDistance = higherBandFrequency - lowerBandFrequency;
+				float lowerBandFactor, higherBandFactor;
+				if (lowerBandFrequency <= 20.0f)
+				{
+					lowerBandFactor = -1.0f;
+				}
+				else
+				{
+					lowerBandFactor = (higherBandFrequency - filterFrequency) / frequencyDistance;
+				}
 
-			lowerBandFactors.push_back(lowerBandFactor);
-			higherBandFactors.push_back(higherBandFactor);
+				if (higherBandFrequency >= 20000.0f)
+				{
+					higherBandFactor = -1.0f;
+				}
+				else
+				{
+					higherBandFactor = (filterFrequency - lowerBandFrequency) / frequencyDistance;
+				}
 
+				lowerBandFactors.push_back(lowerBandFactor);
+				higherBandFactors.push_back(higherBandFactor);
+			}
 		}
 
 		filterBankUsed = GAMMATONE;

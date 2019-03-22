@@ -437,11 +437,11 @@ namespace HAHLSimulation {
 		audiogramOutput.left.Fill(outputBuffer.left.GetNsamples(), 0.0f);
 		audiogramOutput.right.Fill(outputBuffer.right.GetNsamples(), 0.0f);
 
-		if( enableMultibandExpander.left && enableHearingLossSimulation.left )
+		if( enableMultibandExpander.left && enableHearingLossSimulation.left && multibandExpanders.left.IsReady() )
 			multibandExpanders.left.Process(smearingOutput.left, audiogramOutput.left);
 		else
 			audiogramOutput.left = smearingOutput.left;
-		if (enableMultibandExpander.right && enableHearingLossSimulation.right)
+		if (enableMultibandExpander.right && enableHearingLossSimulation.right && multibandExpanders.right.IsReady())
 			multibandExpanders.right.Process(smearingOutput.right, audiogramOutput.right);
 		else
 			audiogramOutput.right = smearingOutput.right;
