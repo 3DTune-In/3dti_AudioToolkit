@@ -131,6 +131,7 @@ namespace HAHLSimulation {
 		*/
 		float GetAttenuationForOctaveBand(int bandIndex);
 
+		bool IsReady();
 
 		TFilterBank GetFilterBankType();
 
@@ -168,6 +169,7 @@ namespace HAHLSimulation {
 		Common::CGammatoneFilterBank gammatoneFilterBank;		// Filter bank to process the data
 		Common::CFiltersBank butterworthFilterBank;
 		vector<float> bandAttenuations;					// Attenuation applied after expander for each band
+		bool setupDone;
 
 	};
 }// end namespace HAHLSimulation
