@@ -64,27 +64,6 @@ namespace HAHLSimulation {
 		*/
 		void Setup(int samplingRate, float iniFreq_Hz, int bandsNumber, int filtersPerBand, TFilterBank _filterBank);
 
-		/** \brief Setup the multiband expander using a Butterworth filterbank
-		*	\details Specifies the bands (number, initial frequency and number of internal filters per band, to increase bandwidth). Using Butterworth filterbank results in a -3dB gain correction.
-		*	\param [in] samplingRate sampling rate in samples per second
-		*	\param [in] iniFreq_Hz initial frequency, in Hertzs
-		*	\param [in] bandsNumber number of frequency bands
-		*	\param [in] filtersPerBand specifies the number of filters per band
-		*	\pre parameter filtersPerBand must be an odd number.
-		*   \eh On error, an error code is reported to the error handler.
-		*/
-		void SetupButterworth(int samplingRate, float iniFreq_Hz, int bandsNumber, int filtersPerBand);
-
-		/** \brief Setup the multiband expander using a Gammatone Filterbank
-		*	\details Specifies number of bands and initial frequency. Using Gammatone filterbank results in a +12dB gain correction.
-		*	\param [in] samplingRate sampling rate in samples per second
-		*	\param [in] iniFreq_Hz initial frequency, in Hertzs
-		*	\param [in] bandsNumber number of frequency bands
-		*   \eh On error, an error code is reported to the error handler.
-		*/
-		void SetupGammatone(int samplingRate, float iniFreq_Hz, int bandsNumber);
-
-
 		/** \brief Process an input buffer
 		*	\details The input buffer is processed by the multiband expander. The result is returned in the output buffer
 		*	\param [in] inputBuffer input buffer
@@ -113,8 +92,8 @@ namespace HAHLSimulation {
 		*	\retval expander Pointer to the expander object 
 		*   \eh Nothing is reported to the error handler.
 		*/
-		Common::CDynamicExpanderMono* GetBandExpander(int bandIndex) { return bandExpanders[bandIndex]; }
-
+		Common::CDynamicExpanderMono* GetBandExpander(int bandIndex);
+		
 		/** \brief Set attenuation to be applied after expander for one band.
 		*	\param[in] bandIndex index of the band for which attenuation will be set
 		*	\param[in] attenuation attenuation value in (positive) decibels
@@ -133,6 +112,7 @@ namespace HAHLSimulation {
 
 		bool IsReady();
 
+		void SetFilterBankType(TFilterBank _filterBank);
 		TFilterBank GetFilterBankType();
 
 		// Calculate the corresponding gain for each filter
@@ -155,20 +135,21 @@ namespace HAHLSimulation {
 
 		void GetOctaveBandButterworthFiltersFirstAndLastIndex(int bandIndex, int &firstInternalBand, int &lastInternalBand);
 
-		vector<Common::CDynamicExpanderMono*> bandExpanders;	// Dynamic expanders for each band		
-		vector<float> octaveBandFrequencies_Hz;				// Center frequencies for each equalizer band, in Hertzs
-		vector<float> expanderBandFrequencies_Hz;
-		vector<float> bandGains_dB;					// Gains for each equalizer band, in decibels
-		vector<float> lowerBandFactors;				// Factor for the attenuation linear interpolation for each filter regarding the immediately lower band's attenuation
-		vector<float> higherBandFactors;			// Factor for the attenuation linear interpolation for each filter regarding the immediately higher band's attenuation
-		vector<int> lowerBandIndices;				// Index of the immediately lower bands' attenuation for each filter
-		vector<int> higherBandIndices;				// Index of the immediately higher bands' attenuation for each filter
+		vector<Common::CDynamicExpanderMono*> butterworthBandExpanders; // Dynamic expanders for each band		
+		vector<Common::CDynamicExpanderMono*> gammatoneBandExpanders; // Dynamic expanders for each band		
+		vector<float> octaveBandFrequencies_Hz;					// Center frequencies for each equalizer band, in Hertzs
+		vector<float> gammatoneExpanderBandFrequencies_Hz;		// Center frequencies for each Gammatone filter, in Hertzs
+		vector<float> octaveBandGains_dB;						// Gains for each equalizer band, in decibels
+		vector<float> lowerBandFactors;							// Factor for the attenuation linear interpolation for each Gammatone filter regarding the immediately lower band's attenuation
+		vector<float> higherBandFactors;						// Factor for the attenuation linear interpolation for each Gammatone filter regarding the immediately higher band's attenuation
+		vector<int>   lowerBandIndices;							// Index of the immediately lower bands' attenuation for each Gammatone filter
+		vector<int>   higherBandIndices;						// Index of the immediately higher bands' attenuation for each Gammatone filter
 		
 		TFilterBank filterBankUsed;
 
 		Common::CGammatoneFilterBank gammatoneFilterBank;		// Filter bank to process the data
 		Common::CFiltersBank butterworthFilterBank;
-		vector<float> bandAttenuations;					// Attenuation applied after expander for each band
+		vector<float> octaveBandAttenuations;					// Attenuation applied after expander for each band
 		bool setupDone;
 
 	};
