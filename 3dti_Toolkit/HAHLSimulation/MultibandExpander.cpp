@@ -261,14 +261,16 @@ namespace HAHLSimulation {
 		{
 			for (int i = 0; i < butterworthBandExpanders.size(); i++)
 			{
-				butterworthFilterBank.GetFilter(i)->Process(CMonoBuffer<float>(128, 0.0f));
+                CMonoBuffer<float> emptyBuffer = CMonoBuffer<float>(128, 0.0f);
+                butterworthFilterBank.GetFilter(i)->Process(emptyBuffer);
 			}
 		}
 		else
 		{
 			for (int i = 0; i < gammatoneFilterBank.GetNumFilters(); i++)
 			{
-				gammatoneFilterBank.GetFilter(i)->Process(CMonoBuffer<float>(128, 0.0f));
+                CMonoBuffer<float> emptyBuffer = CMonoBuffer<float>(128, 0.0f);
+                gammatoneFilterBank.GetFilter(i)->Process(emptyBuffer);
 			}
 		}
 	}
