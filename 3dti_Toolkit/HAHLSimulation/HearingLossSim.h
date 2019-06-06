@@ -69,12 +69,13 @@ namespace HAHLSimulation {
 		*	\param [in] bandsNumber number of frequency bands
 		*	\param [in] filtersPerBand specifies the number of filters per band
 		*	\param [in] _filterBank specifies which type of filterbank to use: butterworth or gammatone
+		*	\param [in] filterGrouping specifies whether you want the multiband expander to act on single filters or grouped filters
 		*	\param [in] bufferSize size of buffers to be processed
 		*	\param [in] smearingAlgorithm algorithm used in frequency smearing processing
 		*	\pre parameter filtersPerBand must be an odd number.
 		*   \eh Nothing is reported to the error handler.
 		*/
-		void Setup(int samplingRate, float Calibration_dBs_SPL_for_0_dBs_fs, float iniFreq_Hz, int bandsNumber, int filtersPerBand, TFilterBank filterBank, int bufferSize, CFrequencySmearing::SmearingAlgorithm _smearingAlgorithm);
+		void Setup(int samplingRate, float Calibration_dBs_SPL_for_0_dBs_fs, float iniFreq_Hz, int bandsNumber, int filtersPerBand, TFilterBank filterBank, bool filterGrouping, int bufferSize, CFrequencySmearing::SmearingAlgorithm _smearingAlgorithm);
 
 		/** \brief Set the hearing loss simulator calibration
 		*	\details Specifies the equivalence between 0 dBFS and X dBSPL, coming from external calibration
@@ -254,7 +255,7 @@ namespace HAHLSimulation {
 
 		float CalculateDBHLFromAttenuation(float attenuation);
 
-		void SetGammatoneMultibandExpanderParameters(CMultibandExpander* multibandExpander, int bandIndex, TAudiometry audiometry);
+		void SetPerFilterMultibandExpanderParameters(CMultibandExpander* multibandExpander, int bandIndex, TAudiometry audiometry);
 
 
 	private:                                                           // PRIVATE ATTRIBUTES

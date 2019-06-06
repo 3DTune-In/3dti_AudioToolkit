@@ -30,7 +30,7 @@
 
 namespace HAHLSimulation {
 
-	void CHearingLossSim::Setup(int samplingRate, float Calibration_dBs_SPL_for_0_dBs_fs, float iniFreq_Hz, int bandsNumber, int filtersPerBand, TFilterBank filterBank, int bufferSize, CFrequencySmearing::SmearingAlgorithm smearingAlgorithm)
+	void CHearingLossSim::Setup(int samplingRate, float Calibration_dBs_SPL_for_0_dBs_fs, float iniFreq_Hz, int bandsNumber, int filtersPerBand, TFilterBank filterBank, bool filterGrouping, int bufferSize, CFrequencySmearing::SmearingAlgorithm smearingAlgorithm)
 	{
 		// Set default switches for each independent process
 		enableHearingLossSimulation.left = true;
@@ -42,8 +42,8 @@ namespace HAHLSimulation {
 
 		// Setup multiband expander
 		dBs_SPL_for_0_dBs_fs = Calibration_dBs_SPL_for_0_dBs_fs;
-		multibandExpanders.left.Setup(samplingRate, iniFreq_Hz, bandsNumber, filtersPerBand, filterBank);
-		multibandExpanders.right.Setup(samplingRate, iniFreq_Hz, bandsNumber, filtersPerBand, filterBank);
+		multibandExpanders.left.Setup(samplingRate, iniFreq_Hz, bandsNumber, filtersPerBand, filterBank, filterGrouping);
+		multibandExpanders.right.Setup(samplingRate, iniFreq_Hz, bandsNumber, filtersPerBand, filterBank, filterGrouping);
 		audiometries.left.assign(bandsNumber, 0.0f);
 		audiometries.right.assign(bandsNumber, 0.0f);
 
@@ -97,13 +97,13 @@ namespace HAHLSimulation {
 		
 		if ((ear == Common::T_ear::LEFT) || (ear == Common::T_ear::BOTH))
 		{
-			if (multibandExpanders.left.GetFilterBankType() == TFilterBank::GAMMATONE) {
+			if (!multibandExpanders.left.GetFilterGrouping()) {
 				// Apply to corresponding ears
 
 				audiometries.left[bandIndex] = hearingLevel_dBHL;
 				multibandExpanders.left.SetAttenuationForOctaveBand(bandIndex, attenuation);
 				CMultibandExpander* multibandExpander = &multibandExpanders.left;
-				SetGammatoneMultibandExpanderParameters(multibandExpander, bandIndex, audiometries.left);
+				SetPerFilterMultibandExpanderParameters(multibandExpander, bandIndex, audiometries.left);
 
 			}
 			else
@@ -124,12 +124,12 @@ namespace HAHLSimulation {
 		}
 		if ((ear == Common::T_ear::RIGHT) || (ear == Common::T_ear::BOTH)) {
 
-			if (multibandExpanders.right.GetFilterBankType() == TFilterBank::GAMMATONE) {
+			if (!multibandExpanders.right.GetFilterGrouping()) {
 				
 				audiometries.right[bandIndex] = hearingLevel_dBHL;
 				multibandExpanders.right.SetAttenuationForOctaveBand(bandIndex, attenuation);
 				CMultibandExpander* multibandExpander = &multibandExpanders.right;
-				SetGammatoneMultibandExpanderParameters(multibandExpander, bandIndex, audiometries.right);
+				SetPerFilterMultibandExpanderParameters(multibandExpander, bandIndex, audiometries.right);
 				
 			}
 			else
@@ -152,7 +152,7 @@ namespace HAHLSimulation {
 		
 	}
 
-	void CHearingLossSim::SetGammatoneMultibandExpanderParameters(CMultibandExpander* multibandExpander, int bandIndex, TAudiometry audiometry)
+	void CHearingLossSim::SetPerFilterMultibandExpanderParameters(CMultibandExpander* multibandExpander, int bandIndex, TAudiometry audiometry)
 	{
 
 		float threshold_dBSPL, threshold_dBFS, ratio;
@@ -170,7 +170,7 @@ namespace HAHLSimulation {
 
 			for (int i = 0; i < multibandExpander->GetNumFilters(); i++)
 			{
-				expanderFrequency = multibandExpander->GetExpanderBandFrequency(i);
+				expanderFrequency = multibandExpander->GetFilterFrequency(i);
 
 				if (expanderFrequency < bandFrequency)
 				{
@@ -181,7 +181,7 @@ namespace HAHLSimulation {
 					ratio = CalculateRatioFromDBHL(audiometry[0]);
 
 				}
-				else if (expanderFrequency > bandFrequency && expanderFrequency < posteriorBandFrequency)
+				else if (expanderFrequency >= bandFrequency && expanderFrequency <= posteriorBandFrequency)
 				{
 					previousFactor = (posteriorBandFrequency - expanderFrequency) / (posteriorBandFrequency - bandFrequency);
 					posteriorFactor = (expanderFrequency - bandFrequency) / (posteriorBandFrequency - bandFrequency);
@@ -205,7 +205,7 @@ namespace HAHLSimulation {
 
 			for (int i = multibandExpander->GetNumFilters() - 1; i >= 0; i--)
 			{
-				expanderFrequency = multibandExpander->GetExpanderBandFrequency(i);
+				expanderFrequency = multibandExpander->GetFilterFrequency(i);
 
 				if (expanderFrequency > bandFrequency)
 				{
@@ -214,7 +214,7 @@ namespace HAHLSimulation {
 
 					ratio = CalculateRatioFromDBHL(audiometry[audiometry.size() - 1]);
 				}
-				else if (expanderFrequency < bandFrequency && expanderFrequency > previousBandFrequency)
+				else if (expanderFrequency <= bandFrequency && expanderFrequency >= previousBandFrequency)
 				{
 					previousFactor = (bandFrequency - expanderFrequency) / (bandFrequency - previousBandFrequency);
 					posteriorFactor = (expanderFrequency - previousBandFrequency) / (bandFrequency - previousBandFrequency);
@@ -238,13 +238,13 @@ namespace HAHLSimulation {
 
 			for (int i = 0; i < multibandExpander->GetNumFilters(); i++)
 			{
-				expanderFrequency = multibandExpander->GetExpanderBandFrequency(i);
+				expanderFrequency = multibandExpander->GetFilterFrequency(i);
 
 				if (expanderFrequency > posteriorBandFrequency) break;
 
 				if (expanderFrequency < previousBandFrequency) continue;
 
-				if (expanderFrequency < bandFrequency && expanderFrequency > previousBandFrequency)
+				if (expanderFrequency < bandFrequency && expanderFrequency >= previousBandFrequency)
 				{
 					previousFactor = (bandFrequency - expanderFrequency) / (bandFrequency - previousBandFrequency);
 					posteriorFactor = (expanderFrequency - previousBandFrequency) / (bandFrequency - previousBandFrequency);
@@ -254,7 +254,7 @@ namespace HAHLSimulation {
 					ratio = CalculateRatioFromDBHL(previousFactor * audiometry[bandIndex - 1] + posteriorFactor * audiometry[bandIndex]);
 
 				}
-				else if (expanderFrequency > bandFrequency && expanderFrequency < posteriorBandFrequency)
+				else if (expanderFrequency >= bandFrequency && expanderFrequency <= posteriorBandFrequency)
 				{
 					previousFactor = (posteriorBandFrequency - expanderFrequency) / (posteriorBandFrequency - bandFrequency);
 					posteriorFactor = (expanderFrequency - bandFrequency) / (posteriorBandFrequency - bandFrequency);
