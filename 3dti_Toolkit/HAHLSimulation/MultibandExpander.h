@@ -80,19 +80,19 @@ namespace HAHLSimulation {
 		*       On error, an error code is reported to the error handler.
 		*/
 		float GetOctaveBandFrequency(int bandIndex);
-		float GetFilterFrequency(int bandIndex);
+		float GetFilterFrequency(int bandIndex, TFilterBank filterBank);
 		/** \brief Get the current number of bands in the equalizer.
 		*	\retval n number of bands in the equalizer.
 		*   \eh Nothing is reported to the error handler.
 		*/
-		int GetNumBands() { return octaveBandFrequencies_Hz.size(); }
+		int GetNumBands(TFilterBank filterBank, bool filterGrouping);
 
 		/** \brief Returns a reference to the expander object of one band.
 		*	\param [in] bandIndex band index for which the expander will be returned
 		*	\retval expander Pointer to the expander object 
 		*   \eh Nothing is reported to the error handler.
 		*/
-		Common::CDynamicExpanderMono* GetBandExpander(int bandIndex);
+		Common::CDynamicExpanderMono* GetBandExpander(int bandIndex, TFilterBank filterBank, bool filterGrouping);
 		
 		/** \brief Set attenuation to be applied after expander for one band.
 		*	\param[in] bandIndex index of the band for which attenuation will be set
@@ -122,7 +122,7 @@ namespace HAHLSimulation {
 		float GetFilterGain(int filterIndex, TFilterBank filterBank);
 		float GetFilterGainDB(int filterIndex, TFilterBank filterBank);
 
-		float GetNumFilters();
+		float GetNumFilters(TFilterBank filterBank);
 	private:
 
 		// Calculate factor to multiply to the samples, from a (positive) attenuation value in decibels

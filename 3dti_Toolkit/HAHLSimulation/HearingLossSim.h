@@ -147,21 +147,21 @@ namespace HAHLSimulation {
 		*	\retval expander Pointer to the dynamics expander of specified band and ear
 		*   \eh On error, an error code is reported to the error handler.
 		*/
-		Common::CDynamicExpanderMono* GetBandExpander(Common::T_ear ear, int bandIndex);
+		Common::CDynamicExpanderMono* GetBandExpander(Common::T_ear ear, int bandIndex, TFilterBank filterBank, bool filterGrouping);
 
 		/** \brief Set attack time, in ms, for the dynamics expanders of all bands in one ear
 		*	\param [in] ear for which ear we want to set the attack
 		*	\param [in] attack attack time in milliseconds
 		*   \eh Nothing is reported to the error handler.
 		*/
-		void SetAttackForAllBands(Common::T_ear ear, float attack);
+		void SetAttackForAllBands(Common::T_ear ear, float attack, TFilterBank filterBank, bool filterGrouping);
 
 		/** \brief Set release time, in ms, for the dynamics expanders of all bands in one ear
 		*	\param [in] ear for which ear we want to set the release
 		*	\param [in] release release time in milliseconds
 		*   \eh Nothing is reported to the error handler.
 		*/
-		void SetReleaseForAllBands(Common::T_ear ear, float release);
+		void SetReleaseForAllBands(Common::T_ear ear, float release, TFilterBank filterBank, bool filterGrouping);
 
 		/** \brief Set attenuation for one band in one ear.
 		*	\param[in] ear ear for which we want to set attenuation
