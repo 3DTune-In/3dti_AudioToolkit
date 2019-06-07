@@ -139,6 +139,8 @@ namespace HAHLSimulation {
 		void GetOctaveBandButterworthFiltersFirstAndLastIndex(int bandIndex, int &firstInternalBand, int &lastInternalBand);
 		void GetOctaveBandGammatoneFiltersFirstAndLastIndex(int bandIndex, int &firstInternalBand, int &lastInternalBand);
 
+		void CleanAllBuffers();
+
 		vector<Common::CDynamicExpanderMono*> perFilterButterworthBandExpanders; // Dynamic expanders for each Butterworth filter		
 		vector<Common::CDynamicExpanderMono*> perGroupBandExpanders;			 // Dynamic expanders for each band	group	
 		vector<Common::CDynamicExpanderMono*> perFilterGammatoneBandExpanders;	 // Dynamic expanders for each Gammatone filter		

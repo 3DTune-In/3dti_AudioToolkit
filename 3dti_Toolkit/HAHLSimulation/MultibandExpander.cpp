@@ -177,6 +177,21 @@ namespace HAHLSimulation {
 		}
 	}
 
+	void CMultibandExpander::CleanAllBuffers()
+	{
+		for (int i = 0; i < gammatoneFilterBank.GetNumFilters(); i++)
+		{
+			CMonoBuffer<float> emptyBuffer = CMonoBuffer<float>(128, 0.0f);
+			gammatoneFilterBank.GetFilter(i)->Process(emptyBuffer);
+		}
+
+		for (int i = 0; i < butterworthFilterBank.GetNumFilters(); i++)
+		{
+			CMonoBuffer<float> emptyBuffer = CMonoBuffer<float>(128, 0.0f);
+			butterworthFilterBank.GetFilter(i)->Process(emptyBuffer);
+		}
+	}
+
 
 	void CMultibandExpander::Process(CMonoBuffer<float> &  inputBuffer, CMonoBuffer<float> & outputBuffer)
 	{
@@ -359,24 +374,7 @@ namespace HAHLSimulation {
 	void CMultibandExpander::SetFilterBankType(TFilterBank _filterBank)
 	{
 		filterBankUsed = _filterBank;
-		
-		// Buffer cleaning
-		if (filterBankUsed == TFilterBank::BUTTERWORTH)
-		{
-			for (int i = 0; i < perGroupBandExpanders.size(); i++)
-			{
-                CMonoBuffer<float> emptyBuffer = CMonoBuffer<float>(128, 0.0f);
-                butterworthFilterBank.GetFilter(i)->Process(emptyBuffer);
-			}
-		}
-		else
-		{
-			for (int i = 0; i < gammatoneFilterBank.GetNumFilters(); i++)
-			{
-                CMonoBuffer<float> emptyBuffer = CMonoBuffer<float>(128, 0.0f);
-                gammatoneFilterBank.GetFilter(i)->Process(emptyBuffer);
-			}
-		}
+		CleanAllBuffers();
 	}
 
 	TFilterBank CMultibandExpander::GetFilterBankType()
@@ -387,6 +385,7 @@ namespace HAHLSimulation {
 	void CMultibandExpander::SetFilterGrouping(bool filterGrouping)
 	{
 		octaveBandFilterGrouping = filterGrouping;
+		CleanAllBuffers();
 	}
 
 	bool CMultibandExpander::GetFilterGrouping()
