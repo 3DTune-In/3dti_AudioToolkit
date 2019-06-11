@@ -30,15 +30,15 @@
 
 namespace HAHLSimulation {
 
-	void CHearingLossSim::Setup(int samplingRate, float Calibration_dBs_SPL_for_0_dBs_fs, float iniFreq_Hz, int bandsNumber, int filtersPerBand, TFilterBank filterBank, bool filterGrouping, int bufferSize, CFrequencySmearing::SmearingAlgorithm smearingAlgorithm)
+	void CHearingLossSim::Setup(int samplingRate, float Calibration_dBs_SPL_for_0_dBs_fs, float iniFreq_Hz, int bandsNumber, int filtersPerBand, TFilterBank filterBank, bool filterGrouping, int bufferSize)
 	{
 		// Set default switches for each independent process
 		enableHearingLossSimulation.left = true;
 		enableHearingLossSimulation.right = true;
 		enableMultibandExpander.left = true;
 		enableMultibandExpander.right = true;
-		enableFrequencySmearing.left = true;
-		enableFrequencySmearing.right = true;
+		enableFrequencySmearing.left = false;
+		enableFrequencySmearing.right = false;
 
 		// Setup multiband expander
 		dBs_SPL_for_0_dBs_fs = Calibration_dBs_SPL_for_0_dBs_fs;
@@ -56,8 +56,6 @@ namespace HAHLSimulation {
 		// Setup frequency smearing
 		//ERRORHANDLER3DTI.AddVariableWatch(WV_BUFFER_TEST);
 		//ERRORHANDLER3DTI.SetWatcherLogFile(WV_BUFFER_TEST, "smearingFOutput.txt");
-		frequencySmearers.left.Setup(bufferSize, samplingRate, smearingAlgorithm);
-		frequencySmearers.right.Setup(bufferSize, samplingRate, smearingAlgorithm);
 		frequencySmearingBypassDelay.left.Setup(bufferSize);
 		frequencySmearingBypassDelay.right.Setup(bufferSize);
 	}
@@ -410,7 +408,7 @@ namespace HAHLSimulation {
 		// Left:
 		if (enableFrequencySmearing.left && enableHearingLossSimulation.left)
 		{
-			frequencySmearers.left.Process(asynchronyOutput.left, smearingOutput.left);			
+			frequencySmearers.left->Process(asynchronyOutput.left, smearingOutput.left);			
 			frequencySmearingBypassDelay.left.Process(smearingOutput.left, asynchronyOutput.left);	// Do a dummy process of the bypass delay buffer, to minimize clicks when enabling/disabling one ear
 		}
 		else
@@ -423,7 +421,7 @@ namespace HAHLSimulation {
 		// Right:
 		if (enableFrequencySmearing.right && enableHearingLossSimulation.right)
 		{
-			frequencySmearers.right.Process(asynchronyOutput.right, smearingOutput.right);
+			frequencySmearers.right->Process(asynchronyOutput.right, smearingOutput.right);
 			frequencySmearingBypassDelay.right.Process(smearingOutput.right, asynchronyOutput.right);	// Do a dummy process of the bypass delay buffer, to minimize clicks when enabling/disabling one ear
 		}
 		else
@@ -541,12 +539,12 @@ namespace HAHLSimulation {
 
 	//////////////////////////////////////////////
 
-	CFrequencySmearing* CHearingLossSim::GetFrequencySmearingSimulator(Common::T_ear ear)
+	shared_ptr<CFrequencySmearing> CHearingLossSim::GetFrequencySmearingSimulator(Common::T_ear ear)
 	{		
 		if (ear == Common::T_ear::LEFT)
-			return &frequencySmearers.left;
+			return frequencySmearers.left;
 		if (ear == Common::T_ear::RIGHT)
-			return &frequencySmearers.right;
+			return frequencySmearers.right;
 	
 		SET_RESULT(RESULT_ERROR_CASENOTDEFINED, "Attempt to get frequency smearing simulator for both or none ears");
 		return nullptr;
@@ -621,6 +619,16 @@ namespace HAHLSimulation {
 			temporalDistortionSimulator.DisableTemporalDistortionSimulator(Common::T_ear::RIGHT);
 	}
 
+	void CHearingLossSim::SetFrequencySmearer(Common::T_ear ear, shared_ptr<CFrequencySmearing> frequencySmearer)
+	{
+		ASSERT(((ear == Common::T_ear::LEFT) || (ear == Common::T_ear::RIGHT)), RESULT_ERROR_CASENOTDEFINED, "Cannot set the same frequency smearer for both ears", "");
+
+		if (ear == Common::T_ear::LEFT)
+			frequencySmearers.left = frequencySmearer;
+		if (ear == Common::T_ear::RIGHT)
+			frequencySmearers.right = frequencySmearer;
+	}
+
 	//////////////////////////////////////////////
 
 	void CHearingLossSim::EnableHearingLossSimulation(Common::T_ear ear)
@@ -664,8 +672,14 @@ namespace HAHLSimulation {
 			EnableFrequencySmearing(Common::T_ear::RIGHT);
 			return;
 		}
-		if(ear == Common::T_ear::LEFT ) enableFrequencySmearing.left  = true;
-		if(ear == Common::T_ear::RIGHT) enableFrequencySmearing.right = true;
+		if (ear == Common::T_ear::LEFT) {
+			ASSERT(frequencySmearers.left.get(), RESULT_ERROR_NULLPOINTER, "Frequency smearing cannot be enabled for left ear because the frequency smearer has not been set", "");
+			enableFrequencySmearing.left = true;
+		}
+		if (ear == Common::T_ear::RIGHT) {
+			ASSERT(frequencySmearers.right.get(), RESULT_ERROR_NULLPOINTER, "Frequency smearing cannot be enabled for right ear because the frequency smearer has not been set", "");
+			enableFrequencySmearing.right = true;
+		}
 	}
 
 	//////////////////////////////////////////////

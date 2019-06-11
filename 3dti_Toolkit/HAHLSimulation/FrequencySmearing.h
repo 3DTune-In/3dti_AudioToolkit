@@ -25,15 +25,6 @@
 
 //#define _USE_MATH_DEFINES
 
-#include <vector>
-#include <Common/Buffer.h>
-#include <Common/Fprocessor.h>
-
-#include <Eigen/QR>
-
-using namespace Eigen;
-#define EIGEN_NO_DEBUG 
-
 
 #ifndef FSMEARING_THRESHOLD
 #define FSMEARING_THRESHOLD 0.0000001f
@@ -45,23 +36,12 @@ using namespace Eigen;
 
 namespace HAHLSimulation {
 
-	// Bidimensional Float CMonoBuffer type definition
-	typedef CMonoBuffer<CMonoBuffer<double>> BidimensionalDoubleMonoBuffer;
-
 	/** \details This class implements frequency smearing, which simulates the broadening of auditory filters in sensorineural hearing loss
 	*/
 	class CFrequencySmearing
 	{
 
 	public:
-
-		enum SmearingAlgorithm {
-			CLASSIC, SUBFRAME
-		};
-
-		/** \brief Default constructor
-		*/
-		CFrequencySmearing();
 
 		/** \brief Initialize the class and allocate memory.
 		*   \details When this method is called, the system initializes variables and allocates memory space for the buffer.
@@ -70,158 +50,15 @@ namespace HAHLSimulation {
 		*   \eh On success, RESULT_OK is reported to the error handler.
 		*       On error, an error code is reported to the error handler.
 		*/
-		void Setup(int _bufferSize, float _samplingRate, SmearingAlgorithm _smearingAlgorithm);
+		virtual void Setup(int _bufferSize, float _samplingRate) = 0;
 
 		/** \brief Process one buffer through frequency smearing effect.
 		*	\param [in] inputBuffer input buffer, in frequency domain
 		*	\param [out] outputBuffer output buffer, in frequency domain
 		*   \eh On error, an error code is reported to the error handler.
 		*/
-		void Process(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer);
+		virtual void Process(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer) = 0;
 
-		/** \brief Set the buffer size for the downward section of the smearing window, in number of samples
-		*	\details Frequencies below this size are truncated
-		*	\param [in] downwardSize size in number of samples
-		*   \eh On error, an error code is reported to the error handler.
-		*/
-		void SetDownwardSmearingBufferSize(int downwardSize);
-
-		/** \brief Set the buffer size for the upward section of the smearing window, in number of samples
-		*	\details Frequencies above this size are truncated
-		*	\param [in] upwardSize size in number of samples
-		*   \eh On error, an error code is reported to the error handler.
-		*/
-		void SetUpwardSmearingBufferSize(int upwardSize);
-
-		/** \brief Set the amount of smearing (standard deviation) for the downward section of the smearing window, in Hz
-		*	\param [in] downwardSmearing amount of smearing, in Hz
-		*   \eh On error, an error code is reported to the error handler.
-		*/
-		void SetDownwardSmearing_Hz(float downwardSmearing);
-
-		/** \brief Set the amount of smearing (standard deviation) for the upward section of the smearing window, in Hz
-		*	\param [in] upwardSmearing amount of smearing, in Hz
-		*   \eh On error, an error code is reported to the error handler.
-		*/
-		void SetUpwardSmearing_Hz(float upwardSmearing);
-
-		/** \brief Set the amount of smearing (standard deviation) for the downward section of the smearing window, in Hz
-		*	\param [in] downwardSmearing amount of smearing, in Hz
-		*   \eh On error, an error code is reported to the error handler.
-		*/
-		void SetDownwardBroadeningFactor(float _downwardBroadeningFactor);
-
-		/** \brief Set the amount of smearing (standard deviation) for the upward section of the smearing window, in Hz
-		*	\param [in] upwardSmearing amount of smearing, in Hz
-		*   \eh On error, an error code is reported to the error handler.
-		*/
-		void SetUpwardBroadeningFactor(float _upwardBroadeningFactor);
-
-		/** \brief Get a (frequency-domain) buffer containing the smearing window
-		*	\retval smearingWindow smearing window buffer, in frequency domain
-		*   \eh Nothing is reported to the error handler.
-		*/
-		CMonoBuffer<float>* GetSmearingWindow();
-
-
-		/** \brief Get frequency smearing algorithm
-		*	\retval smearingAlgorithm enum
-		*   \eh Nothing is reported to the error handler.
-		*/
-		SmearingAlgorithm GetSmearingAlgorithm();
-
-		/** \brief Set frequency smearing algorithm
-		*	\param [in] _smearingAlgorithm enum
-		*   \eh Nothing is reported to the error handler.
-		*/
-		void SetSmearingAlgorithm(SmearingAlgorithm _smearingAlgorithm);
-
-
-
-	private:
-
-		/////////////
-		// METHODS
-		/////////////
-		// Initialize the hann window buffer according to its size 
-		void CalculateHannWindow();
-
-		// Multiply the input buffer by the hann window
-		void ProcessHannWindow(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer);
-
-		// Overlap ADD method to get the correct output buffer and update the storageBuffer
-		void ProcessOutputBuffer_OverlapAddMethod(std::vector<float>& input_ConvResultBuffer, std::vector<float>& outBuffer);
-
-		// This method rounds to zero a value that is very close to zero.
-		double CalculateRoundToZero(double number);
-
-		// Do the actual frequency smearing process
-		void ProcessSmearing(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer);
-
-		// Generate the smearing window used for convolution
-		void CalculateSmearingWindow();
-
-		// Generate the smearing matrix used for convolution
-		void CalculateSmearingMatrix();
-
-		// Calculate probability for a single value following a gaussian distribution
-		float CalculateGaussianProbability(float mean, float deviation, float value);
-
-		// Configures 
-		void SmearingFunctionSetup();
-
-		// Tell if a float value is zero or close to zero
-		bool IsCloseToZero(float value);
-
-		void InitializePreviousBuffers();
-
-		void ProcessSubframe(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer);
-
-		void ProcessClassic(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer);
-
-		// Process 1D convolution of input buffer with smearing window, with output size equal to input size.
-		// To achieve same size, convolution starts from the zero point of the smearing window and ends at the same point.
-		void ProcessSmearingConvolution(CMonoBuffer<float> &inputBuffer, CMonoBuffer<float> &outputBuffer);
-
-		// Processes input buffer with different smearing window for each frequency value, with output size equal to input size.
-		// To achieve same size, convolution starts from the zero point of the smearing window and ends at the same point.
-		void ProcessSmearingComplexConvolution(CMonoBuffer<float> &inputBuffer, CMonoBuffer<float> &outputBuffer);
-
-		// Calculates an auditory filter matrix given frequency's lower and upper sides broadening values
-		BidimensionalDoubleMonoBuffer CalculateAuditoryFilter(float lowerSideBroadening, float upperSideBroadening);
-
-		// Extends a matrix by adding all-zeros columns, getting an output matrix of size (originalSize, 3*originalSize/2)
-		BidimensionalDoubleMonoBuffer ExtendMatrix(BidimensionalDoubleMonoBuffer& inputMatrix);
-
-		MatrixXd BidimensionalCMonoBufferToEigenMatrix(BidimensionalDoubleMonoBuffer& input);
-
-		BidimensionalDoubleMonoBuffer EigenMatrixToBidimensionalCMonoBuffer(MatrixXd& input);
-
-		// Returns A\B (matrix left division)
-		BidimensionalDoubleMonoBuffer Solve(BidimensionalDoubleMonoBuffer& matrixA, BidimensionalDoubleMonoBuffer& matrixB);
-
-		///////////////
-		// ATTRIBUTES	
-		///////////////
-		int bufferSize;										//Size of the inputs buffer		
-		float samplingRate;									//Sampling rate, in Hz
-		bool setupDone;										//It's true when setup has been called at least once
-		float oneSampleBandwidth;							//Precomputed bandwidth for one sample of frequency-domain buffer, in Hz
-		CMonoBuffer<float> previousBuffer;					//To store the previous buffer
-		CMonoBuffer<float> storageBuffer;					//To store partial results of the convolution from previous buffer
-		CMonoBuffer<float> storageLastBuffer[3];			//To store needed partial results of the convolution from last buffer
-		CMonoBuffer<float> hannWindowBuffer;				//To store the hann window
-		CMonoBuffer<float> smearingWindow;					//To store the smearing window	
-		BidimensionalDoubleMonoBuffer smearingMatrix;		//To store the smearing matrix
-
-															// Configurable parameters		
-		int downwardSmearingBufferSize;		 // Size of downward section of smearing window, in number of samples, for classic algorithm
-		int upwardSmearingBufferSize;		 // Size of upward section of smearing window, in number of samples, for classic algorithm
-		float downwardSmearing_Hz;			 // Amount of smearing (standard deviation) of downward section of smearing window, in Hz, for classic algorithm
-		float upwardSmearing_Hz;			 // Amount of smearing (standard deviation) of upward section of smearing window, in Hz, for classic algorithm
-		float downwardBroadeningFactor;		 // Downward broadening factor for subframe algorithm
-		float upwardBroadeningFactor;		 // Upward broadening factor for subframe algorithm
-		SmearingAlgorithm smearingAlgorithm; // Smearing algorithm, either the classic algorithm or subframe algorithm
 	};
 }
 #endif

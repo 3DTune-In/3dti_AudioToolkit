@@ -32,7 +32,8 @@
 #include <memory>
 #include <HAHLSimulation/MultibandExpander.h>
 #include <HAHLSimulation/TemporalDistortionSimulator.h>
-#include <HAHLSimulation/FrequencySmearing.h>
+#include <HAHLSimulation/Graf3DTIFrequencySmearing.h>
+#include <HAHLSimulation/BaerMooreFrequencySmearing.h>
 
 //#define DB_HL_TO_SPL_OFFSET 80.0f
 //#define DB_HL_TO_SPL_FACTOR	9.0f
@@ -75,7 +76,7 @@ namespace HAHLSimulation {
 		*	\pre parameter filtersPerBand must be an odd number.
 		*   \eh Nothing is reported to the error handler.
 		*/
-		void Setup(int samplingRate, float Calibration_dBs_SPL_for_0_dBs_fs, float iniFreq_Hz, int bandsNumber, int filtersPerBand, TFilterBank filterBank, bool filterGrouping, int bufferSize, CFrequencySmearing::SmearingAlgorithm _smearingAlgorithm);
+		void Setup(int samplingRate, float Calibration_dBs_SPL_for_0_dBs_fs, float iniFreq_Hz, int bandsNumber, int filtersPerBand, TFilterBank filterBank, bool filterGrouping, int bufferSize);
 
 		/** \brief Set the hearing loss simulator calibration
 		*	\details Specifies the equivalence between 0 dBFS and X dBSPL, coming from external calibration
@@ -190,7 +191,7 @@ namespace HAHLSimulation {
 		*	\retval frequencySmearingSimulator Pointer to the frequency smearing simulator
 		*   \eh On error, an error code is reported to the error handler.
 		*/
-		CFrequencySmearing* GetFrequencySmearingSimulator(Common::T_ear ear);
+		shared_ptr<CFrequencySmearing> GetFrequencySmearingSimulator(Common::T_ear ear);
 
 		CMultibandExpander* GetMultibandExpander(Common::T_ear ear);
 
@@ -229,6 +230,8 @@ namespace HAHLSimulation {
 		*   \eh Nothing is reported to the error handler.
 		*/
 		void DisableTemporalDistortion(Common::T_ear ear);
+
+		void SetFrequencySmearer(Common::T_ear ear, shared_ptr<CFrequencySmearing> frequencySmearer);
 
 		/** \brief Enable frequency smearing simulation for one (or both) ear
 		*	\param[in] ear for which ear we want to enable frequency smearing simulation
@@ -269,8 +272,8 @@ namespace HAHLSimulation {
 		CTemporalDistortionSimulator temporalDistortionSimulator;	// Temporal Distortion simulator 
 
 		// Frequency smearing
-		Common::CEarPair<CFrequencySmearing> frequencySmearers;			// Frequency smearing processors for both ears
-		Common::CEarPair<Common::CDelay> frequencySmearingBypassDelay;	// Buffers for delay compensation when only one ear is affected by frequency smearing
+		Common::CEarPair<shared_ptr<CFrequencySmearing>> frequencySmearers;	// Graf-3DTI frequency smearing processors for both ears
+		Common::CEarPair<Common::CDelay> frequencySmearingBypassDelay;		// Buffers for delay compensation when only one ear is affected by frequency smearing
 
 		// Switches for each effect, for each ear
 		Common::CEarPair<bool> enableHearingLossSimulation;				// Global switch for whole hearing loss simulation process, for each ear
