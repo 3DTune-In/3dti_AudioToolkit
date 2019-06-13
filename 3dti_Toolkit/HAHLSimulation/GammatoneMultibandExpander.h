@@ -1,9 +1,9 @@
 /**
-* \class CMultibandExpander
+* \class CGammatoneMultibandExpander
 *
-* \brief Declaration of CMultibandExpander class interface. 
+* \brief Declaration of CGammatoneMultibandExpander class interface. 
 *
-* \date	June 2017
+* \date	June 2019
 *
 * \authors 3DI-DIANA Research Group (University of Malaga), in alphabetical order: M. Cuevas-Rodriguez, C. Garre,  D. Gonzalez-Toledo, E.J. de la Rubia-Cuestas, L. Molina-Tanco ||
 * Coordinated by , A. Reyes-Lecuona (University of Malaga) and L.Picinali (Imperial College London) ||
@@ -21,9 +21,10 @@
 * \b Acknowledgement: This project has received funding from the European Union's Horizon 2020 research and innovation programme under grant agreement No 644051
 */
 
-#ifndef _CMULTIBAND_EXPANDER_H_
-#define _CMULTIBAND_EXPANDER_H_
+#ifndef _CGAMMATONEMULTIBAND_EXPANDER_H_
+#define _CGAMMATONEMULTIBAND_EXPANDER_H_
 
+#include <HAHLSimulation/MultibandExpander.h>
 #include <Common/FiltersBank.h>
 #include <Common/GammatoneFilterBank.h>
 #include <Common/EnvelopeDetector.h>
@@ -43,11 +44,10 @@
 
 namespace HAHLSimulation {
 
-
 	/** \details This class implements a multiband equalizer where each band has an	independent envelope follower and expander. 
 	*	This is used for simulation of non-linear attenuation in hearing loss.
 	*/
-	class CMultibandExpander
+	class CGammatoneMultibandExpander : public CMultibandExpander
 	{
 	public:                                                             // PUBLIC METHODS
 
@@ -61,7 +61,7 @@ namespace HAHLSimulation {
 		*	\pre parameter filtersPerBand must be an odd number.
 		*   \eh On error, an error code is reported to the error handler.
 		*/
-		virtual void Setup(int samplingRate, float iniFreq_Hz, int bandsNumber, int filtersPerBand, bool filterGrouping) = 0;
+		void Setup(int samplingRate, float iniFreq_Hz, int bandsNumber, int filtersPerBand, bool filterGrouping);
 
 		/** \brief Process an input buffer
 		*	\details The input buffer is processed by the multiband expander. The result is returned in the output buffer
@@ -70,43 +70,70 @@ namespace HAHLSimulation {
 		*	\pre The size of the buffers must be the same, which should be greater than 0
 		*   \eh Nothing is reported to the error handler.
 		*/
-		virtual void Process(CMonoBuffer<float> & inputBuffer, CMonoBuffer<float> & outputBuffer) = 0;
+		void Process(CMonoBuffer<float> & inputBuffer, CMonoBuffer<float> & outputBuffer);
 
-		/** \brief Get the frequency in Hertzs of the band whose index is passed
-		*	\param [in] bandIndex index of the band whose frequency is requiered
-		*	\retval frequency centre frequency in Hzs of the band
-		*   \eh On success, RESULT_OK is reported to the error handler.
-		*       On error, an error code is reported to the error handler.
-		*/
-		virtual float GetOctaveBandFrequency(int bandIndex) = 0;
-		virtual float GetFilterFrequency(int bandIndex) = 0;
+		float GetFilterFrequency(int bandIndex);
+
 		/** \brief Get the current number of bands in the equalizer.
 		*	\retval n number of bands in the equalizer.
 		*   \eh Nothing is reported to the error handler.
 		*/
-		virtual int GetNumBands(bool filterGrouping) = 0;
+		int GetNumBands(bool filterGrouping);
 
 		/** \brief Returns a reference to the expander object of one band.
 		*	\param [in] bandIndex band index for which the expander will be returned
 		*	\retval expander Pointer to the expander object 
 		*   \eh Nothing is reported to the error handler.
 		*/
-		virtual Common::CDynamicExpanderMono* GetBandExpander(int bandIndex, bool filterGrouping) = 0;
+		Common::CDynamicExpanderMono* GetBandExpander(int bandIndex, bool filterGrouping);
+		
+		void SetAttenuationForOctaveBand(int bandIndex, float attenuation);
 
-		virtual void SetAttenuationForOctaveBand(int bandIndex, float attenuation) = 0;
+		float GetAttenuationForOctaveBand(int bandIndex);
 
-		virtual float GetAttenuationForOctaveBand(int bandIndex) = 0;
+		float GetOctaveBandFrequency(int bandIndex);
 
-		virtual bool IsReady() = 0;
+		bool IsReady();
 
-		virtual void SetFilterGrouping(bool filterGrouping) = 0;
-		virtual bool GetFilterGrouping() = 0;
+		void SetFilterGrouping(bool filterGrouping);
+		bool GetFilterGrouping();
 
 		// Calculate the corresponding gain for each filter
-		virtual float GetFilterGain(int filterIndex) = 0;
-		virtual float GetFilterGainDB(int filterIndex) = 0;
+		float GetFilterGain(int filterIndex);
+		float GetFilterGainDB(int filterIndex);
 
-		virtual float GetNumFilters() = 0;
+		float GetNumFilters();
+	private:
+
+		// Calculate factor to multiply to the samples, from a (positive) attenuation value in decibels
+		float CalculateAttenuationFactor(float attenuation);
+
+		// Calculate frequency and index of immediately lower band to the specified filter
+		float GetLowerOctaveBandFrequency(float filterFrequency, int &lowerBandIndex);
+
+		// Calculate frequency and index of immediately higher band to the specified filter
+		float GetHigherOctaveBandFrequency(float filterFrequency, int &lowerBandIndex);
+
+		void GetOctaveBandGammatoneFiltersFirstAndLastIndex(int bandIndex, int &firstInternalBand, int &lastInternalBand);
+
+		void CleanAllBuffers();
+
+		vector<Common::CDynamicExpanderMono*> perGroupBandExpanders;			 // Dynamic expanders for each band	group	
+		vector<Common::CDynamicExpanderMono*> perFilterGammatoneBandExpanders;	 // Dynamic expanders for each Gammatone filter		
+
+		vector<float> octaveBandFrequencies_Hz;					// Center frequencies for each equalizer band, in Hertzs
+		vector<float> gammatoneExpanderBandFrequencies_Hz;		// Center frequencies for each Gammatone filter, in Hertzs
+		vector<float> octaveBandGains_dB;						// Gains for each equalizer band, in decibels
+		vector<float> gammatoneLowerBandFactors;				// Factor for the attenuation linear interpolation for each Gammatone filter regarding the immediately lower band's attenuation
+		vector<float> gammatoneHigherBandFactors;				// Factor for the attenuation linear interpolation for each Gammatone filter regarding the immediately higher band's attenuation
+		vector<int>   gammatoneLowerBandIndices;				// Index of the immediately lower bands' attenuation for each Gammatone filter
+		vector<int>   gammatoneHigherBandIndices;				// Index of the immediately higher bands' attenuation for each Gammatone filter
+		
+		bool octaveBandFilterGrouping;
+
+		Common::CGammatoneFilterBank gammatoneFilterBank;		// Filter bank to process the data
+		vector<float> octaveBandAttenuations;					// Attenuation applied after expander for each band
+		bool setupDone;
 
 	};
 }// end namespace HAHLSimulation
