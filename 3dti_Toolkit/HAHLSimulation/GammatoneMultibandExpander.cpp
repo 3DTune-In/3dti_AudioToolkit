@@ -27,16 +27,10 @@
 #include <iomanip>
 
 namespace HAHLSimulation {
-	void CGammatoneMultibandExpander::Setup(int samplingRate, float iniFreq_Hz, int bandsNumber, int filtersPerBand, bool filterGrouping)
+	void CGammatoneMultibandExpander::Setup(int samplingRate, float iniFreq_Hz, int bandsNumber, bool filterGrouping)
 	{
 		setupDone = false;
 		
-		if ((filtersPerBand % 2) == 0)
-		{
-			SET_RESULT(RESULT_ERROR_BADSIZE, "Filters per band for multiband expander must be an odd number.");
-			return;
-		}
-
 		// Internal attributes cleaning
 		octaveBandFrequencies_Hz.clear();
 		gammatoneExpanderBandFrequencies_Hz.clear();
@@ -52,13 +46,6 @@ namespace HAHLSimulation {
 		float bandsPerOctave = 1.0f;	// Currently fixed to one band per octave, but could be a parameter
 		float bandFrequencyStep = std::pow(2, 1.0f / (float)bandsPerOctave);
 		float bandFrequency = iniFreq_Hz;
-		float filterFrequencyStep = std::pow(2, 1.0f / (bandsPerOctave*filtersPerBand));
-		float filterFrequency = bandFrequency / ((float)(trunc(filtersPerBand / 2))*filterFrequencyStep);
-
-		// Compute Q for all filters
-		float octaveStep = 1.0f / ((float)filtersPerBand * bandsPerOctave);
-		float octaveStepPow = std::pow(2.0f, octaveStep);
-		float Q_BPF = std::sqrt(octaveStepPow) / (octaveStepPow - 1.0f);
 
 		for (int band = 0; band < bandsNumber; band++)
 		{
@@ -67,11 +54,6 @@ namespace HAHLSimulation {
 			octaveBandFrequencies_Hz.push_back(bandFrequency);
 			octaveBandGains_dB.push_back(0.0f);
 			bandFrequency *= bandFrequencyStep;
-
-			// Setup per-group expanders
-			Common::CDynamicExpanderMono* expander = new Common::CDynamicExpanderMono();
-			expander->Setup(samplingRate, DEFAULT_RATIO, DEFAULT_THRESHOLD, DEFAULT_ATTACK, DEFAULT_RELEASE);
-			perGroupBandExpanders.push_back(expander);
 
 			// Create atenuation for band
 			octaveBandAttenuations.push_back(0.0f);

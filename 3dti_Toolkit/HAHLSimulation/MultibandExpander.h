@@ -61,7 +61,7 @@ namespace HAHLSimulation {
 		*	\pre parameter filtersPerBand must be an odd number.
 		*   \eh On error, an error code is reported to the error handler.
 		*/
-		virtual void Setup(int samplingRate, float iniFreq_Hz, int bandsNumber, int filtersPerBand, bool filterGrouping) = 0;
+		virtual void Setup(int samplingRate, float iniFreq_Hz, int bandsNumber, bool filterGrouping) = 0;
 
 		/** \brief Process an input buffer
 		*	\details The input buffer is processed by the multiband expander. The result is returned in the output buffer

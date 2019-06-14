@@ -27,30 +27,22 @@
 #include <iomanip>
 
 namespace HAHLSimulation {
-	void CButterworthMultibandExpander::Setup(int samplingRate, float iniFreq_Hz, int bandsNumber, int filtersPerBand, bool filterGrouping)
+
+	void CButterworthMultibandExpander::SetNumberOfFiltersPerBand(int filtersPerBand)
 	{
-		setupDone = false;
-		
+		filterbankSetupDone = false;
+
+		butterworthFilterBank.RemoveFilters();
+
 		if ((filtersPerBand % 2) == 0)
 		{
 			SET_RESULT(RESULT_ERROR_BADSIZE, "Filters per band for multiband expander must be an odd number.");
 			return;
 		}
 
-		// Internal attributes cleaning
-		octaveBandFrequencies_Hz.clear();
-		butterworthExpanderBandFrequencies_Hz.clear();
-		octaveBandGains_dB.clear();
-		perGroupBandExpanders.clear();
-		perFilterButterworthBandExpanders.clear();
-
-		// Create and setup all bands
-		butterworthFilterBank.RemoveFilters();
-
 		// Setup equalizer	
 		float bandsPerOctave = 1.0f;	// Currently fixed to one band per octave, but could be a parameter
-		float bandFrequencyStep = std::pow(2, 1.0f / (float)bandsPerOctave);
-		float bandFrequency = iniFreq_Hz;
+		float bandFrequency = octaveBandFrequencies_Hz[0];
 		float filterFrequencyStep = std::pow(2, 1.0f / (bandsPerOctave*filtersPerBand));
 		float filterFrequency = bandFrequency / ((float)(trunc(filtersPerBand / 2))*filterFrequencyStep);
 
@@ -59,7 +51,7 @@ namespace HAHLSimulation {
 		float octaveStepPow = std::pow(2.0f, octaveStep);
 		float Q_BPF = std::sqrt(octaveStepPow) / (octaveStepPow - 1.0f);
 
-		for (int band = 0; band < bandsNumber; band++)
+		for (int band = 0; band < octaveBandFrequencies_Hz.size(); band++)
 		{
 			// Create filters
 			for (int filter = 0; filter < filtersPerBand; filter++)
@@ -73,7 +65,30 @@ namespace HAHLSimulation {
 				expander->Setup(samplingRate, DEFAULT_RATIO, DEFAULT_THRESHOLD, DEFAULT_ATTACK, DEFAULT_RELEASE);
 				perFilterButterworthBandExpanders.push_back(expander);
 			}
+		}
 
+		filterbankSetupDone = true;
+	}
+
+	void CButterworthMultibandExpander::Setup(int samplingRate, float iniFreq_Hz, int bandsNumber, bool filterGrouping)
+	{
+		initialSetupDone = false;
+		
+
+		// Internal attributes cleaning
+		octaveBandFrequencies_Hz.clear();
+		butterworthExpanderBandFrequencies_Hz.clear();
+		octaveBandGains_dB.clear();
+		perGroupBandExpanders.clear();
+		perFilterButterworthBandExpanders.clear();
+
+		// Setup equalizer	
+		float bandsPerOctave = 1.0f;	// Currently fixed to one band per octave, but could be a parameter
+		float bandFrequencyStep = std::pow(2, 1.0f / (float)bandsPerOctave);
+		float bandFrequency = iniFreq_Hz;
+
+		for (int band = 0; band < bandsNumber; band++)
+		{
 			// Add band to list of frequencies and gains
 			octaveBandFrequencies_Hz.push_back(bandFrequency);
 			octaveBandGains_dB.push_back(0.0f);
@@ -87,9 +102,9 @@ namespace HAHLSimulation {
 			// Create atenuation for band
 			octaveBandAttenuations.push_back(0.0f);
 		}
-		
+		this->samplingRate = samplingRate;
 		octaveBandFilterGrouping = filterGrouping;
-		setupDone = true;
+		initialSetupDone = true;
 	}
 
 	//////////////////////////////////////////////
@@ -124,7 +139,7 @@ namespace HAHLSimulation {
 		// Initialization of output buffer
 		outputBuffer.Fill(outputBuffer.size(), 0.0f);
 
-		if (setupDone) {
+		if (IsReady()) {
 			if (octaveBandFilterGrouping)
 			{
 				for (int band = 0; band < octaveBandFrequencies_Hz.size(); band++)
@@ -230,7 +245,7 @@ namespace HAHLSimulation {
 
 	bool CButterworthMultibandExpander::IsReady()
 	{
-		return setupDone;
+		return filterbankSetupDone && initialSetupDone;
 	}
 
 	void CButterworthMultibandExpander::SetFilterGrouping(bool filterGrouping)
@@ -256,7 +271,7 @@ namespace HAHLSimulation {
 
 	float CButterworthMultibandExpander::GetFilterGainDB(int filterIndex)
 	{
-		if (setupDone) {
+		if (IsReady()) {
 			int filtersPerBand = GetNumberOfFiltersPerBand();
 			int bandNumber = filterIndex / filtersPerBand;
 			int filterIndexInsideBand = filterIndex % filtersPerBand;

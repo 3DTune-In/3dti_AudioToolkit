@@ -57,11 +57,10 @@ namespace HAHLSimulation {
 		*	\param [in] iniFreq_Hz initial frequency, in Hertzs
 		*	\param [in] bandsNumber number of frequency bands
 		*	\param [in] filtersPerBand specifies the number of filters per band
-		*	\param [in] _filterBank specifies which type of filterbank to use: butterworth or gammatone. Output gain will be corrected to achieve homogeneous gain
 		*	\pre parameter filtersPerBand must be an odd number.
 		*   \eh On error, an error code is reported to the error handler.
 		*/
-		void Setup(int samplingRate, float iniFreq_Hz, int bandsNumber, int filtersPerBand, bool filterGrouping);
+		void Setup(int samplingRate, float iniFreq_Hz, int bandsNumber, bool filterGrouping);
 
 		/** \brief Process an input buffer
 		*	\details The input buffer is processed by the multiband expander. The result is returned in the output buffer

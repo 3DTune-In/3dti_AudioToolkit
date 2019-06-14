@@ -61,7 +61,7 @@ namespace HAHLSimulation {
 		*	\pre parameter filtersPerBand must be an odd number.
 		*   \eh On error, an error code is reported to the error handler.
 		*/
-		void Setup(int samplingRate, float iniFreq_Hz, int bandsNumber, int filtersPerBand, bool filterGrouping);
+		void Setup(int samplingRate, float iniFreq_Hz, int bandsNumber, bool filterGrouping);
 
 		/** \brief Process an input buffer
 		*	\details The input buffer is processed by the multiband expander. The result is returned in the output buffer
@@ -104,6 +104,8 @@ namespace HAHLSimulation {
 
 		float GetNumFilters();
 
+		void SetNumberOfFiltersPerBand(int filtersPerBand);
+
 	private:
 
 		// Calculate factor to multiply to the samples, from a (positive) attenuation value in decibels
@@ -132,8 +134,8 @@ namespace HAHLSimulation {
 
 		Common::CFiltersBank butterworthFilterBank;
 		vector<float> octaveBandAttenuations;					// Attenuation applied after expander for each band
-		bool setupDone;
-
+		bool initialSetupDone, filterbankSetupDone;
+		int samplingRate;
 	};
 }// end namespace HAHLSimulation
 #endif
