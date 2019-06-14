@@ -85,9 +85,7 @@ namespace HAHLSimulation {
 		for (int filterIndex = 0; filterIndex < gammatoneFilterBank.GetNumFilters(); filterIndex++)
 		{
 			// Setup Gammatone expanders
-			Common::CDynamicExpanderMono* expander = new Common::CDynamicExpanderMono();
-			expander->Setup(samplingRate, DEFAULT_RATIO, DEFAULT_THRESHOLD, DEFAULT_ATTACK, DEFAULT_RELEASE);
-			perFilterGammatoneBandExpanders.push_back(expander);
+			AddMonoExpander(perFilterGammatoneBandExpanders);
 
 			// Add frequency to frequency list
 			float filterFrequency = gammatoneFilterBank.GetFilter(filterIndex)->GetCenterFrequency();
@@ -107,19 +105,16 @@ namespace HAHLSimulation {
 		}
 
 		octaveBandFilterGrouping = filterGrouping;
+		this->samplingRate = samplingRate;
 		setupDone = true;
 	}
 
 
-	void CGammatoneMultibandExpander::GetOctaveBandGammatoneFiltersFirstAndLastIndex(int bandIndex, int &firstInternalBand, int &lastInternalBand)
+	void CGammatoneMultibandExpander::GetBandsFirstAndLastIndex(int bandIndex, int &firstInternalBand, int &lastInternalBand)
 	{
 
-		float thisBandFrequency = octaveBandFrequencies_Hz[bandIndex];
-		float previousBandFrequency = bandIndex == 0 ? 0 : octaveBandFrequencies_Hz[bandIndex - 1];
-		float posteriorBandFrequency = bandIndex == octaveBandFrequencies_Hz.size() - 1 ? 30000 : octaveBandFrequencies_Hz[bandIndex + 1];
-
-		float lowerThreshold = bandIndex > 0 ? (thisBandFrequency + previousBandFrequency) / 2.0f : 0.0f;
-		float upperThreshold = bandIndex < octaveBandFrequencies_Hz.size() - 1 ? (thisBandFrequency + posteriorBandFrequency) / 2.0f : 30000;
+		float lowerThreshold = bandIndex > 0 ? bandLimits_Hz[bandIndex - 1] : 0.0f;
+		float upperThreshold = bandIndex < bandLimits_Hz.size() ? bandLimits_Hz[bandIndex] : 30000.0f;
 
 		bool firstInternalBandFound = false;
 
@@ -143,6 +138,33 @@ namespace HAHLSimulation {
 		}
 	}
 
+	float CGammatoneMultibandExpander::GetBandGain(int bandIndex)
+	{
+		return CalculateAttenuationFactor(GetBandGainDB(bandIndex));
+	}
+
+	float CGammatoneMultibandExpander::GetBandGainDB(int bandIndex)
+	{
+		if (setupDone) {
+			if (gammatoneLowerBandGroupFactors[bandIndex] < 0 && gammatoneHigherBandGroupFactors[bandIndex] > 0)
+			{
+				return	(octaveBandAttenuations[gammatoneHigherBandGroupIndices[bandIndex]]);
+			}
+			else if (gammatoneLowerBandGroupFactors[bandIndex] > 0 && gammatoneHigherBandGroupFactors[bandIndex] < 0)
+			{
+				return	(octaveBandAttenuations[gammatoneLowerBandGroupIndices[bandIndex]]);
+			}
+			else if (gammatoneLowerBandGroupFactors[bandIndex] > 0 && gammatoneHigherBandGroupFactors[bandIndex] > 0)
+			{
+				return	(octaveBandAttenuations[gammatoneLowerBandGroupIndices[bandIndex]]) * gammatoneLowerBandGroupFactors[bandIndex] +
+					(octaveBandAttenuations[gammatoneHigherBandGroupIndices[bandIndex]]) * gammatoneHigherBandGroupFactors[bandIndex];
+			}
+			else return 0.0f;
+		}
+		else
+			return 0.0f;
+	}
+
 	void CGammatoneMultibandExpander::CleanAllBuffers()
 	{
 		for (int i = 0; i < gammatoneFilterBank.GetNumFilters(); i++)
@@ -161,14 +183,12 @@ namespace HAHLSimulation {
 		if (setupDone) {
 			if (octaveBandFilterGrouping)
 			{
-				for (int band = 0; band < octaveBandFrequencies_Hz.size(); band++)
+				for (int band = 0; band < bandIndices.size(); band++)
 				{
 					CMonoBuffer<float> oneBandBuffer(inputBuffer.size(), 0.0f);
 
 					// Process eq for each band, mixing eq process of all internal band filters
-					int firstBandFilter, lastBandFilter;
-					GetOctaveBandGammatoneFiltersFirstAndLastIndex(band, firstBandFilter, lastBandFilter);
-					for (int i = firstBandFilter; i <= lastBandFilter; i++)
+					for (int i = bandIndices[band][0]; i <= bandIndices[band][1]; i++)
 					{
 						CMonoBuffer<float> oneFilterOutputBuffer(inputBuffer.size());
 						gammatoneFilterBank.GetFilter(i)->Process(inputBuffer, oneFilterOutputBuffer);
@@ -179,7 +199,7 @@ namespace HAHLSimulation {
 					perGroupBandExpanders[band]->Process(oneBandBuffer);
 
 					// Apply attenuation for each band
-					oneBandBuffer.ApplyGain(CalculateAttenuationFactor(octaveBandAttenuations[band]));
+					oneBandBuffer.ApplyGain(GetBandGain(band));
 
 					// Mix into output buffer
 					outputBuffer += oneBandBuffer;
@@ -273,6 +293,72 @@ namespace HAHLSimulation {
 	bool CGammatoneMultibandExpander::IsReady()
 	{
 		return setupDone;
+	}
+
+	void CGammatoneMultibandExpander::SetGroups(vector<float> bandLimits)
+	{
+		bandLimits_Hz.clear();
+		gammatoneLowerBandGroupIndices.clear();
+		gammatoneLowerBandGroupFactors.clear();
+		gammatoneHigherBandGroupIndices.clear();
+		gammatoneHigherBandGroupFactors.clear();
+		perGroupBandExpanders.clear();
+
+		if (bandLimits.size() > 0)
+		{
+			for (int i = 0; i < bandLimits.size(); i++)
+			{
+				if (i!=0) ASSERT(bandLimits[i] > bandLimits[i - 1], RESULT_ERROR_NOTALLOWED, "Band limits should be in ascending order", "");
+				ASSERT(bandLimits[i] >= 0.0f, RESULT_ERROR_NOTALLOWED, "Band limits should be positive", "");
+			}
+
+			bandLimits_Hz = bandLimits;
+			bandIndices.resize(bandLimits_Hz.size() + 1);
+
+			for (int i = 0; i < bandIndices.size(); i++)
+			{
+				bandIndices[i].resize(2);
+				GetBandsFirstAndLastIndex(i, bandIndices[i][0], bandIndices[i][1]);
+
+				float bandCentralFreq;
+				if (i == 0) bandCentralFreq = 0;
+				else if (i == bandLimits_Hz.size()) bandCentralFreq = 30000;
+				else if (i > 0 && i < bandLimits_Hz.size()) bandCentralFreq = (bandLimits_Hz[i] + bandLimits_Hz[i - 1]) / 2;
+
+				// Add lower and higher octave band indices for this frequency
+				int lowerBandIndex, higherBandIndex;
+				float lowerBandFrequency = GetLowerOctaveBandFrequency(bandCentralFreq, lowerBandIndex);
+				gammatoneLowerBandGroupIndices.push_back(lowerBandIndex);
+				float higherBandFrequency = GetHigherOctaveBandFrequency(bandCentralFreq, higherBandIndex);
+				gammatoneHigherBandGroupIndices.push_back(higherBandIndex);
+
+				// Add lower and higher octave band factors for this frequency
+				float frequencyDistance = higherBandFrequency - lowerBandFrequency;
+				gammatoneLowerBandGroupFactors.push_back(lowerBandFrequency <= 20.0f ? -1.0f : ((higherBandFrequency - bandCentralFreq) / frequencyDistance));
+				gammatoneHigherBandGroupFactors.push_back(higherBandFrequency >= 20000.0f ? -1.0f : ((bandCentralFreq - lowerBandFrequency) / frequencyDistance));
+
+				// Setup per-group expanders
+				AddMonoExpander(perGroupBandExpanders);
+
+			}
+
+		}
+		else if (bandLimits.size() == 0)
+		{
+			bandIndices.resize(1);
+			bandIndices[0].resize(2);
+			bandIndices[0][0] = 0;
+			bandIndices[0][1] = gammatoneFilterBank.GetNumFilters() - 1;
+			AddMonoExpander(perGroupBandExpanders);
+		}
+
+	}
+
+	void CGammatoneMultibandExpander::AddMonoExpander(vector<Common::CDynamicExpanderMono*>& monoExpanderVector)
+	{
+		Common::CDynamicExpanderMono* expander = new Common::CDynamicExpanderMono();
+		expander->Setup(samplingRate, DEFAULT_RATIO, DEFAULT_THRESHOLD, DEFAULT_ATTACK, DEFAULT_RELEASE);
+		monoExpanderVector.push_back(expander);
 	}
 
 	void CGammatoneMultibandExpander::SetFilterGrouping(bool filterGrouping)

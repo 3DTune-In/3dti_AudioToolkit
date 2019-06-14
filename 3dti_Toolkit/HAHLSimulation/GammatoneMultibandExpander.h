@@ -95,15 +95,21 @@ namespace HAHLSimulation {
 
 		bool IsReady();
 
-		void SetFilterGrouping(bool filterGrouping);
-		bool GetFilterGrouping();
+		void SetGroups(vector<float> bandLimits);
 
-		// Calculate the corresponding gain for each filter
-		float GetFilterGain(int filterIndex);
-		float GetFilterGainDB(int filterIndex);
+		void SetFilterGrouping(bool filterGrouping);
+		bool GetFilterGrouping();					
+
 
 		float GetNumFilters();
+
 	private:
+
+		// Calculates the gain applied to a specific filter
+		float GetFilterGain(int filterIndex);		
+
+		// Calculates the gain applied to a specific filter, in dB
+		float GetFilterGainDB(int filterIndex);		
 
 		// Calculate factor to multiply to the samples, from a (positive) attenuation value in decibels
 		float CalculateAttenuationFactor(float attenuation);
@@ -114,26 +120,46 @@ namespace HAHLSimulation {
 		// Calculate frequency and index of immediately higher band to the specified filter
 		float GetHigherOctaveBandFrequency(float filterFrequency, int &lowerBandIndex);
 
-		void GetOctaveBandGammatoneFiltersFirstAndLastIndex(int bandIndex, int &firstInternalBand, int &lastInternalBand);
-
-		void CleanAllBuffers();
+		// Calculates the first and last index of the filterbank that belong to a specific group of filters
+		void GetBandsFirstAndLastIndex(int bandIndex, int &firstInternalBand, int &lastInternalBand); 
+		
+		// Calculates the corresponding gain for a specific filter group
+		float GetBandGain(int bandIndex);						
+		
+		// Calculates the corresponding gain for a specific filter group, in dB
+		float GetBandGainDB(int bandIndex);						
+		
+		// Cleans all buffers of the filter bank
+		void CleanAllBuffers();									
+		
+		// Adds a mono expander with default settings to a vector
+		void AddMonoExpander(vector<Common::CDynamicExpanderMono*>& monoExpanderVector); 
 
 		vector<Common::CDynamicExpanderMono*> perGroupBandExpanders;			 // Dynamic expanders for each band	group	
 		vector<Common::CDynamicExpanderMono*> perFilterGammatoneBandExpanders;	 // Dynamic expanders for each Gammatone filter		
 
 		vector<float> octaveBandFrequencies_Hz;					// Center frequencies for each equalizer band, in Hertzs
-		vector<float> gammatoneExpanderBandFrequencies_Hz;		// Center frequencies for each Gammatone filter, in Hertzs
 		vector<float> octaveBandGains_dB;						// Gains for each equalizer band, in decibels
+		
+		vector<float> gammatoneExpanderBandFrequencies_Hz;		// Center frequencies for each Gammatone filter, in Hertzs
 		vector<float> gammatoneLowerBandFactors;				// Factor for the attenuation linear interpolation for each Gammatone filter regarding the immediately lower band's attenuation
 		vector<float> gammatoneHigherBandFactors;				// Factor for the attenuation linear interpolation for each Gammatone filter regarding the immediately higher band's attenuation
 		vector<int>   gammatoneLowerBandIndices;				// Index of the immediately lower bands' attenuation for each Gammatone filter
 		vector<int>   gammatoneHigherBandIndices;				// Index of the immediately higher bands' attenuation for each Gammatone filter
 		
+		vector<vector<int>>   bandIndices;						// Vector containing the indices of the first and last filter index for each group
+		vector<float> bandLimits_Hz;							// Boundary frequencies between band groups, in Hertzs
+		vector<float> gammatoneLowerBandGroupFactors;			// Factor for the attenuation linear interpolation for each band group regarding the immediately lower band's attenuation
+		vector<float> gammatoneHigherBandGroupFactors;			// Factor for the attenuation linear interpolation for each band group regarding the immediately higher band's attenuation
+		vector<int>   gammatoneLowerBandGroupIndices;			// Index of the immediately lower bands' attenuation for each Gammatone filter group
+		vector<int>   gammatoneHigherBandGroupIndices;			// Index of the immediately higher bands' attenuation for each Gammatone filter group
+
 		bool octaveBandFilterGrouping;
 
 		Common::CGammatoneFilterBank gammatoneFilterBank;		// Filter bank to process the data
 		vector<float> octaveBandAttenuations;					// Attenuation applied after expander for each band
 		bool setupDone;
+		unsigned int samplingRate;
 
 	};
 }// end namespace HAHLSimulation
