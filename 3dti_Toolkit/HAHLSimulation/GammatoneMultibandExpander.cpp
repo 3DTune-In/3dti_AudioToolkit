@@ -394,7 +394,7 @@ namespace HAHLSimulation {
 
 	float CGammatoneMultibandExpander::GetLowerOctaveBandFrequency(float filterFrequency, int & lowerBandIndex)
 	{
-		for (int i = 0; i < GetNumBands(true); i++)
+		for (int i = 0; i < octaveBandFrequencies_Hz.size(); i++)
 		{
 			if (filterFrequency < octaveBandFrequencies_Hz[i])
 			{
@@ -411,14 +411,14 @@ namespace HAHLSimulation {
 			}
 		}
 
-		lowerBandIndex = GetNumBands(true) - 1;
+		lowerBandIndex = octaveBandFrequencies_Hz.size() - 1;
 		return octaveBandFrequencies_Hz[lowerBandIndex];
 
 	}
 
 	float CGammatoneMultibandExpander::GetHigherOctaveBandFrequency(float filterFrequency, int & higherBandIndex)
 	{
-		for (int i = 0; i < GetNumBands(true); i++)
+		for (int i = 0; i < octaveBandFrequencies_Hz.size(); i++)
 		{
 			if (filterFrequency < octaveBandFrequencies_Hz[i])
 			{
