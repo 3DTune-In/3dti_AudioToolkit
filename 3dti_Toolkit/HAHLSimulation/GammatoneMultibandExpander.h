@@ -99,6 +99,7 @@ namespace HAHLSimulation {
 		void SetFilterGrouping(bool filterGrouping);
 		bool GetFilterGrouping();					
 
+		float GetBandFrequency(int bandIndex, bool filterGrouping);
 
 		float GetNumFilters();
 
@@ -137,6 +138,7 @@ namespace HAHLSimulation {
 		vector<Common::CDynamicExpanderMono*> perGroupBandExpanders;			 // Dynamic expanders for each band	group	
 		vector<Common::CDynamicExpanderMono*> perFilterGammatoneBandExpanders;	 // Dynamic expanders for each Gammatone filter		
 
+		vector<float> groupBandCentralFrequencies_Hz;
 		vector<float> octaveBandFrequencies_Hz;					// Center frequencies for each equalizer band, in Hertzs
 		vector<float> octaveBandGains_dB;						// Gains for each equalizer band, in decibels
 		

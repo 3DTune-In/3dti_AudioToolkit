@@ -285,6 +285,7 @@ namespace HAHLSimulation {
 		gammatoneHigherBandGroupIndices.clear();
 		gammatoneHigherBandGroupFactors.clear();
 		perGroupBandExpanders.clear();
+		groupBandCentralFrequencies_Hz.clear();
 
 		if (bandLimits.size() > 0)
 		{
@@ -306,6 +307,8 @@ namespace HAHLSimulation {
 				if (i == 0) bandCentralFreq = 0;
 				else if (i == bandLimits_Hz.size()) bandCentralFreq = 30000;
 				else if (i > 0 && i < bandLimits_Hz.size()) bandCentralFreq = (bandLimits_Hz[i] + bandLimits_Hz[i - 1]) / 2;
+
+				groupBandCentralFrequencies_Hz.push_back(bandCentralFreq);
 
 				// Add lower and higher octave band indices for this frequency
 				int lowerBandIndex, higherBandIndex;
@@ -352,6 +355,14 @@ namespace HAHLSimulation {
 	bool CGammatoneMultibandExpander::GetFilterGrouping()
 	{
 		return octaveBandFilterGrouping;
+	}
+
+	float CGammatoneMultibandExpander::GetBandFrequency(int bandIndex, bool filterGrouping)
+	{
+		if (filterGrouping)
+			return groupBandCentralFrequencies_Hz[bandIndex];
+		else
+			return gammatoneExpanderBandFrequencies_Hz[bandIndex];
 	}
 
 

@@ -93,6 +93,8 @@ namespace HAHLSimulation {
 
 		float GetOctaveBandFrequency(int bandIndex);
 
+		float GetBandFrequency(int bandIndex, bool filterGrouping);
+
 		bool IsReady();
 
 		void SetFilterGrouping(bool filterGrouping);

@@ -79,6 +79,9 @@ namespace HAHLSimulation {
 		*       On error, an error code is reported to the error handler.
 		*/
 		virtual float GetOctaveBandFrequency(int bandIndex) = 0;
+
+		virtual float GetBandFrequency(int bandIndex, bool filterGrouping) = 0;
+
 		virtual float GetFilterFrequency(int bandIndex) = 0;
 		/** \brief Get the current number of bands in the equalizer.
 		*	\retval n number of bands in the equalizer.

@@ -220,6 +220,14 @@ namespace HAHLSimulation {
 		return octaveBandFrequencies_Hz[bandIndex];
 	}
 
+	float CButterworthMultibandExpander::GetBandFrequency(int bandIndex, bool filterGrouping)
+	{
+		if (filterGrouping)
+			return octaveBandFrequencies_Hz[bandIndex];
+		else
+			return GetFilterFrequency(bandIndex);
+	}
+
 	void CButterworthMultibandExpander::SetAttenuationForOctaveBand(int bandIndex, float attenuation)
 	{
 		if (bandIndex < 0 || bandIndex >= octaveBandAttenuations.size())

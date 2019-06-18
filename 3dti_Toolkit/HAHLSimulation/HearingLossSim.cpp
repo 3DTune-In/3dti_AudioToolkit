@@ -91,90 +91,50 @@ namespace HAHLSimulation {
 		
 		if ((ear == Common::T_ear::LEFT) || (ear == Common::T_ear::BOTH))
 		{
-			if (!multibandExpanders.left->GetFilterGrouping()) {
-				// Apply to corresponding ears
-				audiometries.left[bandIndex] = hearingLevel_dBHL;
-				multibandExpanders.left->SetAttenuationForOctaveBand(bandIndex, attenuation);
-				CMultibandExpander* multibandExpander = multibandExpanders.left.get();
-				SetPerFilterMultibandExpanderParameters(multibandExpander, bandIndex, audiometries.left);
-			}
-			else
-			{
-				// Compute threshold
-				float threshold_dBSPL = CalculateThresholdFromDBHL(hearingLevel_dBHL);
-				float threshold_dBFS = CalculateDBFSFromDBSPL(threshold_dBSPL);
-
-				// Compute ratio
-				float ratio = CalculateRatioFromDBHL(hearingLevel_dBHL);
-
-				audiometries.left[bandIndex] = hearingLevel_dBHL;
-				multibandExpanders.left->GetBandExpander(bandIndex, true)->SetThreshold(threshold_dBFS);
-				multibandExpanders.left->GetBandExpander(bandIndex, true)->SetRatio(ratio);
-				multibandExpanders.left->SetAttenuationForOctaveBand(bandIndex, attenuation);
-
-			}
+			audiometries.left[bandIndex] = hearingLevel_dBHL;
+			multibandExpanders.left->SetAttenuationForOctaveBand(bandIndex, attenuation);
+			CMultibandExpander* multibandExpander = multibandExpanders.left.get();
+			SetMultibandExpanderParameters(multibandExpander, bandIndex, audiometries.left, multibandExpanders.left->GetFilterGrouping());
 		}
-		if ((ear == Common::T_ear::RIGHT) || (ear == Common::T_ear::BOTH)) {
-
-			if (!multibandExpanders.right->GetFilterGrouping()) {
-				
-				audiometries.right[bandIndex] = hearingLevel_dBHL;
-				multibandExpanders.right->SetAttenuationForOctaveBand(bandIndex, attenuation);
-				CMultibandExpander* multibandExpander = multibandExpanders.right.get();
-				SetPerFilterMultibandExpanderParameters(multibandExpander, bandIndex, audiometries.right);
-				
-			}
-			else
-			{
-				// Compute threshold
-				float threshold_dBSPL = CalculateThresholdFromDBHL(hearingLevel_dBHL);
-				float threshold_dBFS = CalculateDBFSFromDBSPL(threshold_dBSPL);
-
-				// Compute ratio
-				float ratio = CalculateRatioFromDBHL(hearingLevel_dBHL);
-
-				audiometries.right[bandIndex] = hearingLevel_dBHL;
-				multibandExpanders.right->GetBandExpander(bandIndex, true)->SetThreshold(threshold_dBFS);
-				multibandExpanders.right->GetBandExpander(bandIndex, true)->SetRatio(ratio);
-				multibandExpanders.right->SetAttenuationForOctaveBand(bandIndex, attenuation);
-
-			}
+		if ((ear == Common::T_ear::RIGHT) || (ear == Common::T_ear::BOTH)) 
+		{
+			audiometries.right[bandIndex] = hearingLevel_dBHL;
+			multibandExpanders.right->SetAttenuationForOctaveBand(bandIndex, attenuation);
+			CMultibandExpander* multibandExpander = multibandExpanders.right.get();
+			SetMultibandExpanderParameters(multibandExpander, bandIndex, audiometries.right, multibandExpanders.right->GetFilterGrouping());
 		}
 
 		
 	}
 
-	void CHearingLossSim::SetPerFilterMultibandExpanderParameters(CMultibandExpander* multibandExpander, int bandIndex, TAudiometry audiometry)
+	void CHearingLossSim::SetMultibandExpanderParameters(CMultibandExpander* multibandExpander, int bandIndex, TAudiometry audiometry, bool filterGrouping)
 	{
 
 		float threshold_dBSPL, threshold_dBFS, ratio;
 		float previousFactor, posteriorFactor;
 		float previousBandFrequency, posteriorBandFrequency, previousBandAttenuation, posteriorBandAttenuation, expanderFrequency;
-		
 
 		float bandFrequency = multibandExpander->GetOctaveBandFrequency(bandIndex);
 		float bandAttenuation = multibandExpander->GetAttenuationForOctaveBand(bandIndex);
-
 
 		if (bandIndex == 0)
 		{
 			posteriorBandFrequency = multibandExpander->GetOctaveBandFrequency(1);
 			posteriorBandAttenuation = multibandExpander->GetAttenuationForOctaveBand(1);
 
-			for (int i = 0; i < multibandExpander->GetNumFilters(); i++)
+			for (int i = 0; i < multibandExpander->GetNumBands(filterGrouping); i++)
 			{
-				expanderFrequency = multibandExpander->GetFilterFrequency(i);
+				expanderFrequency = multibandExpander->GetBandFrequency(i, filterGrouping);
 
 				if (expanderFrequency < bandFrequency)
 				{
-
 					threshold_dBSPL = CalculateThresholdFromDBHL(CalculateDBHLFromAttenuation(bandAttenuation));
 					threshold_dBFS = CalculateDBFSFromDBSPL(threshold_dBSPL);
 
 					ratio = CalculateRatioFromDBHL(audiometry[0]);
 
 				}
-				else if (expanderFrequency >= bandFrequency && expanderFrequency <= posteriorBandFrequency)
+				else if (expanderFrequency > bandFrequency && expanderFrequency < posteriorBandFrequency)
 				{
 					previousFactor = (posteriorBandFrequency - expanderFrequency) / (posteriorBandFrequency - bandFrequency);
 					posteriorFactor = (expanderFrequency - bandFrequency) / (posteriorBandFrequency - bandFrequency);
@@ -184,10 +144,16 @@ namespace HAHLSimulation {
 					ratio = CalculateRatioFromDBHL(previousFactor * audiometry[0] + posteriorFactor * audiometry[1]);
 
 				}
+				else if (abs(expanderFrequency - bandFrequency) < 0.1f)
+				{
+					threshold_dBSPL = CalculateThresholdFromDBHL(CalculateDBHLFromAttenuation(bandAttenuation));
+					threshold_dBFS = CalculateDBFSFromDBSPL(threshold_dBSPL);
+					ratio = CalculateRatioFromDBHL(audiometry[bandIndex]);
+				}
 				else break;
 
-				multibandExpander->GetBandExpander(i, false)->SetThreshold(threshold_dBFS);
-				multibandExpander->GetBandExpander(i, false)->SetRatio(ratio);
+				multibandExpander->GetBandExpander(i, filterGrouping)->SetThreshold(threshold_dBFS);
+				multibandExpander->GetBandExpander(i, filterGrouping)->SetRatio(ratio);
 			}
 
 		}
@@ -196,9 +162,9 @@ namespace HAHLSimulation {
 			previousBandFrequency = multibandExpander->GetOctaveBandFrequency(bandIndex - 1);
 			previousBandAttenuation = multibandExpander->GetAttenuationForOctaveBand(audiometry.size() - 2);
 
-			for (int i = multibandExpander->GetNumFilters() - 1; i >= 0; i--)
+			for (int i = multibandExpander->GetNumBands(filterGrouping) - 1; i >= 0; i--)
 			{
-				expanderFrequency = multibandExpander->GetFilterFrequency(i);
+				expanderFrequency = multibandExpander->GetBandFrequency(i, filterGrouping);
 
 				if (expanderFrequency > bandFrequency)
 				{
@@ -207,7 +173,7 @@ namespace HAHLSimulation {
 
 					ratio = CalculateRatioFromDBHL(audiometry[audiometry.size() - 1]);
 				}
-				else if (expanderFrequency <= bandFrequency && expanderFrequency >= previousBandFrequency)
+				else if (expanderFrequency < bandFrequency && expanderFrequency > previousBandFrequency)
 				{
 					previousFactor = (bandFrequency - expanderFrequency) / (bandFrequency - previousBandFrequency);
 					posteriorFactor = (expanderFrequency - previousBandFrequency) / (bandFrequency - previousBandFrequency);
@@ -216,10 +182,16 @@ namespace HAHLSimulation {
 
 					ratio = CalculateRatioFromDBHL(previousFactor * audiometry[audiometry.size() - 2] + posteriorFactor * audiometry[audiometry.size() - 1]);
 				}
+				else if (abs(expanderFrequency - bandFrequency) < 0.1f)
+				{
+					threshold_dBSPL = CalculateThresholdFromDBHL(CalculateDBHLFromAttenuation(bandAttenuation));
+					threshold_dBFS = CalculateDBFSFromDBSPL(threshold_dBSPL);
+					ratio = CalculateRatioFromDBHL(audiometry[bandIndex]);
+				}
 				else break;
 
-				multibandExpander->GetBandExpander(i, false)->SetThreshold(threshold_dBFS);
-				multibandExpander->GetBandExpander(i, false)->SetRatio(ratio);
+				multibandExpander->GetBandExpander(i, filterGrouping)->SetThreshold(threshold_dBFS);
+				multibandExpander->GetBandExpander(i, filterGrouping)->SetRatio(ratio);
 			}
 		}
 		else
@@ -229,15 +201,15 @@ namespace HAHLSimulation {
 			previousBandAttenuation = multibandExpander->GetAttenuationForOctaveBand(bandIndex - 1);
 			posteriorBandAttenuation = multibandExpander->GetAttenuationForOctaveBand(bandIndex + 1);
 
-			for (int i = 0; i < multibandExpander->GetNumFilters(); i++)
+			for (int i = 0; i < multibandExpander->GetNumBands(filterGrouping); i++)
 			{
-				expanderFrequency = multibandExpander->GetFilterFrequency(i);
+				expanderFrequency = multibandExpander->GetBandFrequency(i, filterGrouping);
 
-				if (expanderFrequency > posteriorBandFrequency) break;
+				if (expanderFrequency >= posteriorBandFrequency) break;
 
-				if (expanderFrequency < previousBandFrequency) continue;
+				if (expanderFrequency <= previousBandFrequency) continue;
 
-				if (expanderFrequency < bandFrequency && expanderFrequency >= previousBandFrequency)
+				if (expanderFrequency < bandFrequency && expanderFrequency > previousBandFrequency)
 				{
 					previousFactor = (bandFrequency - expanderFrequency) / (bandFrequency - previousBandFrequency);
 					posteriorFactor = (expanderFrequency - previousBandFrequency) / (bandFrequency - previousBandFrequency);
@@ -247,7 +219,7 @@ namespace HAHLSimulation {
 					ratio = CalculateRatioFromDBHL(previousFactor * audiometry[bandIndex - 1] + posteriorFactor * audiometry[bandIndex]);
 
 				}
-				else if (expanderFrequency >= bandFrequency && expanderFrequency <= posteriorBandFrequency)
+				else if (expanderFrequency > bandFrequency && expanderFrequency < posteriorBandFrequency)
 				{
 					previousFactor = (posteriorBandFrequency - expanderFrequency) / (posteriorBandFrequency - bandFrequency);
 					posteriorFactor = (expanderFrequency - bandFrequency) / (posteriorBandFrequency - bandFrequency);
@@ -255,16 +227,19 @@ namespace HAHLSimulation {
 					threshold_dBFS = CalculateDBFSFromDBSPL(threshold_dBSPL);
 
 					ratio = CalculateRatioFromDBHL(previousFactor * audiometry[bandIndex] + posteriorFactor * audiometry[bandIndex + 1]);
-
+				}
+				else if (abs(expanderFrequency - bandFrequency) < 0.1f)
+				{
+					threshold_dBSPL = CalculateThresholdFromDBHL(CalculateDBHLFromAttenuation(bandAttenuation));
+					threshold_dBFS = CalculateDBFSFromDBSPL(threshold_dBSPL);
+					ratio = CalculateRatioFromDBHL(audiometry[bandIndex]);
 				}
 
-				multibandExpander->GetBandExpander(i, false)->SetThreshold(threshold_dBFS);
-				multibandExpander->GetBandExpander(i, false)->SetRatio(ratio);
+				multibandExpander->GetBandExpander(i, filterGrouping)->SetThreshold(threshold_dBFS);
+				multibandExpander->GetBandExpander(i, filterGrouping)->SetRatio(ratio);
 			}
 		}
 	}
-
-	//////////////////////////////////////////////
 
 	float CHearingLossSim::GetHearingLevel_dBHL(Common::T_ear ear, int bandIndex)
 	{

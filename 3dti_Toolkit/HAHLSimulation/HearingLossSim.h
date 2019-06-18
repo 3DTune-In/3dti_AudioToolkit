@@ -260,7 +260,7 @@ namespace HAHLSimulation {
 
 		float CalculateDBHLFromAttenuation(float attenuation);
 
-		void SetPerFilterMultibandExpanderParameters(CMultibandExpander* multibandExpander, int bandIndex, TAudiometry audiometry);
+		void SetMultibandExpanderParameters(CMultibandExpander* multibandExpander, int bandIndex, TAudiometry audiometry, bool filterGrouping);
 
 
 	private:                                                           // PRIVATE ATTRIBUTES
