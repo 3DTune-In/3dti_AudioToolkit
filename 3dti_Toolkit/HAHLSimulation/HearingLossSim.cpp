@@ -295,13 +295,19 @@ namespace HAHLSimulation {
 	{
 		if ((ear == Common::T_ear::LEFT) || (ear == Common::T_ear::BOTH))
 		{
-			for (size_t i = 0; i < multibandExpanders.left->GetNumBands(filterGrouping); i++)
-				multibandExpanders.left->GetBandExpander(i, filterGrouping)->SetAttack(attack);
+			CMultibandExpander* multibandExpander = multibandExpanders.left.get();
+			int numBands = multibandExpander->GetNumBands(filterGrouping);
+
+			for (size_t i = 0; i < numBands; i++)
+				multibandExpander->GetBandExpander(i, filterGrouping)->SetAttack(attack);
 		}
 		if ((ear == Common::T_ear::RIGHT) || (ear == Common::T_ear::BOTH))
 		{
-			for (size_t i = 0; i <  multibandExpanders.right->GetNumBands(filterGrouping); i++)
-				multibandExpanders.right->GetBandExpander(i, filterGrouping)->SetAttack(attack);
+			CMultibandExpander* multibandExpander = multibandExpanders.right.get();
+			int numBands = multibandExpander->GetNumBands(filterGrouping);
+
+			for (size_t i = 0; i < numBands; i++)
+				multibandExpander->GetBandExpander(i, filterGrouping)->SetAttack(attack);
 		}
 	}
 
@@ -311,13 +317,19 @@ namespace HAHLSimulation {
 	{
 		if ((ear == Common::T_ear::LEFT) || (ear == Common::T_ear::BOTH))
 		{
-			for (size_t i = 0; i < multibandExpanders.left->GetNumBands(filterGrouping); i++)
-				multibandExpanders.left->GetBandExpander(i, filterGrouping)->SetRelease(release);
+			CMultibandExpander* multibandExpander = multibandExpanders.left.get();
+			int numBands = multibandExpander->GetNumBands(filterGrouping);
+
+			for (size_t i = 0; i < numBands; i++)
+				multibandExpander->GetBandExpander(i, filterGrouping)->SetRelease(release);
 		}
 		if ((ear == Common::T_ear::RIGHT) || (ear == Common::T_ear::BOTH))
 		{
-			for (size_t i = 0; i < multibandExpanders.left->GetNumBands(filterGrouping); i++)
-				multibandExpanders.right->GetBandExpander(i, filterGrouping)->SetRelease(release);
+			CMultibandExpander* multibandExpander = multibandExpanders.right.get();
+			int numBands = multibandExpander->GetNumBands(filterGrouping);
+
+			for (size_t i = 0; i < numBands; i++)
+				multibandExpander->GetBandExpander(i, filterGrouping)->SetRelease(release);
 		}
 	}
 	
