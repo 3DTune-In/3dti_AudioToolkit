@@ -99,6 +99,7 @@ namespace HAHLSimulation {
 		float upperThreshold = bandIndex < bandLimits_Hz.size() ? bandLimits_Hz[bandIndex] : 30000.0f;
 
 		bool firstInternalBandFound = false;
+		bool lastInternalBandFound = false;
 
 		for (int i = 0; i < gammatoneExpanderBandFrequencies_Hz.size(); i++)
 		{
@@ -115,9 +116,13 @@ namespace HAHLSimulation {
 			if (gammatoneExpanderBandFrequencies_Hz[i] > upperThreshold)
 			{
 				lastInternalBand = i - 1;
+				lastInternalBandFound = true;
 				break;
 			}
 		}
+
+		if (!lastInternalBandFound) lastInternalBand = gammatoneExpanderBandFrequencies_Hz.size() - 1;
+
 	}
 
 	float CGammatoneMultibandExpander::GetBandGain(int bandIndex)
