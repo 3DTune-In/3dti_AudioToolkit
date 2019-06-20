@@ -247,18 +247,19 @@ namespace HAHLSimulation {
 		*/
 		void DisableFrequencySmearing(Common::T_ear ear);
 
-	private:															// PRIVATE METHODS
+		//Calculate band attenuation corresponding to one hearing level in dBHL
+		float CalculateAttenuationFromDBHL(float dBHL);
 
 		// Calculate expander threshold corresponding to one hearing level in dBHL
 		float CalculateThresholdFromDBHL(float dBHL);
+		
+	private:															// PRIVATE METHODS
 
 		// Calculate expander ratio corresponding to one hearing level in dBHL
 		float CalculateRatioFromDBHL(float dBHL);
 
-		//Calculate band attenuation corresponding to one hearing level in dBHL
-		float CalculateAttenuationFromDBHL(float dBHL);
-
 		float CalculateDBHLFromAttenuation(float attenuation);
+
 
 		void SetMultibandExpanderParameters(CMultibandExpander* multibandExpander, int bandIndex, TAudiometry audiometry, bool filterGrouping);
 
