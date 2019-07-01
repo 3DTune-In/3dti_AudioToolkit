@@ -182,6 +182,9 @@ namespace HAHLSimulation {
 						oneBandBuffer += oneFilterOutputBuffer;
 					}
 
+					// Apply gain correction
+					oneBandBuffer.ApplyGain(LINEAR_GAIN_CORRECTION_GAMMATONE);
+
 					// Process expander for each band
 					perGroupBandExpanders[band]->Process(oneBandBuffer);
 
@@ -202,6 +205,9 @@ namespace HAHLSimulation {
 					// Process input buffer for each filter
 					gammatoneFilterBank.GetFilter(filterIndex)->Process(inputBuffer, oneFilterBuffer);
 
+					// Apply gain correction
+					oneFilterBuffer.ApplyGain(LINEAR_GAIN_CORRECTION_GAMMATONE);
+
 					// Process expander for each filter
 					perFilterGammatoneBandExpanders[filterIndex]->Process(oneFilterBuffer);
 
@@ -212,7 +218,6 @@ namespace HAHLSimulation {
 					outputBuffer += oneFilterBuffer;
 				}
 			}
-				outputBuffer.ApplyGain(LINEAR_GAIN_CORRECTION_GAMMATONE);
 		}
 	}
 	

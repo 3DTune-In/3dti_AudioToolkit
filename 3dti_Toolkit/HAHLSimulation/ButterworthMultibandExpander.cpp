@@ -156,6 +156,9 @@ namespace HAHLSimulation {
 						oneBandBuffer += oneFilterOutputBuffer;
 					}
 
+					// Apply gain correction
+					oneBandBuffer.ApplyGain(LINEAR_GAIN_CORRECTION_BUTTERWORTH);
+
 					// Process expander for each band
 					perGroupBandExpanders[band]->Process(oneBandBuffer);
 
@@ -172,12 +175,12 @@ namespace HAHLSimulation {
 				{
 					CMonoBuffer<float> oneFilterBuffer(inputBuffer.size(), 0.0f);
 					butterworthFilterBank.GetFilter(filter)->Process(inputBuffer, oneFilterBuffer);
+					oneFilterBuffer.ApplyGain(LINEAR_GAIN_CORRECTION_BUTTERWORTH);
 					perFilterButterworthBandExpanders[filter]->Process(oneFilterBuffer);
 					oneFilterBuffer.ApplyGain(GetFilterGain(filter)); 
 					outputBuffer += oneFilterBuffer;
 				}
 			}
-			outputBuffer.ApplyGain(LINEAR_GAIN_CORRECTION_BUTTERWORTH);
 		}
 	}
 
