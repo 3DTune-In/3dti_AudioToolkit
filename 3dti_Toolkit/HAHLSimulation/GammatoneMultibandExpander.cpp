@@ -316,7 +316,7 @@ namespace HAHLSimulation {
 				float bandCentralFreq;
 				if (i == 0) bandCentralFreq = 0;
 				else if (i == bandLimits_Hz.size()) bandCentralFreq = 30000;
-				else if (i > 0 && i < bandLimits_Hz.size()) bandCentralFreq = (bandLimits_Hz[i] + bandLimits_Hz[i - 1]) / 2;
+				else if (i > 0 && i < bandLimits_Hz.size()) bandCentralFreq = sqrtf(bandLimits_Hz[i] * bandLimits_Hz[i - 1]);
 
 				groupBandCentralFrequencies_Hz.push_back(bandCentralFreq);
 
