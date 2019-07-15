@@ -133,11 +133,11 @@ namespace HAHLSimulation {
 	float CGammatoneMultibandExpander::GetBandGainDB(int bandIndex)
 	{
 		if (setupDone) {
-			if (gammatoneLowerBandGroupFactors[bandIndex] < 0 && gammatoneHigherBandGroupFactors[bandIndex] > 0)
+			if (gammatoneLowerBandGroupFactors[bandIndex] < 0)
 			{
 				return	(octaveBandAttenuations[gammatoneHigherBandGroupIndices[bandIndex]]);
 			}
-			else if (gammatoneLowerBandGroupFactors[bandIndex] > 0 && gammatoneHigherBandGroupFactors[bandIndex] < 0)
+			else if (gammatoneHigherBandGroupFactors[bandIndex] < 0)
 			{
 				return	(octaveBandAttenuations[gammatoneLowerBandGroupIndices[bandIndex]]);
 			}
