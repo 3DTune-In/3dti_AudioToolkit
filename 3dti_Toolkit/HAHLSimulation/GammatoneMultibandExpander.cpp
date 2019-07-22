@@ -41,6 +41,10 @@ namespace HAHLSimulation {
 		gammatoneHigherBandIndices.clear();
 		perGroupBandExpanders.clear();
 		perFilterGammatoneBandExpanders.clear();
+		
+		// Attributes applying
+		this->samplingRate = samplingRate;
+		octaveBandFilterGrouping = filterGrouping;
 
 		// Setup equalizer	
 		float bandsPerOctave = 1.0f;	// Currently fixed to one band per octave, but could be a parameter
@@ -86,8 +90,6 @@ namespace HAHLSimulation {
 			gammatoneHigherBandFactors.push_back(higherBandFrequency >= 20000.0f ? -1.0f : ((filterFrequency - lowerBandFrequency) / frequencyDistance));
 		}
 
-		octaveBandFilterGrouping = filterGrouping;
-		this->samplingRate = samplingRate;
 		setupDone = true;
 	}
 
