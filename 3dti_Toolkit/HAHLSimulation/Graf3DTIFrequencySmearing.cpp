@@ -1,9 +1,9 @@
 /**
-* \class CFrequencySmearing
+* \class CGraf3DTIFrequencySmearing
 *
-* \brief Definition of CFrequencySmearing class.
+* \brief Definition of CGraf3DTIFrequencySmearing class.
 *
-* This class implements the necessary algorithms to do the frequency smearing for HL simulation.
+* This class implements the necessary algorithms to do the 3DTI frequency smearing approach for HL simulation.
 *
 * \authors 3DI-DIANA Research Group (University of Malaga), in alphabetical order: M. Cuevas-Rodriguez, C. Garre,  D. Gonzalez-Toledo, E.J. de la Rubia-Cuestas, L. Molina-Tanco ||
 * Coordinated by , A. Reyes-Lecuona (University of Malaga) and L.Picinali (Imperial College London) ||
@@ -20,9 +20,10 @@
 *
 * \b Acknowledgement: This project has received funding from the European Union's Horizon 2020 research and innovation programme under grant agreement No 644051
 */
-#include <HAHLSimulation/FrequencySmearing.h>
+#include <HAHLSimulation/Graf3DTIFrequencySmearing.h>
 #include <Common/ErrorHandler.h>
 #include <cmath>
+
 
 // 1 / (sqrt(2*PI))
 #ifndef INVERSE_SQRT_2PI
@@ -33,8 +34,8 @@ namespace HAHLSimulation {
 	/////////////////////////////
 	// CONSTRUCTOR/DESTRUCTOR  //
 	/////////////////////////////
-	CFrequencySmearing::CFrequencySmearing() : bufferSize{ 0 }, setupDone{ false }
-	{		
+	CGraf3DTIFrequencySmearing::CGraf3DTIFrequencySmearing() : bufferSize{ 0 }, setupDone{ false }
+	{
 	}
 
 	///////////////////
@@ -42,48 +43,37 @@ namespace HAHLSimulation {
 	///////////////////
 
 	//Initialize the class and allocate memory.
-	void CFrequencySmearing::Setup(int _bufferSize, float _samplingRate)
+	void CGraf3DTIFrequencySmearing::Setup(int _bufferSize, float _samplingRate)
 	{
 		ASSERT(_bufferSize > 0, RESULT_ERROR_BADSIZE, "Bad buffer size when setting up frequency smearing", "");
-		
+
 		if (_bufferSize > 0)		//In case the error handler is off
 		{
-			//Second time this method has been called we have to clear all buffers
-			if (setupDone) {
-				previousBuffer.clear();
-				storageBuffer.clear();
-				hannWindowBuffer.clear();
-				smearingWindow.clear();				
-			}
 
 			bufferSize = _bufferSize;					//Store the new buffer size
 			samplingRate = _samplingRate;				//Store the new sampling rate
 			oneSampleBandwidth = (samplingRate / ((float)bufferSize * 4.0f));
 
-			downwardSmearingBufferSize = DEFAULT_SMEARING_SECTION_SIZE;
-			upwardSmearingBufferSize = DEFAULT_SMEARING_SECTION_SIZE;			
-			downwardSmearing_Hz = DEFAULT_SMEARING_HZ;
-			upwardSmearing_Hz = DEFAULT_SMEARING_HZ;			
+			InitializePreviousBuffers();
 
-			previousBuffer.resize(bufferSize);			//Reserve space to store one buffer frame
-			storageBuffer.resize(bufferSize);			//Reserve space to store one buffer frame
-			hannWindowBuffer.resize(bufferSize * 2);	//Reserve space to store hann window need double of buffer frame size
-			CalculateHannWindow();						//Calculate hann window to this buffer size
-			CalculateSmearingWindow();					//Calculate smearing window with default parameters			
+			downwardSmearingBufferSize = DEFAULT_SMEARING_SECTION_SIZE;
+			upwardSmearingBufferSize = DEFAULT_SMEARING_SECTION_SIZE;
+			downwardSmearing_Hz = DEFAULT_SMEARING_HZ;
+			upwardSmearing_Hz = DEFAULT_SMEARING_HZ;
+
+			SmearingFunctionSetup();
 
 			setupDone = true;
 			SET_RESULT(RESULT_OK, "Smearing frequency succesfully set");
-		}				
+		}
 	}//Setup
 
-
-	void CFrequencySmearing::Process(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer)
+	void CGraf3DTIFrequencySmearing::Process(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer)
 	{
-		ASSERT(setupDone, RESULT_ERROR_NOTINITIALIZED, "Setup method should be called before calling Process in Frequency Smearing", "");
 		ASSERT(inputBuffer.size() == bufferSize, RESULT_ERROR_BADSIZE, "Bad input size when setting up frequency smearing", "");
-		
+
 		if (setupDone && (inputBuffer.size() == bufferSize)) //In case the error handler is off
-		{ 			
+		{
 			//Merge current buffer and last buffer
 			CMonoBuffer<float> longInputBuffer;
 			longInputBuffer.reserve(previousBuffer.size() + inputBuffer.size());						// preallocate memory
@@ -104,9 +94,9 @@ namespace HAHLSimulation {
 			Common::CFprocessor::ProcessToModulePhase(longInputBufferWindowed_FFT, moduleBuffer, phaseBuffer);
 
 			// SMEARING
-			CMonoBuffer<float> smearingModuleBuffer;			
+			CMonoBuffer<float> smearingModuleBuffer;
 			ProcessSmearing(moduleBuffer, smearingModuleBuffer);
-			
+
 			//Merge Module and Phase
 			CMonoBuffer<float> longOutputBuffer_FFT;
 			Common::CFprocessor::ProcessToRealImaginary(smearingModuleBuffer, phaseBuffer, longOutputBuffer_FFT);
@@ -119,67 +109,66 @@ namespace HAHLSimulation {
 			ProcessOutputBuffer_OverlapAddMethod(longOutputBuffer, outputBuffer);
 
 			//Update new buffer
-			previousBuffer = inputBuffer;		
-		}						
-	}
-	
-	 /////////////////////
-	// Private methods //
-	/////////////////////
-
-	void CFrequencySmearing::CalculateHannWindow()
-	{
-		int hannWindowSize = hannWindowBuffer.size();
-		for (int i = 0; i< hannWindowSize; i++) {
-			float temp = (2 * M_PI * i) / (hannWindowSize - 1);
-			hannWindowBuffer[i] = CalculateRoundToZero(0.5f * (1 - std::cos(temp)));
+			previousBuffer = inputBuffer;
+		}
+		else
+		{
+			outputBuffer.clear();
+			outputBuffer.insert(outputBuffer.end(), bufferSize, 0.0f);
 		}
 	}
 
-	void CFrequencySmearing::ProcessHannWindow(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer) 
+	/////////////////////
+	// Private methods //
+	/////////////////////
+
+	void CGraf3DTIFrequencySmearing::SmearingFunctionSetup() {
+
+		//Reserve space to store hann window 
+		hannWindowBuffer.resize(bufferSize * 2);
+
+		//Calculate Smearing Window
+		CalculateSmearingWindow();
+
+		//Calculate Hann window to this buffer size
+		CalculateHannWindow();
+
+	}
+
+	void CGraf3DTIFrequencySmearing::CalculateHannWindow()
+	{
+		int hannWindowSize = hannWindowBuffer.size();
+		for (int i = 0; i< hannWindowSize; i++) {
+			double temp = (2.0 * M_PI * (double)i) / ((double)hannWindowSize - 1.0);
+			hannWindowBuffer[i] = CalculateRoundToZero(0.5 * (1.0 - std::cos(temp)));
+		}
+	}
+
+	void CGraf3DTIFrequencySmearing::ProcessHannWindow(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer)
 	{
 		ASSERT(inputBuffer.size() == hannWindowBuffer.size(), RESULT_ERROR_BADSIZE, "The input buffer size has to be equal to hann window buffer size", "");
-		
+
 		if (inputBuffer.size() == hannWindowBuffer.size())		//Just in case the error handler is off
-		{			
+		{
 			outputBuffer.resize(inputBuffer.size());	//resize output buffer
-			//Process hann window
+														//Process hann window
 			for (int i = 0; i< inputBuffer.size(); i++) {
 				outputBuffer[i] = inputBuffer[i] * hannWindowBuffer[i];
 			}
-		}		
+		}
 	}
-	
-	void CFrequencySmearing::ProcessSmearing(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer)
-	{		
-		// TO DO: ASSERT for inputBuffer.size == outputBuffer.size ??
 
-		// TEST
-		//CMonoBuffer<float> leftInputBuffer(512);
-		//// TONE:
-		//leftInputBuffer.Fill(512, 0.0f);
-		//leftInputBuffer[64] = 1.0f;
-		////// DOWNWARD RAMP:
-		////leftInputBuffer.SetFromRamp(false);
-		//SetDownwardSmearing_Hz(100.0f);
-		//SetUpwardSmearing_Hz(500.0f);
-		//SetDownwardSmearingBufferSize(100);
-		//SetUpwardSmearingBufferSize(100);
-		////
-
-		//// 1. Get right section [-PI, 0) of symmetric input buffer for convolution, and append value at [0]
-		//// Note: if input buffer size is even, this might have undefined behavior
-		//CMonoBuffer<float> rightInputBuffer(inputBuffer.begin() + inputBuffer.size() / 2, inputBuffer.end());	// Get right side
-		//rightInputBuffer.push_back(inputBuffer[0]);	// Append value at frequency 0
-
+	void CGraf3DTIFrequencySmearing::ProcessSmearing(const CMonoBuffer<float>& inputBuffer, CMonoBuffer<float>& outputBuffer)
+	{
 		// 1. Get left section [0, PI] of symmetric input buffer for convolution
 		// Note: if input buffer size is even, this might have undefined behavior
-		CMonoBuffer<float> leftInputBuffer(inputBuffer.begin(), inputBuffer.begin() + inputBuffer.size()/2 + 1);	// Get left side		
+		CMonoBuffer<float> leftInputBuffer(inputBuffer.begin(), inputBuffer.begin() + inputBuffer.size() / 2 + 1);	// Get left side		
 
-		// 2. Process convolution between smearing window and left section of input
+		// 2. Process convolution between smearing window or matrix and left section of input
 		outputBuffer.clear();
 		outputBuffer.assign(leftInputBuffer.size(), 0.0f);
-		ProcessSmearingConvolution(leftInputBuffer, outputBuffer);		
+		
+		ProcessSmearingConvolution(leftInputBuffer, outputBuffer);
 
 		// 3. Copy inverted convolved buffer to right side of symmetric output (except for last sample)		
 		//for (int i = 0; i < leftInputBuffer.size() - 1; i++)
@@ -187,26 +176,20 @@ namespace HAHLSimulation {
 		{
 			outputBuffer.push_back(outputBuffer[leftInputBuffer.size() - i - 1]);
 		}
-
-		// TEST
-		//for (int i = 0; i < outputBuffer.size(); i++)
-		//{
-		//	WATCH(WV_BUFFER_TEST, outputBuffer[i], float);
-		//}
-		//		
+	
 	}
 
-	void CFrequencySmearing::ProcessOutputBuffer_OverlapAddMethod(std::vector<float>& input_ConvResultBuffer, std::vector<float>& outBuffer)
-	{			
+	void CGraf3DTIFrequencySmearing::ProcessOutputBuffer_OverlapAddMethod(std::vector<float>& input_ConvResultBuffer, std::vector<float>& outBuffer)
+	{
 		if (outBuffer.size() < bufferSize) { outBuffer.resize(bufferSize); }	//Prepare the outbuffer		
-		//Check buffer sizes	
+																				//Check buffer sizes	
 		ASSERT(outBuffer.size() == bufferSize, RESULT_ERROR_BADSIZE, "OutBuffer size has to be zero or equal to the input size indicated by the setup method", "");
 
 		if (outBuffer.size() == bufferSize) //Just in case error handler is off
 		{
 			int outBufferSize = bufferSize;	//Locar var to move throught the outbuffer
 
-			//Fill out the output signal buffer
+											//Fill out the output signal buffer
 			for (int i = 0; i < outBufferSize; i++)
 			{
 				if (i < storageBuffer.size()) {
@@ -233,44 +216,45 @@ namespace HAHLSimulation {
 				}
 			}
 			storageBuffer.swap(temp);				//To use in C++03
-			//storageBuffer = std::move(temp);			//To use in C++11
-		}		
+													//storageBuffer = std::move(temp);			//To use in C++11
+		}
 	}
 
-	double CFrequencySmearing::CalculateRoundToZero(double number)
+	double CGraf3DTIFrequencySmearing::CalculateRoundToZero(double number)
 	{
-		if (std::abs(number) < FSMEARING_THRESHOLD) {	return 0.0f;}
-		else{ return number;}
+		if (std::abs(number) < FSMEARING_THRESHOLD) { return 0.0f; }
+		else { return number; }
 	}
-	
-	void CFrequencySmearing::CalculateSmearingWindow()
-	{			
+
+
+	void CGraf3DTIFrequencySmearing::CalculateSmearingWindow()
+	{
 		//// Compute left and right buffer size 
 		//int leftSize = leftSmearingWindowBandwidth / oneSampleBandwidth;
 		//int rightSize = rightSmearingWindowBandwidth / oneSampleBandwidth;				
 
 		// Init values
-		float totalArea = 0.0f;	
+		float totalArea = 0.0f;
 		float valueAtMean = 0.0f;
-		
+
 		// Special case: both smearing amounts are 0 -> single impulse
 		if (IsCloseToZero(downwardSmearing_Hz) && IsCloseToZero(upwardSmearing_Hz))
 		{
 			smearingWindow.clear();
-			smearingWindow.assign(downwardSmearingBufferSize + upwardSmearingBufferSize, 0.0f);			
+			smearingWindow.assign(downwardSmearingBufferSize + upwardSmearingBufferSize, 0.0f);
 			smearingWindow[downwardSmearingBufferSize] = 1.0f;	// This is the impulse
 			return;
 		}
 
 		// Build downward section
 		smearingWindow.clear();
-		for (int i = downwardSmearingBufferSize-1; i >= 0; i--)
+		for (int i = downwardSmearingBufferSize - 1; i >= 0; i--)
 		{
 			float scaledValue = (float)i * oneSampleBandwidth;	// Value in Hz
 			float gaussianValue = CalculateGaussianProbability(0.0f, downwardSmearing_Hz, scaledValue);
-			smearingWindow.push_back(gaussianValue);			
+			smearingWindow.push_back(gaussianValue);
 			totalArea += gaussianValue; // Add new value to total area									
-		}		
+		}
 		valueAtMean = smearingWindow[downwardSmearingBufferSize - 1];
 
 		// Build upward section
@@ -292,10 +276,10 @@ namespace HAHLSimulation {
 
 		// Concatenate downward and upward buffers and normalize wrt total area		
 		smearingWindow.insert(smearingWindow.end(), upwardSmearingWindow.begin(), upwardSmearingWindow.end());
-		smearingWindow.ApplyGain(1.0f / totalArea);		
+		smearingWindow.ApplyGain(1.0f / totalArea);
 	}
 
-	float CFrequencySmearing::CalculateGaussianProbability(float mean, float deviation, float value)
+	float CGraf3DTIFrequencySmearing::CalculateGaussianProbability(float mean, float deviation, float value)
 	{
 		if (IsCloseToZero(deviation))
 		{
@@ -309,41 +293,48 @@ namespace HAHLSimulation {
 		return deviation * INVERSE_SQRT_2PI * std::exp(-0.5f * standarizedValue * standarizedValue); // Gaussian probability
 	}
 
-	void CFrequencySmearing::SetDownwardSmearingBufferSize(int downwardSize)
+	void CGraf3DTIFrequencySmearing::SetDownwardSmearingBufferSize(int downwardSize)
 	{
 		ASSERT(downwardSize > 0, RESULT_ERROR_OUTOFRANGE, "Smearing window size must be a positive value", "");
-		downwardSmearingBufferSize = downwardSize;		
-		CalculateSmearingWindow();
+		downwardSmearingBufferSize = downwardSize;
+		setupDone = false;
+		SmearingFunctionSetup();
+		setupDone = true;
 	}
 
-	void CFrequencySmearing::SetUpwardSmearingBufferSize(int upwardSize)
+	void CGraf3DTIFrequencySmearing::SetUpwardSmearingBufferSize(int upwardSize)
 	{
 		ASSERT(upwardSize > 0, RESULT_ERROR_OUTOFRANGE, "Smearing window size must be a positive value", "");
-		upwardSmearingBufferSize = upwardSize;		
-		CalculateSmearingWindow();
+		upwardSmearingBufferSize = upwardSize;
+		setupDone = false;
+		SmearingFunctionSetup();
+		setupDone = true;
 	}
 
-	void CFrequencySmearing::SetDownwardSmearing_Hz(float downwardSmearing)
+	void CGraf3DTIFrequencySmearing::SetDownwardSmearing_Hz(float downwardSmearing)
 	{
 		ASSERT(downwardSmearing >= 0.0f, RESULT_ERROR_OUTOFRANGE, "Smearing amount must be a positive (or zero) value in Hz", "");
 		downwardSmearing_Hz = downwardSmearing;
-		CalculateSmearingWindow();
+		setupDone = false;
+		SmearingFunctionSetup();
+		setupDone = true;
 	}
 
-	void CFrequencySmearing::SetUpwardSmearing_Hz(float upwardSmearing)
+	void CGraf3DTIFrequencySmearing::SetUpwardSmearing_Hz(float upwardSmearing)
 	{
 		ASSERT(upwardSmearing >= 0.0f, RESULT_ERROR_OUTOFRANGE, "Smearing amount must be a positive (or zero) value in Hz", "");
 		upwardSmearing_Hz = upwardSmearing;
-		CalculateSmearingWindow();
+		setupDone = false;
+		SmearingFunctionSetup();
+		setupDone = true;
 	}
 
-	CMonoBuffer<float>* CFrequencySmearing::GetSmearingWindow()
+	CMonoBuffer<float>* CGraf3DTIFrequencySmearing::GetSmearingWindow()
 	{
 		return &smearingWindow;
 	}
 
-
-	bool CFrequencySmearing::IsCloseToZero(float value)
+	bool CGraf3DTIFrequencySmearing::IsCloseToZero(float value)
 	{
 		if (std::abs(value) < FSMEARING_THRESHOLD)
 			return true;
@@ -351,20 +342,23 @@ namespace HAHLSimulation {
 			return false;
 	}
 
-	void CFrequencySmearing::ProcessSmearingConvolution(CMonoBuffer<float> &inputBuffer, CMonoBuffer<float> &outputBuffer)
+	void CGraf3DTIFrequencySmearing::InitializePreviousBuffers()
+	{
+		
+			previousBuffer.clear();
+			storageBuffer.clear();
+			hannWindowBuffer.clear();
+			smearingWindow.clear();
+		
+
+		previousBuffer.insert(previousBuffer.end(), bufferSize, 0.0f);
+		storageBuffer.insert(storageBuffer.end(), bufferSize, 0.0f);
+		hannWindowBuffer.insert(hannWindowBuffer.end(), bufferSize * 2, 0.0f);
+	}
+
+	void CGraf3DTIFrequencySmearing::ProcessSmearingConvolution(CMonoBuffer<float> &inputBuffer, CMonoBuffer<float> &outputBuffer)
 	{
 		ASSERT(inputBuffer.size() == outputBuffer.size(), RESULT_ERROR_BADSIZE, "Smearing convolution process requires output buffer to be of the same size of input source signal", "");
-
-		//for (int outputIndex = 0; outputIndex < inputBuffer.size(); outputIndex++)				
-		//{			
-		//	outputBuffer[outputIndex] = 0.0f;						
-		//	for (int smearingIndex = 0; smearingIndex < smearingWindow.size(); smearingIndex++)			
-		//	{		
-		//		int inputIndex = inputBuffer.size() - 1 - outputIndex + smearingIndex - downwardSmearingBufferSize;
-		//		if (( inputIndex >= 0) && (inputIndex < outputBuffer.size()))
-		//			outputBuffer[outputIndex] += inputBuffer[inputIndex] * smearingWindow[smearingIndex];
-		//	}			
-		//}
 
 		for (int n = 0; n < inputBuffer.size(); n++)
 		{
@@ -372,10 +366,10 @@ namespace HAHLSimulation {
 			for (int m = 0; m < inputBuffer.size(); m++)
 			{
 				int smearingWindowIndex = n - m + downwardSmearingBufferSize;
-				if ( (smearingWindowIndex >= 0) && (smearingWindowIndex < smearingWindow.size()) )
+				if ((smearingWindowIndex >= 0) && (smearingWindowIndex < smearingWindow.size()))
 					outputBuffer[n] += inputBuffer[m] * smearingWindow[smearingWindowIndex];
 			}
 		}
 	}
-	
+
 }//end namespace
