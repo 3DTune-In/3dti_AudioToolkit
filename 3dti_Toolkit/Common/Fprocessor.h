@@ -90,6 +90,15 @@ namespace Common {
 		*/
 		static void ProcessToModulePhase(const std::vector<float>& inputBuffer, std::vector<float>& moduleBuffer, std::vector<float>& phaseBuffer);
 
+		/** \brief Process a buffer with complex numbers to get two separated vectors one with the powers and other with the phases.
+		*   \details This method return two vectors with the power and phase of the vector introduced.
+		*   \param [in] inputBuffer Vector of samples that has real and imaginary parts interlaced. inputBuffer[i] = Re[Xj], x[i+1] = Img[Xj]
+		*	\param [out] powerBuffer Vector of real numbers that are the power of the complex numbers. moduleBuffer[i] = inputBuffer[2 * i]^2 * inputBuffer[2 * i + 1]^2
+		*	\param [out] phaseBuffer  Vector of real numbers that are the argument of the complex numbers.	phaseBuffer [i] = atan(inputBuffer[2 * i + 1] / inputBuffer[2 * i]^2)
+		*   \throws May throw exceptions and errors to debugger
+		*/
+		static void ProcessToPowerPhase(const std::vector<float>& inputBuffer, std::vector<float>& powerBuffer, std::vector<float>& phaseBuffer);
+
 		/** \brief Process two buffers with module and phase of complex numbers, in order to get a vector with complex numbers in binomial way
 		*   \details This method return one vectors that has real and imaginary parts interlaced. inputBuffer[i] = Re[Xj], x[i+1] = Img[Xj]
 		*   \param [in] moduleBuffer Vector of samples that represents the module of complex numbers.

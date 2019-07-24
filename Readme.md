@@ -79,7 +79,7 @@ This folder contains the source code for the tools implemented for the format co
 
 ## Third party libraries
 
-The 3D Tune-In Toolkit has partially integrated the Takuya OOURA General purpose FFT library (http://www.kurims.kyoto-u.ac.jp/~ooura/fft.html)  
+The 3D Tune-In Toolkit has partially integrated the Takuya OOURA General purpose FFT library (http://www.kurims.kyoto-u.ac.jp/~ooura/fft.html) and Eigen library for linear algebra (https://eigen.tuxfamily.org/).
 
 The 3D Tune-In Toolkit Resource Management Package uses: 
 * Libsofa (Copyright (c) 2013-2014, UMR STMS 9912-Ircam-Centre Pompidou/CNRS/UPMC. https://github.com/sofacoustics/API_Cpp). 

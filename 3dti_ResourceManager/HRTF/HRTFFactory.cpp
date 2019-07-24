@@ -102,9 +102,9 @@ namespace HRTF
 
 	//////////////////////////////////////////////////////////////////////
 
-	bool CreateFromSofa(const std::string & sofafile, shared_ptr<Binaural::CListener> listener)
+	bool CreateFromSofa(const std::string & sofafile, shared_ptr<Binaural::CListener> listener, bool & specifiedDelays)
 	{
-		if (LoadHRTFTableFromSOFA(sofafile, listener))
+		if (LoadHRTFTableFromSOFA(sofafile, listener, specifiedDelays))
 		{
 			listener->GetHRTF()->EndSetup();
 			return true;
@@ -118,9 +118,9 @@ namespace HRTF
 
 	//////////////////////////////////////////////////////////////////////
 
-	bool Create3DTIFromSofa(const std::string & sofafile, shared_ptr<Binaural::CListener> listener)
+	bool Create3DTIFromSofa(const std::string & sofafile, shared_ptr<Binaural::CListener> listener, bool & specifiedDelays)
 	{
-		if (!LoadHRTFTableFromSOFA(sofafile, listener))
+		if (!LoadHRTFTableFromSOFA(sofafile, listener, specifiedDelays))
 		{
 			SET_RESULT(RESULT_ERROR_UNKNOWN, "Sofa exception creating HRTF, please consider previous messages from the sofa library");		
 			return false;
@@ -130,7 +130,7 @@ namespace HRTF
 	
 	//////////////////////////////////////////////////////////////////////
 	
-	bool LoadHRTFTableFromSOFA(const std::string & sofafile, shared_ptr<Binaural::CListener> listener)
+	bool LoadHRTFTableFromSOFA(const std::string & sofafile, shared_ptr<Binaural::CListener> listener, bool & specifiedDelays)
 	{		
 		std::ostream & output = std::cout;
 		try {
@@ -178,6 +178,23 @@ namespace HRTF
 
 			// Prepare HRTF
 			const unsigned int nSamples = (unsigned int)hrir.GetNumDataSamples();   // For example: 512 samples.			
+
+			if (delays.size() == data.size() / nSamples){
+				specifiedDelays = true;
+			}
+			else {
+				if (delays.size() == 2)
+				{
+					specifiedDelays = false;
+					SET_RESULT(RESULT_WARNING, "This HRTF file does not contain individual delays for each HRIR. Therefore, some comb filter effect can be perceived due to interpolations and custom head radius should not be used");
+				}
+				else
+				{
+					SET_RESULT(RESULT_ERROR_BADSIZE, "SOFA gives incoherent number of HRIRs and delays");
+					return false;
+				}
+			}
+
 			double distance = pos[array2DIndex(0, 2, nMeasurements, dims[1])];		//We consider that every HRIR are meased at the same distance, so we get the firts one
 			listener->GetHRTF()->BeginSetup(nSamples, distance);
 
@@ -192,14 +209,14 @@ namespace HRTF
 				while (elevation < 0) elevation += 360; // TODO: check who should do this
 														
 				const int left_ear = 0;
-				hrir_value.leftDelay = delays[array2DIndex(i, left_ear, nMeasurements, 2)];
+				hrir_value.leftDelay = delays[specifiedDelays ? array2DIndex(i, left_ear, nMeasurements, 2) : 0];
 				for (std::size_t k = 0; k < nSamples; k++)
 				{
 					const std::size_t index = array3DIndex(i, left_ear, k, nMeasurements, 2, nSamples);
 					hrir_value.leftHRIR[k] = data[index];
 				}				
 				const int right_ear = 1;
-				hrir_value.rightDelay = delays[array2DIndex(i, right_ear, nMeasurements, 2)];
+				hrir_value.rightDelay = delays[specifiedDelays ? array2DIndex(i, right_ear, nMeasurements, 2) : 1];
 				for (std::size_t k = 0; k < nSamples; k++)
 				{
 					const std::size_t index = array3DIndex(i, right_ear, k, nMeasurements, 2, nSamples);
