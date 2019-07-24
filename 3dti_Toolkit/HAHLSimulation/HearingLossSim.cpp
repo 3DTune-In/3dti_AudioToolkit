@@ -138,9 +138,17 @@ namespace HAHLSimulation {
 				{
 					previousFactor = (posteriorBandFrequency - expanderFrequency) / (posteriorBandFrequency - bandFrequency);
 					posteriorFactor = (expanderFrequency - bandFrequency) / (posteriorBandFrequency - bandFrequency);
-					threshold_dBSPL = CalculateThresholdFromDBHL(CalculateDBHLFromAttenuation(previousFactor * bandAttenuation + posteriorFactor * posteriorBandAttenuation));
+				
+					if (bandIndex == i)
+					{
+						threshold_dBSPL = CalculateThresholdFromDBHL(CalculateDBHLFromAttenuation(previousFactor * bandAttenuation + posteriorFactor * posteriorBandAttenuation));
+					}
+					else
+					{
+						threshold_dBSPL = CalculateThresholdFromDBHL(CalculateDBHLFromAttenuation(previousFactor * multibandExpander->GetAttenuationForOctaveBand(i) + posteriorFactor * multibandExpander->GetAttenuationForOctaveBand(i + 1)));
+					}
+					
 					threshold_dBFS = CalculateDBFSFromDBSPL(threshold_dBSPL);
-
 					ratio = CalculateRatioFromDBHL(previousFactor * audiometry[0] + posteriorFactor * audiometry[1]);
 
 				}
@@ -175,11 +183,20 @@ namespace HAHLSimulation {
 				}
 				else if (expanderFrequency < bandFrequency && expanderFrequency > previousBandFrequency)
 				{
+
 					previousFactor = (bandFrequency - expanderFrequency) / (bandFrequency - previousBandFrequency);
 					posteriorFactor = (expanderFrequency - previousBandFrequency) / (bandFrequency - previousBandFrequency);
-					threshold_dBSPL = CalculateThresholdFromDBHL(CalculateDBHLFromAttenuation(previousFactor * bandAttenuation + posteriorFactor * previousBandAttenuation));
+					
+					if (bandIndex == i)
+					{
+						threshold_dBSPL = CalculateThresholdFromDBHL(CalculateDBHLFromAttenuation(previousFactor * bandAttenuation + posteriorFactor * previousBandAttenuation));
+					}
+					else
+					{
+						threshold_dBSPL = CalculateThresholdFromDBHL(CalculateDBHLFromAttenuation(previousFactor * multibandExpander->GetAttenuationForOctaveBand(i) + posteriorFactor * multibandExpander->GetAttenuationForOctaveBand(i - 1)));
+					}
+					
 					threshold_dBFS = CalculateDBFSFromDBSPL(threshold_dBSPL);
-
 					ratio = CalculateRatioFromDBHL(previousFactor * audiometry[audiometry.size() - 2] + posteriorFactor * audiometry[audiometry.size() - 1]);
 				}
 				else if (abs(expanderFrequency - bandFrequency) < 0.1f)
@@ -213,19 +230,34 @@ namespace HAHLSimulation {
 				{
 					previousFactor = (bandFrequency - expanderFrequency) / (bandFrequency - previousBandFrequency);
 					posteriorFactor = (expanderFrequency - previousBandFrequency) / (bandFrequency - previousBandFrequency);
-					threshold_dBSPL = CalculateThresholdFromDBHL(CalculateDBHLFromAttenuation(previousFactor * bandAttenuation + posteriorFactor * previousBandAttenuation));
+
+					if (bandIndex == i) 
+					{
+						threshold_dBSPL = CalculateThresholdFromDBHL(CalculateDBHLFromAttenuation(previousFactor * bandAttenuation + posteriorFactor * previousBandAttenuation));
+					}
+					else
+					{
+						threshold_dBSPL = CalculateThresholdFromDBHL(CalculateDBHLFromAttenuation(previousFactor * multibandExpander->GetAttenuationForOctaveBand(i) + posteriorFactor * multibandExpander->GetAttenuationForOctaveBand(i - 1)));
+					}
+
 					threshold_dBFS = CalculateDBFSFromDBSPL(threshold_dBSPL);
-
 					ratio = CalculateRatioFromDBHL(previousFactor * audiometry[bandIndex - 1] + posteriorFactor * audiometry[bandIndex]);
-
 				}
 				else if (expanderFrequency > bandFrequency && expanderFrequency < posteriorBandFrequency)
 				{
 					previousFactor = (posteriorBandFrequency - expanderFrequency) / (posteriorBandFrequency - bandFrequency);
 					posteriorFactor = (expanderFrequency - bandFrequency) / (posteriorBandFrequency - bandFrequency);
-					threshold_dBSPL = CalculateThresholdFromDBHL(CalculateDBHLFromAttenuation(previousFactor * bandAttenuation + posteriorFactor * posteriorBandAttenuation));
-					threshold_dBFS = CalculateDBFSFromDBSPL(threshold_dBSPL);
 
+					if (bandIndex == i) 
+					{
+						threshold_dBSPL = CalculateThresholdFromDBHL(CalculateDBHLFromAttenuation(previousFactor * bandAttenuation + posteriorFactor * posteriorBandAttenuation));
+					}
+					else
+					{
+						threshold_dBSPL = CalculateThresholdFromDBHL(CalculateDBHLFromAttenuation(previousFactor * multibandExpander->GetAttenuationForOctaveBand(i) + posteriorFactor * multibandExpander->GetAttenuationForOctaveBand(i + 1)));
+					}
+						
+					threshold_dBFS = CalculateDBFSFromDBSPL(threshold_dBSPL);
 					ratio = CalculateRatioFromDBHL(previousFactor * audiometry[bandIndex] + posteriorFactor * audiometry[bandIndex + 1]);
 				}
 				else if (abs(expanderFrequency - bandFrequency) < 0.1f)
@@ -237,6 +269,7 @@ namespace HAHLSimulation {
 
 				multibandExpander->GetBandExpander(i, filterGrouping)->SetThreshold(threshold_dBFS);
 				multibandExpander->GetBandExpander(i, filterGrouping)->SetRatio(ratio);
+
 			}
 		}
 	}
