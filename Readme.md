@@ -8,6 +8,8 @@ Technical details about the 3D Tune-In Toolkit spatialiser are described in:
 
 Cuevas-Rodríguez M, Picinali L, González-Toledo D, Garre C, de la Rubia-Cuestas E, Molina-Tanco L and Reyes-Lecuona A. (2019) 3D Tune-In Toolkit: An open-source library for real-time binaural spatialisation. PLOS ONE 14(3): e0211899. https://doi.org/10.1371/journal.pone.0211899
 
+For downloading various compiled releases of the 3DTI Toolkit (e.g. Test Applications, VST plugins, etc.), visit the release section (https://github.com/3DTune-In/3dti_AudioToolkit/releases)
+
 **The structure of the repository is as follows:**
 ```
 3dti_AudioToolkit
