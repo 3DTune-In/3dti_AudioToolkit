@@ -102,16 +102,16 @@ namespace Binaural {
 	/// Update internal buffer
 	void CSingleSourceDSP::SetBuffer(CMonoBuffer<float> & buffer)
 	{
-		internalBuffer = buffer;	
+		channelToListener.SetInputBuffer(buffer);
 		readyForAnechoic = true;
 		readyForReverb = true;
 	}
-	/// Get internal buffer
-	const CMonoBuffer<float> CSingleSourceDSP::GetBuffer() const
+	/// Get copy of internal buffer
+	CMonoBuffer<float> CSingleSourceDSP::GetBuffer() const
 	{
 		// TO DO: check readyForAnechoic and/or readyForAnechoic flags?
-		ASSERT(internalBuffer.size() > 0, RESULT_ERROR_NOTSET, "Getting empty buffer from single source DSP", "");
-		return internalBuffer;
+		ASSERT(channelToListener.GetBuffer().size() > 0, RESULT_ERROR_NOTSET, "Getting empty buffer from single source DSP", "");
+		return channelToListener.GetBuffer();
 	}
 	
 	// Move source (position and orientation)
@@ -220,7 +220,7 @@ namespace Binaural {
 	void CSingleSourceDSP::ProcessAnechoic(CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer)
 	{
 		if (readyForAnechoic)
-			ProcessAnechoic(internalBuffer, outLeftBuffer, outRightBuffer);
+			ProcessAnechoic(channelToListener.GetBuffer(), outLeftBuffer, outRightBuffer);
 		else
 		{
 			SET_RESULT(RESULT_WARNING, "Attempt to do anechoic process without updating source buffer; please call to SetBuffer before ProcessAnechoic.");

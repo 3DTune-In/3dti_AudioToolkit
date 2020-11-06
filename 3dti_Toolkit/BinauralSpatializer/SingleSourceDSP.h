@@ -34,6 +34,7 @@
 #include <Common/FarDistanceEffects.h>
 #include <BinauralSpatializer/UPCAnechoic.h>
 #include <Common/FiltersChain.h>
+#include <Common/Channel.h>
 
 //#define USE_UPC_WITHOUT_MEMORY
 #define EPSILON 0.0001f
@@ -75,11 +76,11 @@ namespace Binaural {
 		*/
 		void SetBuffer(CMonoBuffer<float> & buffer);					
 
-		/** \brief Get internal buffer
+		/** \brief Get copy of internal buffer
 		*	\retval buffer internal buffer content
 		*   \eh Nothing is reported to the error handler.
 		*/
-		const CMonoBuffer<float> GetBuffer() const;						
+		CMonoBuffer<float> GetBuffer() const;						
 
 		/** \brief Move source (position and orientation)
 		*	\param [in] _sourceTransform new position and orientation of source
@@ -321,7 +322,8 @@ namespace Binaural {
 		///////////////
 		const CCore* ownerCore;					// Reference to the core where information shared by all sources is stored (listener, room and audio state attributes)	
 		Common::CTransform sourceTransform;		// Position and orientation of source
-		CMonoBuffer<float> internalBuffer;		// Buffer storage
+		//CMonoBuffer<float> internalBuffer;	// Buffer storage
+		Common::CChannel channelToListener;     // Channel to listener. Beware that this will not work if more than one listener. 
 					
 	#ifdef USE_FREQUENCY_COVOLUTION_WITHOUT_PARTITIONS_ANECHOIC
 		Common::CFconvolver outputLeft;   						// Object to make the inverse fft of the left channel
