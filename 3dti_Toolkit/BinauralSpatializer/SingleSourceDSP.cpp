@@ -102,7 +102,7 @@ namespace Binaural {
 	/// Update internal buffer
 	void CSingleSourceDSP::SetBuffer(CMonoBuffer<float> & buffer)
 	{
-		channelToListener.SetInputBuffer(buffer);
+		channelToListener.PushBack(buffer);
 		readyForAnechoic = true;
 		readyForReverb = true;
 	}
@@ -110,8 +110,8 @@ namespace Binaural {
 	CMonoBuffer<float> CSingleSourceDSP::GetBuffer() const
 	{
 		// TO DO: check readyForAnechoic and/or readyForAnechoic flags?
-		ASSERT(channelToListener.GetBuffer().size() > 0, RESULT_ERROR_NOTSET, "Getting empty buffer from single source DSP", "");
-		return channelToListener.GetBuffer();
+		ASSERT(channelToListener.PopFront().size() > 0, RESULT_ERROR_NOTSET, "Getting empty buffer from single source DSP", "");
+		return channelToListener.PopFront();
 	}
 	
 	// Move source (position and orientation)
@@ -220,7 +220,7 @@ namespace Binaural {
 	void CSingleSourceDSP::ProcessAnechoic(CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer)
 	{
 		if (readyForAnechoic)
-			ProcessAnechoic(channelToListener.GetBuffer(), outLeftBuffer, outRightBuffer);
+			ProcessAnechoic(channelToListener.PopFront(), outLeftBuffer, outRightBuffer);
 		else
 		{
 			SET_RESULT(RESULT_WARNING, "Attempt to do anechoic process without updating source buffer; please call to SetBuffer before ProcessAnechoic.");
@@ -387,6 +387,13 @@ namespace Binaural {
 			SET_RESULT( RESULT_ERROR_INVALID_PARAM, "Call to CSingleSourceDSP::GetEarElevation with invalid param" );
             return 0.0f;
         }
+	}
+
+	void CSingleSourceDSP::SetDelay(double milliseconds)
+	{
+		// TODO: properly transform milliseconds into samples
+		int samples = std::nearbyint (milliseconds * 44.1); 
+		channelToListener.SetDelayInSamples(samples);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

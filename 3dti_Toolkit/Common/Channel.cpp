@@ -21,13 +21,33 @@
 */
 
 #include <Common/Channel.h>
+#include <Common/ErrorHandler.h>
 
 namespace Common {
-	void CChannel::SetInputBuffer(CMonoBuffer<float> & _buffer) {
-		buffer = _buffer;
+	void CChannel::PushBack(CMonoBuffer<float> & _buffer) {
+		// Add frame at the end of the buffer. Circular buffer is fixed size
+		// so the latest frame (at the front) will be deleted. 
+		circular_buffer.insert(circular_buffer.end(), _buffer.begin(), _buffer.end());
 	}
-	CMonoBuffer<float> CChannel::GetBuffer() const
+	CMonoBuffer<float> CChannel::PopFront() const
 	{
-		return buffer;
+		// FIXME: properly get the frame size which is hardcoded as 512
+		// Pop really doesn't pop. The next time a buffer is pushed, it will be removed.  
+		CMonoBuffer<float> returnbuffer(circular_buffer.begin(), circular_buffer.begin() + 512);
+		return returnbuffer;
+	}
+	void CChannel::SetDelayInSamples(int samples)
+	{
+
+		try {
+			// FIXME: For the moment this is just a fixed delay, 
+			// FIXME: hardcoded frameSize as 512. 
+			circular_buffer.resize(samples+512); // Is it samples or samples + frame size??
+		}
+		catch (std::bad_alloc & e)
+		{
+			SET_RESULT(RESULT_ERROR_BADALLOC, "Bad alloc in delay buffer");
+			return;
+		}
 	}
 }

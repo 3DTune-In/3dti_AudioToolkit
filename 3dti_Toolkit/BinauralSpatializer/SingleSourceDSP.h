@@ -278,6 +278,12 @@ namespace Binaural {
 		*/
 		float GetEarElevation(Common::T_ear ear) const;
 
+		/** \brief Set fixed delay. For testing purposes only, will be removed
+		*   \param [in] fixed delay in milliseconds. 
+		*/
+		void SetDelay(double milliseconds); 
+
+
 	private:	
 		/////////////
 		// METHODS	

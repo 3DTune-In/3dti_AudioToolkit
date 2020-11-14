@@ -24,20 +24,29 @@
 #define _CCHANNEL_H_
 
 #include <Common/Buffer.h>
+#include <boost/circular_buffer.hpp>
 
 namespace Common {
 	class CChannel
 	{
 		public: 
-			/** \brief Set internal buffer
-			*/
-			void SetInputBuffer(CMonoBuffer<float> & _buffer);
 
-		    /** \brief Get copy of internal buffer
+			/** \brief Add frame to channel buffer
 			*/
-			CMonoBuffer<float> GetBuffer() const;
+			void PushBack(CMonoBuffer<float> & _buffer);
+
+		    /** \brief Get next frame from channel buffer
+			*/
+			CMonoBuffer<float> PopFront() const;
+
+			/** \brief Set Delay directly in samples 
+			*/
+			void SetDelayInSamples(int frames);
+
 		private: 
 			CMonoBuffer<float> buffer; 
+			boost::circular_buffer<float> circular_buffer; 
+			boost::circular_buffer<float>::size_type iUnread;
 	};
 }
 
