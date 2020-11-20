@@ -28,6 +28,9 @@ namespace Common {
 		// Add frame at the end of the buffer. Circular buffer is fixed size
 		// so the latest frame (at the front) will be deleted. 
 		circular_buffer.insert(circular_buffer.end(), _buffer.begin(), _buffer.end());
+
+		// Save copy of this most recent Buffer
+		mostRecentBuffer = _buffer; 
 	}
 	CMonoBuffer<float> CChannel::PopFront() const
 	{

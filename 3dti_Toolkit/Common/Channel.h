@@ -43,10 +43,12 @@ namespace Common {
 			*/
 			void SetDelayInSamples(int frames);
 
+			/** \brief Get most recent Buffer */
+			CMonoBuffer<float> GetMostRecentBuffer() const;
+
 		private: 
-			CMonoBuffer<float> buffer; 
+			CMonoBuffer<float> mostRecentBuffer; 
 			boost::circular_buffer<float> circular_buffer; 
-			boost::circular_buffer<float>::size_type iUnread;
 	};
 }
 

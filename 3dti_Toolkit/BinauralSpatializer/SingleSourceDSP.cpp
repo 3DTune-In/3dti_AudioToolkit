@@ -110,8 +110,8 @@ namespace Binaural {
 	CMonoBuffer<float> CSingleSourceDSP::GetBuffer() const
 	{
 		// TO DO: check readyForAnechoic and/or readyForAnechoic flags?
-		ASSERT(channelToListener.PopFront().size() > 0, RESULT_ERROR_NOTSET, "Getting empty buffer from single source DSP", "");
-		return channelToListener.PopFront();
+		ASSERT(channelToListener.GetMostRecentBuffer().size() > 0, RESULT_ERROR_NOTSET, "Getting empty buffer from single source DSP", "");
+		return channelToListener.GetMostRecentBuffer();
 	}
 	
 	// Move source (position and orientation)
