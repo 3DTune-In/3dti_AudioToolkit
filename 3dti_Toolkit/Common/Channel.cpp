@@ -41,16 +41,25 @@ namespace Common {
 	}
 	void CChannel::SetDelayInSamples(int samples)
 	{
-
-		try {
-			// FIXME: For the moment this is just a fixed delay, 
+		if (circular_buffer.capacity() < samples) { // Buffer has to grow
+			try {
+				// FIXME: For the moment this is just a fixed delay, 
+				// FIXME: hardcoded frameSize as 512. 
+				circular_buffer.resize(samples + 512); // Is it samples or samples + frame size??
+			}
+			catch (std::bad_alloc & e)
+			{
+				SET_RESULT(RESULT_ERROR_BADALLOC, "Bad alloc in delay buffer");
+				return;
+			}
+		}
+		else { // Buffer has to shrink
 			// FIXME: hardcoded frameSize as 512. 
-			circular_buffer.resize(samples+512); // Is it samples or samples + frame size??
+			circular_buffer.set_capacity(samples+512);
 		}
-		catch (std::bad_alloc & e)
-		{
-			SET_RESULT(RESULT_ERROR_BADALLOC, "Bad alloc in delay buffer");
-			return;
-		}
+	}
+	CMonoBuffer<float> CChannel::GetMostRecentBuffer() const
+	{
+		return mostRecentBuffer;
 	}
 }

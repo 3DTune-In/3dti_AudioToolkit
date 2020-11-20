@@ -121,6 +121,8 @@ namespace Binaural {
 
 		CalculateSourceCoordinates();
 
+		CalculateChannelDelay();
+
 		//sourceTransform = CalculateTransformPositionWithRestrictions(newTransform);
 	}
 	// Get source transform (position and orientation)
@@ -359,6 +361,13 @@ namespace Binaural {
 
 		interauralAzimuth = vectorToListener.GetInterauralAzimuthDegrees();	//Get Interaural Azimuth
 
+	}
+
+	// Recalculate time sound takes to reach listener in Milliseconds
+	// and reset channel delay accordingly 
+	void CSingleSourceDSP::CalculateChannelDelay() {
+		double delay = 1000*distanceToListener / ownerCore->GetMagnitudes().GetSoundSpeed();
+		SetDelay(delay);
 	}
 
 	// Returns the azimuth of the specified ear.

@@ -322,6 +322,9 @@ namespace Binaural {
 		// Calculates the values ot attributes related to the relative position between sound source and
 		// the listener.
 		void CalculateSourceCoordinates();
+
+		// Recalculates the delay between Source and Listener and sets it in the channel accordingly
+		void CalculateChannelDelay();
 				
 		///////////////
 		// ATTRIBUTES
