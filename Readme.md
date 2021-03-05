@@ -112,7 +112,7 @@ The members of the development team are (in alphabetical order):
 - [Daniel Gonzalez-Toledo](https://github.com/dgonzalezt) (University of Malaga) 
 - [Luis Molina-Tanco](https://github.com/lmtanco) (University of Malaga)
 - [Ernesto de la Rubia](https://github.com/ernestodelarubia) (University of Malaga) (Left the team Apr 2018)
-- [Ángel Rodríguez-Rivero](https://github.com/ardgzrivero) (University of Malaga) (Joined the team Feb 2018)
+- [Ángel Rodríguez-Rivero](https://github.com/ardgzrivero) (University of Malaga) (Joined the team Feb 2018 to Jul 2019)
 
 Other contributors:
 - David Poirier-Quinot (Imperial College London) produced filter coefficients to simulate near field effects and high performance spatialization. He also contributed in the design of algorithms implemented in the Hearing Loss simulator.
