@@ -8,8 +8,6 @@ Technical details about the 3D Tune-In Toolkit spatialiser are described in:
 
 Cuevas-Rodríguez M, Picinali L, González-Toledo D, Garre C, de la Rubia-Cuestas E, Molina-Tanco L and Reyes-Lecuona A. (2019) 3D Tune-In Toolkit: An open-source library for real-time binaural spatialisation. PLOS ONE 14(3): e0211899. https://doi.org/10.1371/journal.pone.0211899
 
-For downloading various compiled releases of the 3DTI Toolkit (e.g. Test Applications, VST plugins, etc.), visit the release section (https://github.com/3DTune-In/3dti_AudioToolkit/releases)
-
 **The structure of the repository is as follows:**
 ```
 3dti_AudioToolkit
@@ -95,27 +93,50 @@ The 3D Tune-In Toolkit Resource Management Package uses:
 
 *	Audio clips “anechoic Guitar” and “Anechoic Speech” are extracted from Music from Archimedes, Bang&Olufsen, 1992. 
 
+## Additional tools
+
+The 3D Tune-In Toolkit includes a Test Application that allows user to test all the capabilities of the 3D Tune-In Toolkit library through a comprehensive GUI. The latest version of the test application can be downloaded from the Release section of this repository (https://github.com/3DTune-In/3dti_AudioToolkit/releases) for three different platforms: Windows, Mac and Linux.
+
+In addition, there are different tools that make use of the Toolkit and allow it to be integrated into different platforms. These tools are listed below, together with the repository where they are available.
+
+*	3DTI Unity Wrapper. The Unity Wrapper allows integration of some of the components of the 3DTI Toolkit in a Unity Scene. These components are packed in the form of a Unity Package that can be found in the Release version of the 3dti_AudioToolkit_UnityWrapper repository. Code and documentation with further details available at: https://github.com/3DTune-In/3dti_AudioToolkit_UnityWrapper
+*	3DTI VST Plugin. This plugin is a VST interface for the 3D Tune-In Toolkit. Installers for Windows and Mac can be found in the Release section of the 3dti_AudioToolkit_VST_Plugins repository.  Code and documentation with further details available at: https://github.com/3DTune-In/3dti_AudioToolkit_VST_Plugins. 
+*	3DTI Examples. Basic spatialization examples implemented in C++ to show how to use the 3D Tune-In Toolkit library. Code and documentation with further details available at: https://github.com/3DTune-In/3dti_AudioToolkit_Examples
+*	3DTI JavaScript Wrapper. JavaScript port of the 3D Tune-In Toolkit that exposed and ported some of the features of the 3DTI Toolkit. Code and documentation with further details available at: https://github.com/3DTune-In/3dti_AudioToolkit_JavaScript.
+
 
 ## Further Reading
 
 For complete documentation on the 3D Tune-In Toolkit, see the doc directory of this distribution.
 
+
+## Future plans
+
+*	UML driagram. A UML diagram of all classes will be produced for documentation purposes.
+*	HRTF, BRIR and ILD files at 24000 Hz. The 3D Tune-In Toolkit currently support any sampling frequency. However, HRTF, BRIR and ILD files are currently provided only at 44100 Hz, 48000 Hz and 96000 Hz.
+*	Multiple configuration of virtual ambisonic reverberation. Currently, the 3D Tune-In Toolkit implements a 2D virtual ambisonic approach based on three ambisonic channels (W, X and Y). It is planned to make it configurable, allowing the selection of different channel configurations: W (mono), W + Y (stereo), W + X + Y (2D) and W + X + Y + Z (Full 3D).
+*	Loudspeaker Spatialisation. Currently the Toolkit is focused on binaural spatialisation. In the near future, spatialisation based on 2nd order virtual Ambisonic for loudspeaker setups will be added.
+
+
 ## Credits
 
-This software was developed by a team coordinated by 
--	Arcadio Reyes-Lecuona ([University of Malaga](https://www.uma.es/)). Contact: areyes@uma.es  
--	Lorenzo Picinali ([Imperial College London](https://www.imperial.ac.uk/)). Contact: l.picinali@imperial.ac.uk 
+This software is being developed by a team coordinated by 
+-	[Arcadio Reyes-Lecuona](https://github.com/areyesl) ([University of Malaga](https://www.uma.es/)). Contact: areyes@uma.es  
+-	Lorenzo Picinali ([Imperial College London](https://www.imperial.ac.uk/)). Contact: l.picinali@imperial.ac.uk
 
-The members of the development team are (in alphabetical order):
-- [Maria Cuevas-Rodriguez](https://github.com/mariacuevas) (University of Malaga) 
-- [Carlos Garre](https://github.com/carlosgarre) (University of Malaga) (Left the team Jan 2018)
-- [Daniel Gonzalez-Toledo](https://github.com/dgonzalezt) (University of Malaga) 
-- [Luis Molina-Tanco](https://github.com/lmtanco) (University of Malaga)
-- [Ernesto de la Rubia](https://github.com/ernestodelarubia) (University of Malaga) (Left the team Apr 2018)
-- [Ángel Rodríguez-Rivero](https://github.com/ardgzrivero) (University of Malaga) (Joined the team Feb 2018 to Jul 2019)
+The current members of the development team are (in alphabetical order):
+- [Maria Cuevas-Rodriguez](https://github.com/mariacuevas) ([University of Malaga](https://www.uma.es/))
+- [Daniel Gonzalez-Toledo](https://github.com/dgonzalezt) ([University of Malaga](https://www.uma.es/))
+- [Luis Molina-Tanco](https://github.com/lmtanco) ([University of Malaga](https://www.uma.es/))
+
+Former members of the development team are (in alphabetical order):
+- [Carlos Garre](https://github.com/carlosgarre) (Left the team Jan 2018)
+- [Ernesto de la Rubia](https://github.com/ernestodelarubia) (Left the team Apr 2018)
+- [Angel Rodriguez-Rivero](https://github.com/ardgzrivero) (Joined the team Feb 2018 to Jul 2019)
 
 Other contributors:
 - David Poirier-Quinot (Imperial College London) produced filter coefficients to simulate near field effects and high performance spatialization. He also contributed in the design of algorithms implemented in the Hearing Loss simulator.
+- Mike Krzyzaniak (Imperial College London) implemented the gammatone filters included in the Hearing Loss Simulator.
 
 ## Copyright and License
 
