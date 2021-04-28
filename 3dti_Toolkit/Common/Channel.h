@@ -29,27 +29,32 @@
 namespace Common {
 	class CChannel
 	{
-		public: 
+	public:
 
-			/** \brief Add frame to channel buffer
-			*/
-			void PushBack(CMonoBuffer<float> & _buffer);
+		/** \brief Constructor
+		*/
+		CChannel() : lastDistance(0) {}
 
-		    /** \brief Get next frame from channel buffer
-			*/
-			CMonoBuffer<float> PopFront() const;
+		/** \brief Add frame to channel buffer
+		*/
+		void PushBack(CMonoBuffer<float> & _buffer, float currentDistance);
 
-			/** \brief Set Delay directly in samples 
-			*/
-			void SetDelayInSamples(int frames);
+		/** \brief Get next frame from channel buffer
+		*/
+		CMonoBuffer<float> PopFront() const;
 
-			/** \brief Get most recent Buffer */
-			CMonoBuffer<float> GetMostRecentBuffer() const;
+		/** \brief Set Delay directly in samples
+		*/
+		void SetDelayInSamples(int frames);
 
-		private: 
-			CMonoBuffer<float> mostRecentBuffer; 
-			boost::circular_buffer<float> circular_buffer; 
+		/** \brief Get most recent Buffer
+		*/
+		CMonoBuffer<float> GetMostRecentBuffer() const;
+
+	private:
+		CMonoBuffer<float> mostRecentBuffer;
+		boost::circular_buffer<float> circular_buffer;
+		double lastDistance;
 	};
 }
-
 #endif

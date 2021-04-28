@@ -102,7 +102,7 @@ namespace Binaural {
 	/// Update internal buffer
 	void CSingleSourceDSP::SetBuffer(CMonoBuffer<float> & buffer)
 	{
-		channelToListener.PushBack(buffer);
+		channelToListener.PushBack(buffer, distanceToListener);
 		readyForAnechoic = true;
 		readyForReverb = true;
 	}

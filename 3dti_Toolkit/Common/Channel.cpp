@@ -22,13 +22,44 @@
 
 #include <Common/Channel.h>
 #include <Common/ErrorHandler.h>
+#include <boost/math/interpolators/cardinal_cubic_b_spline.hpp>
+
+constexpr float EPSILON = 0.0001;
 
 namespace Common {
-	void CChannel::PushBack(CMonoBuffer<float> & _buffer) {
-		// Add frame at the end of the buffer. Circular buffer is fixed size
-		// so the latest frame (at the front) will be deleted. 
-		circular_buffer.insert(circular_buffer.end(), _buffer.begin(), _buffer.end());
-
+	void CChannel::PushBack(CMonoBuffer<float> & _buffer, float currentDistance) {
+		float changeInDistance = currentDistance - lastDistance;
+		lastDistance = currentDistance;
+		float step = 1.0f / 44100; // FIXME Get this from audio framework
+		// Distance is shrinking or augmenting 
+		if (std::fabs(changeInDistance) > EPSILON) {
+			boost::math::interpolators::cardinal_cubic_b_spline<float> spline(_buffer.begin(), _buffer.end(), 0, step);
+			float changeInMilliseconds = changeInDistance / 343.0f; // FIXME Get this from audio framework. 
+			float changeInNSamples = changeInMilliseconds * 44.1; // FIXME Get this from audio framework. 
+			size_t sizeOfInterpolatedBuffer = std::nearbyint(_buffer.size() + changeInNSamples);
+			CMonoBuffer<float> interpolatedBuffer(sizeOfInterpolatedBuffer);
+			float factor = _buffer.size() / (_buffer.size() + changeInNSamples);
+			for (size_t i = 0; i < sizeOfInterpolatedBuffer; i++) {
+				float j = i * factor;
+				interpolatedBuffer[i] = spline(j);
+			}
+			try {
+				// Now change the capacity to acommodate the new delay. 
+				circular_buffer.rset_capacity(circular_buffer.capacity() - 512 + sizeOfInterpolatedBuffer); // FIXME hardcoded frame size to 512
+			}
+			catch (std::bad_alloc &) {
+				SET_RESULT(RESULT_ERROR_BADALLOC, "Bad alloc in delay buffer (pushing back frame)");
+				return;
+			}
+			// and add the new frame
+			circular_buffer.insert(circular_buffer.end(), interpolatedBuffer.begin(), interpolatedBuffer.end());
+		}
+		// No change
+		else  {
+			// Just add frame at the end of the buffer.Circular buffer is fixed size
+			// so the latest frame (at the front) will be deleted. 
+			circular_buffer.insert(circular_buffer.end(), _buffer.begin(), _buffer.end());
+		}
 		// Save copy of this most recent Buffer
 		mostRecentBuffer = _buffer; 
 	}
@@ -41,21 +72,24 @@ namespace Common {
 	}
 	void CChannel::SetDelayInSamples(int samples)
 	{
-		if (circular_buffer.capacity() < samples) { // Buffer has to grow
-			try {
-				// FIXME: For the moment this is just a fixed delay, 
-				// FIXME: hardcoded frameSize as 512. 
+		try {
+			if (circular_buffer.capacity() < samples) { // Buffer has to grow
+
+					// FIXME: For the moment this is just a fixed delay, 
+					// FIXME: hardcoded frameSize as 512. 
 				circular_buffer.resize(samples + 512); // Is it samples or samples + frame size??
+
 			}
-			catch (std::bad_alloc & e)
-			{
-				SET_RESULT(RESULT_ERROR_BADALLOC, "Bad alloc in delay buffer");
-				return;
+			else { // Buffer has to shrink
+				// FIXME: hardcoded frameSize as 512. 
+				circular_buffer.rset_capacity(samples + 512); // FIXME: should be rset_capacity so that we get rid of the oldest samples
+
 			}
 		}
-		else { // Buffer has to shrink
-			// FIXME: hardcoded frameSize as 512. 
-			circular_buffer.set_capacity(samples+512);
+		catch (std::bad_alloc & e)
+		{
+			SET_RESULT(RESULT_ERROR_BADALLOC, "Bad alloc in delay buffer");
+			return;
 		}
 	}
 	CMonoBuffer<float> CChannel::GetMostRecentBuffer() const

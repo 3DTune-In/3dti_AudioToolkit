@@ -283,6 +283,11 @@ namespace Binaural {
 		*/
 		void SetDelay(double milliseconds); 
 
+		/** \brief Recalculates the delay in sound propag. between Source and Listener corresponding to their distance. 
+		*/
+		void CalculateChannelDelay();
+
+
 
 	private:	
 		/////////////
@@ -323,9 +328,7 @@ namespace Binaural {
 		// the listener.
 		void CalculateSourceCoordinates();
 
-		// Recalculates the delay between Source and Listener and sets it in the channel accordingly
-		void CalculateChannelDelay();
-				
+
 		///////////////
 		// ATTRIBUTES
 		///////////////
