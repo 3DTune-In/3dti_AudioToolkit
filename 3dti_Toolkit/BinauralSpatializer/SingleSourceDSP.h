@@ -34,7 +34,7 @@
 #include <Common/FarDistanceEffects.h>
 #include <BinauralSpatializer/UPCAnechoic.h>
 #include <Common/FiltersChain.h>
-#include <Common/Channel.h>
+#include <Common/Waveguide.h>
 
 //#define USE_UPC_WITHOUT_MEMORY
 #define EPSILON 0.0001f
@@ -230,6 +230,21 @@ namespace Binaural {
 		*/
 		void SetSpatializationMode(TSpatializationMode _spatializationMode);
 
+		/** \brief Enable propagation delay for this waveguide
+		*   \eh Nothing is reported to the error handler.
+		*/
+		void EnablePropagationDelay();
+
+		/** \brief Disable propagation delay for this waveguide
+		*   \eh Nothing is reported to the error handler.
+		*/
+		void DisablePropagationDelay();
+
+		/** \brief Get the flag for propagation delay enabling
+		*	\retval propagationDelayEnabled if true, propagation delay simulation is enabled for this source
+		*   \eh Nothing is reported to the error handler.
+		*/
+		bool IsPropagationDelayEnabled();
 
 		/** \brief Get the current spatialization mode for this source
 		*	\retval spatializationMode Current spatialization mode for this source
@@ -281,7 +296,7 @@ namespace Binaural {
 		/** \brief Set fixed delay. For testing purposes only, will be removed
 		*   \param [in] fixed delay in milliseconds. 
 		*/
-		void SetDelay(double milliseconds); 
+		//void SetDelay(double milliseconds); 
 
 		/** \brief Recalculates the delay in sound propag. between Source and Listener corresponding to their distance. 
 		*/
@@ -335,7 +350,7 @@ namespace Binaural {
 		const CCore* ownerCore;					// Reference to the core where information shared by all sources is stored (listener, room and audio state attributes)	
 		Common::CTransform sourceTransform;		// Position and orientation of source
 		//CMonoBuffer<float> internalBuffer;	// Buffer storage
-		Common::CChannel channelToListener;     // Channel to listener. Beware that this will not work if more than one listener. 
+		Common::CWaveguide channelToListener;     // Channel to listener. Beware that this will not work if more than one listener. 
 					
 	#ifdef USE_FREQUENCY_COVOLUTION_WITHOUT_PARTITIONS_ANECHOIC
 		Common::CFconvolver outputLeft;   						// Object to make the inverse fft of the left channel
@@ -383,6 +398,8 @@ namespace Binaural {
 		float interauralAzimuth;  // Iteraural azimuth
 
 		Common::CVector3 vectorToListener;  // Vector to the listener
+		        	
+		void GetRamp(CMonoBuffer<float> & buffer);//TO DELETE
 
 		friend class CEnvironment;		//Friend Class definition
 		friend class CCore;				//Friend Class definition		

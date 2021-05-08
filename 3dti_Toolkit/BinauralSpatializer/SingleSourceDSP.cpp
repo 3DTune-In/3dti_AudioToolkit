@@ -84,7 +84,8 @@ namespace Binaural {
 
 		distanceToListener = 0;
 		interauralAzimuth = 0;
-		
+						
+
 		nearFieldEffectFilters.left.AddFilter();		//Initialize the filter to ILD simulation 
 		nearFieldEffectFilters.left.AddFilter();		//Initialize the filter to ILD simulation
 		nearFieldEffectFilters.right.AddFilter();		//Initialize the filter to ILD simulation
@@ -101,11 +102,36 @@ namespace Binaural {
 	
 	/// Update internal buffer
 	void CSingleSourceDSP::SetBuffer(CMonoBuffer<float> & buffer)
-	{
-		channelToListener.PushBack(buffer, distanceToListener);
+	{						
+		// DANI TESTING // TO DELETE					
+		//GetRamp(buffer);		
+		// END DANI TESTING
+
+		channelToListener.PushBack(buffer, ownerCore->GetAudioState(), ownerCore->GetMagnitudes().GetSoundSpeed(), distanceToListener);
 		readyForAnechoic = true;
 		readyForReverb = true;
 	}
+	void CSingleSourceDSP::GetRamp(CMonoBuffer<float> & buffer) {
+		float max = 0.5f;
+		float slope = max / (0.25 * buffer.size());
+
+		int i;
+		for (i = 0; i < buffer.size() / 4; i++) {
+			buffer[i] = slope * i;
+		}
+		for (i = i; i < buffer.size() / 2; i++) {
+			buffer[i] = (-slope * (i - 0.25f * buffer.size())) + max;
+		}
+		for (i = i; i < 3 * buffer.size() / 4; i++) {
+			buffer[i] = (-slope * (i - 0.5f * buffer.size()));
+		}
+		for (i = i; i < buffer.size(); i++) {
+			buffer[i] = (slope * (i - 0.75f * buffer.size())) - max;
+		}
+	}
+
+
+
 	/// Get copy of internal buffer
 	CMonoBuffer<float> CSingleSourceDSP::GetBuffer() const
 	{
@@ -121,7 +147,7 @@ namespace Binaural {
 
 		CalculateSourceCoordinates();
 
-		CalculateChannelDelay();
+		//CalculateChannelDelay();
 
 		//sourceTransform = CalculateTransformPositionWithRestrictions(newTransform);
 	}
@@ -203,6 +229,13 @@ namespace Binaural {
 	///Get the flag for near field effect enabling
 	bool CSingleSourceDSP::IsNearFieldEffectEnabled() { return enableNearFieldEffect; };
 			
+	///Enable propagation delay for this source
+	void CSingleSourceDSP::EnablePropagationDelay() { channelToListener.EnablePropagationDelay(); };
+	///Disable propagation delay for this source
+	void CSingleSourceDSP::DisablePropagationDelay() { channelToListener.DisablePropagationDelay(); };
+	///Get the flag for propagation delay enabling for this source
+	bool CSingleSourceDSP::IsPropagationDelayEnabled() { return channelToListener.IsPropagationDelayEnabled(); };
+
 	/////////////////////////////
 	// RESET METHODS
 	/////////////////////////////
@@ -222,7 +255,7 @@ namespace Binaural {
 	void CSingleSourceDSP::ProcessAnechoic(CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer)
 	{
 		if (readyForAnechoic)
-			ProcessAnechoic(channelToListener.PopFront(), outLeftBuffer, outRightBuffer);
+			ProcessAnechoic(channelToListener.PopFront(ownerCore->GetAudioState()), outLeftBuffer, outRightBuffer);
 		else
 		{
 			SET_RESULT(RESULT_WARNING, "Attempt to do anechoic process without updating source buffer; please call to SetBuffer before ProcessAnechoic.");
@@ -365,10 +398,14 @@ namespace Binaural {
 
 	// Recalculate time sound takes to reach listener in Milliseconds
 	// and reset channel delay accordingly 
-	void CSingleSourceDSP::CalculateChannelDelay() {
-		double delay = 1000*distanceToListener / ownerCore->GetMagnitudes().GetSoundSpeed();
-		SetDelay(delay);
-	}
+	//void CSingleSourceDSP::CalculateChannelDelay() {
+	//	double delaySeconds = distanceToListener / ownerCore->GetMagnitudes().GetSoundSpeed();
+	//	//SetDelay(delayMilliseconds);
+	//	// TODO: properly transform milliseconds into samples
+	//	float sampleRate = ownerCore->GetAudioState().sampleRate;
+	//	int samples = std::nearbyint(delaySeconds * sampleRate);						
+	//	channelToListener.SetDelayInSamples(samples);
+	//}
 
 	// Returns the azimuth of the specified ear.
 	float CSingleSourceDSP::GetEarAzimuth( Common::T_ear ear ) const
@@ -398,12 +435,12 @@ namespace Binaural {
         }
 	}
 
-	void CSingleSourceDSP::SetDelay(double milliseconds)
-	{
-		// TODO: properly transform milliseconds into samples
-		int samples = std::nearbyint (milliseconds * 44.1); 
-		channelToListener.SetDelayInSamples(samples);
-	}
+	//void CSingleSourceDSP::SetDelay(double milliseconds)
+	//{
+	//	// TODO: properly transform milliseconds into samples
+	//	int samples = std::nearbyint (milliseconds * 44.1); 
+	//	channelToListener.SetDelayInSamples(samples);
+	//}
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	///PRIVATE METHODS
