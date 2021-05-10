@@ -398,9 +398,7 @@ namespace Binaural {
 		float interauralAzimuth;  // Iteraural azimuth
 
 		Common::CVector3 vectorToListener;  // Vector to the listener
-		        	
-		void GetRamp(CMonoBuffer<float> & buffer);//TO DELETE
-
+		        			
 		friend class CEnvironment;		//Friend Class definition
 		friend class CCore;				//Friend Class definition		
 	};   

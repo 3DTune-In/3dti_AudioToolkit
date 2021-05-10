@@ -33,8 +33,7 @@ namespace Common {
 	public:
 
 		/** \brief Constructor
-		*/
-		//CWaveguide() : enablePropagationDelay(false), contadorDani(0){}
+		*/		
 		CWaveguide() : enablePropagationDelay(false) {}
 
 
@@ -55,43 +54,44 @@ namespace Common {
 		bool IsPropagationDelayEnabled();
 
 
-		/** \brief Add frame to channel buffer
-		*/
-		//void PushBack(CMonoBuffer<float> & _buffer, float currentDistance);
+		/** \brief Insert the new frame into the waveguide
+		*/		
 		void PushBack(CMonoBuffer<float> & _buffer, const Common::TAudioStateStruct& audioState, float soundSpeed, float currentDistanceToListener);
 
-		/** \brief Get next frame from channel buffer
+		/** \brief Get next frame frame after pass throught the waveguide
 		*/
 		CMonoBuffer<float> PopFront(const Common::TAudioStateStruct& audioState) const;
-
-		/** \brief Set Delay directly in samples
-		*/
-		//void SetDelayInSamples(int frames);
-
+		
 		/** \brief Get most recent Buffer
 		*/
 		CMonoBuffer<float> GetMostRecentBuffer() const;
-		
-		//void SetBuffer(CCore* _ownerCore);		
+				
 	private:
+		/// Calculate the new delay in samples.
 		size_t CalculateDelay(Common::TAudioStateStruct audioState, float soundSpeed, float distanceToListener);		
+		
+		/// Resize the circular buffer
 		void ResizeCirculaBuffer(size_t newSize);
+		
+		/// Changes de circular buffer capacity, throwing away the oldest samples
 		void CWaveguide::RsetCirculaBuffer(size_t newSize);
+		
+		/// Execute a buffer expansion or compression
 		void ProcessExpansionCompressionMethod(const CMonoBuffer<float>& input, CMonoBuffer<float>& output);
-		//void ProcessExpansionCompressionMethod(const CMonoBuffer<float>& input, size_t resultSize);
+		/// Execute a buffer expansion or compression, and introduce the samples directly into the circular buffer
+		void ProcessExpansionCompressionMethod(const CMonoBuffer<float>& input, int outputSize);		
 		
-		//void CalculateExpandCompressBuffer(const CMonoBuffer<float> & _inpuBuffer, CMonoBuffer<float> & interpolatedBuffer, const Common::TAudioStateStruct& audioState, int newDelayInSamples, int currentDelayInSamples);		
-		void CoutCircularBuffer();
-		void CoutBuffer(const CMonoBuffer<float> & _buffer, string bufferName) const;
+		///////////////
+		// Vars
+		///////////////
+		bool enablePropagationDelay;					/// To store if the propagation delay is enabled or not
+		CMonoBuffer<float> mostRecentBuffer;			/// To store the last buffer introduced into the waveguide
+		boost::circular_buffer<float> circular_buffer;	/// To store the samples into the waveguide	
 		
-		// vars
-		CMonoBuffer<float> mostRecentBuffer;
-		boost::circular_buffer<float> circular_buffer;
-		//double lastDistance;
-		bool enablePropagationDelay;
-
-
-		//int contadorDani; //TO DO Delete me
+		//TO DO Delete me
+		//int contadorDani; 
+		//void CoutCircularBuffer();
+		//void CoutBuffer(const CMonoBuffer<float> & _buffer, string bufferName) const;
 	};
 }
 #endif

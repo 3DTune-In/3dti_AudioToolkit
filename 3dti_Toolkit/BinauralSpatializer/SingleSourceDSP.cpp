@@ -103,34 +103,10 @@ namespace Binaural {
 	/// Update internal buffer
 	void CSingleSourceDSP::SetBuffer(CMonoBuffer<float> & buffer)
 	{						
-		// DANI TESTING // TO DELETE					
-		//GetRamp(buffer);		
-		// END DANI TESTING
-
 		channelToListener.PushBack(buffer, ownerCore->GetAudioState(), ownerCore->GetMagnitudes().GetSoundSpeed(), distanceToListener);
 		readyForAnechoic = true;
 		readyForReverb = true;
 	}
-	void CSingleSourceDSP::GetRamp(CMonoBuffer<float> & buffer) {
-		float max = 0.5f;
-		float slope = max / (0.25 * buffer.size());
-
-		int i;
-		for (i = 0; i < buffer.size() / 4; i++) {
-			buffer[i] = slope * i;
-		}
-		for (i = i; i < buffer.size() / 2; i++) {
-			buffer[i] = (-slope * (i - 0.25f * buffer.size())) + max;
-		}
-		for (i = i; i < 3 * buffer.size() / 4; i++) {
-			buffer[i] = (-slope * (i - 0.5f * buffer.size()));
-		}
-		for (i = i; i < buffer.size(); i++) {
-			buffer[i] = (slope * (i - 0.75f * buffer.size())) - max;
-		}
-	}
-
-
 
 	/// Get copy of internal buffer
 	CMonoBuffer<float> CSingleSourceDSP::GetBuffer() const
