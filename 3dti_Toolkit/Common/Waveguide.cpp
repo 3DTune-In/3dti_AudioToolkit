@@ -34,6 +34,7 @@ namespace Common {
 	void CWaveguide::DisablePropagationDelay() { 
 		enablePropagationDelay = false; 
 		circular_buffer.clear();		// reset the circular buffer	
+		sourcePositionsBuffer.clear();
 	}
 
 	/// Get the flag for propagation delay enabling for this waveguide
@@ -41,7 +42,7 @@ namespace Common {
 
 	
 	/// Insert the new frame into the waveguide
-	void CWaveguide::PushBack(CMonoBuffer<float> & _inputBuffer, const Common::TAudioStateStruct& _audioState, float soundSpeed, float currentDistanceToListener) {
+	void CWaveguide::PushBack(CMonoBuffer<float> & _inputBuffer, const Common::TAudioStateStruct& _audioState, float soundSpeed, const CVector3 & _sourcePosition, float currentDistanceToListener) {
 		// Save a copy of this most recent Buffer
 		mostRecentBuffer = _inputBuffer; 						
 		
@@ -49,20 +50,26 @@ namespace Common {
 		if (!enablePropagationDelay) return;
 		
 		// Calculate new delay
-		int newDelayInSamples = CalculateDelay(_audioState, soundSpeed, currentDistanceToListener);
+		//int newDelayInSamples = CalculateDelay(_audioState, soundSpeed, currentDistanceToListener);
+		float changeInSourceDistance = CalculateSourceDistanceChange(_sourcePosition);
+		int newDelayInSamples = CalculateDelay(_audioState, soundSpeed, changeInSourceDistance);
 		
+
 		// Init circular buffer the first time
-		if (circular_buffer.capacity() == 0) {
-			// Buffer has to grow 			
-			ResizeCirculaBuffer(newDelayInSamples + _audioState.bufferSize);
+		if (circular_buffer.capacity() == 0) {			
+			ResizeCirculaBuffer(newDelayInSamples + _audioState.bufferSize);		// Buffer has to grow, full of Zeros			
+			InitSourcePositionBuffer(newDelayInSamples);							// Introduce first data into the sourcePositionBuffer
 		}
 				
 		// Save data into the circular_buffer
 		int currentDelayInSamples = circular_buffer.size() - _audioState.bufferSize;		//Calculate current delay in samples								
 		if (newDelayInSamples == currentDelayInSamples) 
-		{			
-			circular_buffer.insert(circular_buffer.end(), _inputBuffer.begin(), _inputBuffer.end());
-
+		{									
+			circular_buffer.insert(circular_buffer.end(), _inputBuffer.begin(), _inputBuffer.end());	//introduce the input buffer into the circular buffer			
+			InsertSourcePositionBuffer(_inputBuffer.size(), _sourcePosition);	// introduce the source positions into its buffer			
+			
+			cout << "cf: " << circular_buffer[sourcePositionsBuffer[sourcePositionsBuffer.size() - 1].beginIndex] << " " << circular_buffer[sourcePositionsBuffer[sourcePositionsBuffer.size() - 1].endIndex] << endl;
+			cout << "in: " << _inputBuffer[0] << _inputBuffer[_inputBuffer.size() - 1] << endl << endl;
 		} else {
 			// Circular Buffer has to grow and Input buffer has to be expanded or
 			// Circular Buffer has to shrink and Input buffer has to be compressed	
@@ -87,21 +94,28 @@ namespace Common {
 			// into the circular buffer. Saves having to create a buffer and insert it at the end. Next two line sinstead the previous four
 			
 			// Change circular_buffer capacity. This is when you throw away the samples, which are already out.
+			int currentSamples = circular_buffer.capacity();
 			RsetCirculaBuffer(newDelayInSamples + _audioState.bufferSize);
-			// Expand or compress and insert into the cirular buffer
+			//ShiftSourcePositionsBuffer(currentSamples- newDelayInSamples - _audioState.bufferSize);
+			
+			// Expand or compress and insert into the cirular buffer			
 			ProcessExpansionCompressionMethod(_inputBuffer, newBufferSize);
+			InsertSourcePositionBuffer(newBufferSize, _sourcePosition);	// introduce the source positions into its buffer			
 
+			cout << "cf: "<<circular_buffer[sourcePositionsBuffer[sourcePositionsBuffer.size() - 1].beginIndex] << " " << circular_buffer[sourcePositionsBuffer[sourcePositionsBuffer.size() - 1].endIndex] << endl;
+			cout << "in: " << _inputBuffer[0] << _inputBuffer[_inputBuffer.size() - 1] << endl << endl;
 		}				
 	}
 	
 	/// Return next buffer frame after pass throught the waveguide
-	CMonoBuffer<float> CWaveguide::PopFront(const Common::TAudioStateStruct& audioState) const
+	CMonoBuffer<float> CWaveguide::PopFront(const Common::TAudioStateStruct& _audioState)
 	{		
 		// if the propagation delay is not activated, just return the last input buffer
 		if (!enablePropagationDelay) { return mostRecentBuffer; }
 		
 		// Pop really doesn't pop. The next time a buffer is pushed, it will be removed.  		
-		CMonoBuffer<float> returnbuffer(circular_buffer.begin(), circular_buffer.begin() + audioState.bufferSize);
+		CMonoBuffer<float> returnbuffer(circular_buffer.begin(), circular_buffer.begin() + _audioState.bufferSize);
+		ShiftSourcePositionsBuffer(_audioState.bufferSize);
 		return returnbuffer;
 	}
 
@@ -115,6 +129,11 @@ namespace Common {
 	// PRIVATE METHODS
 	/////////////////
 	
+
+	int CWaveguide::GetIndexOfCirculaBuffer(boost::circular_buffer<float>::iterator it) {
+		return (it - circular_buffer.begin());
+	}
+
 	/// Resize the circular buffer
 	void CWaveguide::ResizeCirculaBuffer(size_t newSize) {
 		try {			
@@ -137,6 +156,24 @@ namespace Common {
 			return;
 		}	
 	}
+
+	float CWaveguide::CalculateSourceDistanceChange(const CVector3 & newSourcePosition) {
+		
+		CVector3 sourceOldDistance = GetSourceOldPosition();
+		float distance = CalculateDistance(newSourcePosition, listenerOldPosition) - CalculateDistance(sourceOldDistance, listenerOldPosition);	
+		return distance;
+	}
+
+	const float CWaveguide::CalculateDistance(const CVector3 & position1, const CVector3 & position2) const
+	{
+				
+		float distance = (position1.x - position2.x) * (position1.x - position2.x) + (position1.y - position2.y) * (position1.y - position2.y) + (position1.z - position2.z) * (position1.z - position2.z);
+		return std::sqrt(distance);
+		//return distance;
+	}
+
+	//////////////////////////////////////////////
+
 
 	/// Calculate the new delay in samples.
 	size_t CWaveguide::CalculateDelay(Common::TAudioStateStruct audioState, float soundSpeed, float distanceToListener)
@@ -210,6 +247,65 @@ namespace Common {
 		}
 		//output[outputSize - 1] = input[input.size() - 1];		// the last sample has to be the same as the one in the input buffer.		
 		circular_buffer.push_back(input[input.size() - 1]);
+	}
+
+	////////////////////////////
+	// Source Positions Buffer
+	////////////////////////////
+	void CWaveguide::InitSourcePositionBuffer(int numberOFZeroSamples) {		
+		
+		sourcePositionsBuffer.clear();
+		CVector3 sourcePosition(0, 0, 0);				
+		TSourcePosition temp(0, numberOFZeroSamples - 1, sourcePosition);
+		sourcePositionsBuffer.push_back(temp);
+	}
+
+	void CWaveguide::InsertSourcePositionBuffer(int bufferSize, const CVector3 & _sourcePosition) {
+		int begin = circular_buffer.size() - bufferSize;
+		int end = circular_buffer.size() - 1;
+		InsertSourcePositionBuffer(begin, end, _sourcePosition);			// introduce in to the sourcepositionsbuffer	
+	}
+
+	void CWaveguide::InsertSourcePositionBuffer(int begin, int end, const CVector3 & sourcePosition) {
+	
+		//ShiftSourcePositionsBuffer(end - begin + 1);
+		
+		TSourcePosition temp(begin, end, sourcePosition);
+		sourcePositionsBuffer.push_back(temp);
+	}
+	void CWaveguide::ShiftSourcePositionsBuffer(int samples){
+		
+		if (samples <= 0) { return; }
+		
+		int positionToDelete = -1;
+		int index = 0;
+		for (auto &element : sourcePositionsBuffer) {
+			element.beginIndex = element.beginIndex - samples;
+			element.endIndex = element.endIndex - samples;
+			if (element.endIndex < 0) { 
+				// Delete
+				positionToDelete = index;
+			}else if (element.beginIndex < 0) { 
+				element.beginIndex = 0;
+			}			
+			index++;
+		}
+		if (positionToDelete != -1) { 
+			sourcePositionsBuffer.erase(sourcePositionsBuffer.begin() + positionToDelete);
+		}
+
+	}
+	
+	CVector3 CWaveguide::GetSourceOldPosition() {
+
+		if (sourcePositionsBuffer.size() == 0) {
+			CVector3 oldPosition(0, 0, 0);
+			return oldPosition;
+		}
+		else {
+			CVector3 oldPosition(sourcePositionsBuffer[sourcePositionsBuffer.size() - 1].x, sourcePositionsBuffer[sourcePositionsBuffer.size() - 1].y, sourcePositionsBuffer[sourcePositionsBuffer.size() - 1].z);
+			return oldPosition;
+		}			
 	}
 
 	// TO BE DELETED
