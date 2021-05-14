@@ -103,7 +103,7 @@ namespace Binaural {
 	/// Update internal buffer
 	void CSingleSourceDSP::SetBuffer(CMonoBuffer<float> & buffer)
 	{						
-		channelToListener.PushBack(buffer, ownerCore->GetAudioState(), ownerCore->GetMagnitudes().GetSoundSpeed(), sourceTransform.GetPosition(),distanceToListener);
+		channelToListener.PushBack(buffer, sourceTransform.GetPosition(), ownerCore->GetAudioState(), ownerCore->GetMagnitudes().GetSoundSpeed() /*, distanceToListener*/);
 		readyForAnechoic = true;
 		readyForReverb = true;
 	}
@@ -230,8 +230,10 @@ namespace Binaural {
 	// Process data from input buffer to generate anechoic spatialization (direct path). Overloaded: using internal buffer
 	void CSingleSourceDSP::ProcessAnechoic(CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer)
 	{
-		if (readyForAnechoic)
-			ProcessAnechoic(channelToListener.PopFront(ownerCore->GetAudioState()), outLeftBuffer, outRightBuffer);
+		if (readyForAnechoic) {
+			Common::CTransform listenerTransform = ownerCore->GetListener()->GetListenerTransform();			
+			ProcessAnechoic(channelToListener.PopFront(listenerTransform.GetPosition(), ownerCore->GetAudioState(), ownerCore->GetMagnitudes().GetSoundSpeed()), outLeftBuffer, outRightBuffer);
+		}
 		else
 		{
 			SET_RESULT(RESULT_WARNING, "Attempt to do anechoic process without updating source buffer; please call to SetBuffer before ProcessAnechoic.");

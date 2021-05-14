@@ -46,7 +46,12 @@ namespace Common {
 				z = _sourcePosition.z;
 				beginIndex = _beginIndex;
 				endIndex = _endIndex;
-			}
+			};
+
+			CVector3 GetPosition() {
+				CVector3 position(x, y, z);
+				return position;
+			};
 
 		};
 
@@ -75,17 +80,23 @@ namespace Common {
 		/** \brief Insert the new frame into the waveguide
 		*/		
 		//void PushBack(CMonoBuffer<float> & _buffer, const Common::TAudioStateStruct& audioState, float soundSpeed, float currentDistanceToListener);
-		void PushBack(CMonoBuffer<float> & _buffer, const Common::TAudioStateStruct& audioState, float soundSpeed, const CVector3 & _sourcePosition, float currentDistanceToListener);
+		void PushBack(const CMonoBuffer<float> & inputbuffer, const CVector3 & sourcePosition, const Common::TAudioStateStruct& audioState, float soundSpeed/*, float currentDistanceToListener*/);
 		
 		/** \brief Get next frame frame after pass throught the waveguide
 		*/
-		CMonoBuffer<float> PopFront(const Common::TAudioStateStruct& audioState);
+		CMonoBuffer<float> PopFront(const CVector3 & listenerPosition, const Common::TAudioStateStruct& audioState, float soundSpeed);
 		
 		/** \brief Get most recent Buffer
 		*/
 		CMonoBuffer<float> GetMostRecentBuffer() const;
 				
 	private:
+		/// Processes the input buffer according to the movement of the source.
+		void ProcessSourceMovement(const CMonoBuffer<float> & _inputBuffer, const Common::TAudioStateStruct& _audioState, float soundSpeed, const CVector3 & _sourcePosition);
+		
+		/// Processes the existing samples in the waveguide to obtain an output buffer according to the new listener position.
+		CMonoBuffer<float> ProcessListenerMovement(const Common::TAudioStateStruct& _audioState, const CVector3 & _listenerPosition, float soundSpeed);
+
 		/// Calculate the new delay in samples.
 		size_t CalculateDelay(Common::TAudioStateStruct audioState, float soundSpeed, float distanceToListener);		
 		
@@ -109,8 +120,12 @@ namespace Common {
 		int GetIndexOfCirculaBuffer(boost::circular_buffer<float>::iterator it);
 		
 		const float CalculateDistance(const CVector3 & position1, const CVector3 & position2) const;
+						
 		float CalculateSourceDistanceChange(const CVector3 & newSourcePosition);
-		CVector3 GetSourceOldPosition();
+		float CalculateListenerDistanceChange(const CVector3 & newListenerPosition);
+		CVector3 GetLastSourcePosition();
+		CVector3 CWaveguide::GetSourcePositionWhenEmmited();
+		
 		///////////////
 		// Vars
 		///////////////
@@ -118,8 +133,8 @@ namespace Common {
 		CMonoBuffer<float> mostRecentBuffer;			/// To store the last buffer introduced into the waveguide
 		boost::circular_buffer<float> circular_buffer;	/// To store the samples into the waveguide			
 		
-		vector<TSourcePosition> sourcePositionsBuffer;	/// To store the source positions in each frame
-		CVector3 listenerOldPosition;					/// To store the last position of the listener
+		vector<TSourcePosition> previousSourcePositionsBuffer;	/// To store the source positions in each frame
+		CVector3 previousListenerPosition;				/// To store the last position of the listener
 
 		//TO DO Delete me
 		//int contadorDani; 
