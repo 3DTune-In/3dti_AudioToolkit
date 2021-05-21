@@ -33,8 +33,11 @@ namespace Common {
 	/// Disable propagation delay for this waveguide
 	void CWaveguide::DisablePropagationDelay() { 
 		enablePropagationDelay = false; 
-		circular_buffer.clear();		// reset the circular buffer	
-		previousSourcePositionsBuffer.clear();
+		previousListenerPositionInitialized = false;
+		previousListenerPosition = CVector3(0, 0, 0);	// Init previous Listener position
+		circular_buffer.clear();						// reset the circular buffer	
+		sourcePositionsBuffer.clear();					// reset the source position buffer
+		//previosOutputBufferSamples = 0;						// reset
 	}
 
 	/// Get the flag for propagation delay enabling for this waveguide
@@ -42,14 +45,15 @@ namespace Common {
 
 	
 	/// Insert the new frame into the waveguide
-	void CWaveguide::PushBack(const CMonoBuffer<float> & _inputBuffer, const CVector3 & _sourcePosition, const Common::TAudioStateStruct& _audioState, float _soundSpeed/*, float currentDistanceToListener*/) {
+	void CWaveguide::PushBack(const CMonoBuffer<float> & _inputBuffer, const CVector3 & _sourcePosition, const CVector3 & _listenerPosition, const Common::TAudioStateStruct& _audioState, float _soundSpeed) {
 		// Save a copy of this most recent Buffer
 		mostRecentBuffer = _inputBuffer; 						
 		
 		//If propagation delay simulation is not enable, do nothing more
 		if (!enablePropagationDelay) return;
 		
-		ProcessSourceMovement(_inputBuffer, _audioState, _soundSpeed, _sourcePosition);
+		// If it is enabled we compute here the source movement
+		ProcessSourceMovement(_inputBuffer, _sourcePosition, _listenerPosition, _audioState, _soundSpeed);
 						
 	}
 	
@@ -73,39 +77,46 @@ namespace Common {
 		return mostRecentBuffer;
 	}
 
-	/////////////////
+	//////////////////////
 	// PRIVATE METHODS
-	/////////////////
+	///////////////////////
 	
-	void CWaveguide::ProcessSourceMovement(const CMonoBuffer<float> & _inputBuffer, const Common::TAudioStateStruct& _audioState, float soundSpeed, const CVector3 & _sourcePosition) {
+	void CWaveguide::ProcessSourceMovement(const CMonoBuffer<float> & _inputBuffer, const CVector3 & _sourcePosition, const CVector3 & _listenerPosition, const Common::TAudioStateStruct& _audioState, float _soundSpeed) {		
+		// First time we initialized the listener position							
+		if (!previousListenerPositionInitialized) { previousListenerPosition = _listenerPosition; previousListenerPositionInitialized = true; }
+		
+		// Calculate the new delay taking into account the source movement with respect to the listener previous position
+		float currentDistanceToListener = CalculateDistance(_sourcePosition, previousListenerPosition);			
+		float oldDistanceToListener = CalculateDistance(GetLastSourcePosition(), previousListenerPosition);		
+		float distanceDiferenteToListener = currentDistanceToListener - oldDistanceToListener;		
+		int changeInDelayInSamples = CalculateDistanceInSamples(_audioState, _soundSpeed, distanceDiferenteToListener);				
 
-		// Calculate new delay
-		//int newDelayInSamples = CalculateDelay(_audioState, soundSpeed, currentDistanceToListener);
-		float changeInSourceDistance = CalculateSourceDistanceChange(_sourcePosition);
-		int newDelayInSamples = CalculateDelay(_audioState, soundSpeed, changeInSourceDistance);
-
-
-		// Init circular buffer the first time
-		if (circular_buffer.capacity() == 0) {
-			ResizeCirculaBuffer(newDelayInSamples + _audioState.bufferSize);		// Buffer has to grow, full of Zeros			
-			InitSourcePositionBuffer(newDelayInSamples);							// Introduce first data into the sourcePositionBuffer
-		}
-
-		// Save data into the circular_buffer
-		int currentDelayInSamples = circular_buffer.size() - _audioState.bufferSize;		//Calculate current delay in samples								
-		if (newDelayInSamples == currentDelayInSamples)
+		if (circular_buffer.capacity() == 0) {				
+			// We initialize the buffers the first time, this is when its capacity is zero
+			int newDelayInSamples = CalculateDistanceInSamples(_audioState, _soundSpeed, currentDistanceToListener);
+			ResizeCirculaBuffer(newDelayInSamples + _audioState.bufferSize);			// Buffer has to grow, full of Zeros			
+			InitSourcePositionBuffer(changeInDelayInSamples, _sourcePosition);			// Introduce first data into the sourcePositionBuffer.
+			// Save data into the circular_buffer	
+			circular_buffer.insert(circular_buffer.end(), _inputBuffer.begin(), _inputBuffer.end());	// Introduce the input buffer into the circular buffer			
+			InsertSourcePositionBuffer(_inputBuffer.size(), _sourcePosition);							// Introduce the source positions into its buffer
+		}											
+		else if (changeInDelayInSamples == 0)
 		{
+			//No movement
 			circular_buffer.insert(circular_buffer.end(), _inputBuffer.begin(), _inputBuffer.end());	//introduce the input buffer into the circular buffer			
-			InsertSourcePositionBuffer(_inputBuffer.size(), _sourcePosition);	// introduce the source positions into its buffer			
-
-			cout << "cf: " << circular_buffer[previousSourcePositionsBuffer[previousSourcePositionsBuffer.size() - 1].beginIndex] << " " << circular_buffer[previousSourcePositionsBuffer[previousSourcePositionsBuffer.size() - 1].endIndex] << endl;
-			cout << "in: " << _inputBuffer[0] << _inputBuffer[_inputBuffer.size() - 1] << endl << endl;
+			InsertSourcePositionBuffer(_inputBuffer.size(), _sourcePosition);	// introduce the source positions into its buffer						
 		}
 		else {
+			// Source Movement
 			// Circular Buffer has to grow and Input buffer has to be expanded or
 			// Circular Buffer has to shrink and Input buffer has to be compressed	
-
-			size_t newBufferSize = newDelayInSamples - currentDelayInSamples + _audioState.bufferSize;	// Calculate the expasion/compression
+			// 
+			// A soundsource approaches to you, the sound reach that reach you have a shorter wavelength and a higher frequency --> Time Compresion
+			// A soundsource moves away from you, the sound waves that reach you have a longer wavelength and lower frequency --> Time expansion
+			
+			int currentDelayInSamples	= circular_buffer.size() - _audioState.bufferSize;		// Calculate current delay in samples		
+			int newDelayInSamples		= changeInDelayInSamples + currentDelayInSamples;		// Calculate the new delay in samples
+			int newBufferSize			= changeInDelayInSamples + _audioState.bufferSize;				// Calculate the expasion/compression
 			if (newBufferSize < 0) {
 				// TO DO Why would this happen?
 				SET_RESULT(RESULT_ERROR_BADALLOC, "Bad alloc in delay buffer in CWaveguide. (newBufferSize < 0)");
@@ -125,45 +136,62 @@ namespace Common {
 			// into the circular buffer. Saves having to create a buffer and insert it at the end. Next two line sinstead the previous four
 
 			// Change circular_buffer capacity. This is when you throw away the samples, which are already out.
-			int currentSamples = circular_buffer.capacity();
+			//int currentSamples = circular_buffer.capacity();			
 			RsetCirculaBuffer(newDelayInSamples + _audioState.bufferSize);
 			//ShiftSourcePositionsBuffer(currentSamples- newDelayInSamples - _audioState.bufferSize);
 
 			// Expand or compress and insert into the cirular buffer			
 			ProcessExpansionCompressionMethod(_inputBuffer, newBufferSize);
 			InsertSourcePositionBuffer(newBufferSize, _sourcePosition);	// introduce the source positions into its buffer			
-
-			cout << "cf: " << circular_buffer[previousSourcePositionsBuffer[previousSourcePositionsBuffer.size() - 1].beginIndex] << " " << circular_buffer[previousSourcePositionsBuffer[previousSourcePositionsBuffer.size() - 1].endIndex] << endl;
-			cout << "in: " << _inputBuffer[0] << _inputBuffer[_inputBuffer.size() - 1] << endl << endl;
+			
 		}
 
 	}
 
-	CMonoBuffer<float> CWaveguide::ProcessListenerMovement(const Common::TAudioStateStruct& _audioState, const CVector3 & _listenerPosition, float soundSpeed) {
-
+	CMonoBuffer<float> CWaveguide::ProcessListenerMovement(const Common::TAudioStateStruct& _audioState, const CVector3 & _listenerPosition, float soundSpeed) {		
+		CVector3 sourcePositionWhenEmited = GetSourcePositionWhenEmmited(_audioState.bufferSize);	// Get the next samples source position
 		
+		// Calculate the new delay taking into account the current listener position respect to the source position when the samples were emmited
+		float currentDistanceToEmitedSource = CalculateDistance(_listenerPosition, sourcePositionWhenEmited);
+		float oldDistanceToEmitedSource = CalculateDistance(previousListenerPosition, sourcePositionWhenEmited);
+		float distanceDiferenceToEmmitedSource = currentDistanceToEmitedSource - oldDistanceToEmitedSource;
 
-		float changeInListenerDistance = CalculateListenerDistanceChange(_listenerPosition);
+		int changeInDelayInSamples = CalculateDistanceInSamples(_audioState, soundSpeed, distanceDiferenceToEmmitedSource);
 		previousListenerPosition = _listenerPosition;													// Update Listener position		
-		int newDelayInSamples = CalculateDelay(_audioState, soundSpeed, changeInListenerDistance);
+				
+		// An observer moving towards the source measures a higher frequency  --> More than 512 --> Time compression 
+		// An observer moving away from the source measures a lower frequency --> Less than 512 --> Time expansion		
+		int newBufferSize = _audioState.bufferSize - changeInDelayInSamples;	// Calculate the expasion/compression		
 
-		// An observer moving towards the source measures a higher frequency  --> Time compressin
-		// An observer moving away from the source measures a lower frequency --> Time expansion
+		//Get samples from buffer
+		CMonoBuffer<float> extractingBuffer(circular_buffer.begin(), circular_buffer.begin() + newBufferSize /*_audioState.bufferSize*/);
+		ShiftSourcePositionsBuffer(newBufferSize);		// Delete samples that have left the buffer storing the source positions.
+
+		// Check if it needes to do and expasion or compression
+		if (newBufferSize == _audioState.bufferSize) { return extractingBuffer; }
 		
-		size_t newBufferSize = newDelayInSamples + _audioState.bufferSize;	// Calculate the expasion/compression
-
-		cout << newBufferSize;
-
+		//In case we need to expand or compress
+		
+		// the capacity of the circular buffer must be increased with the samples that have not been removed
+		//int t = circular_buffer.capacity() + _audioState.bufferSize - newBufferSize;
+		RsetCirculaBuffer(circular_buffer.capacity() + _audioState.bufferSize - newBufferSize);
+		
+		// Expand or compress
+		CMonoBuffer<float> returnBuffer;
+		returnBuffer.resize(_audioState.bufferSize);							// Prepare buffer			
+		ProcessExpansionCompressionMethod(extractingBuffer, returnBuffer);		// Expand or compress the buffer
+		return returnBuffer;
+		
+		
 		// Pop really doesn't pop. The next time a buffer is pushed, it will be removed.  		
-		CMonoBuffer<float> returnbuffer(circular_buffer.begin(), circular_buffer.begin() + _audioState.bufferSize);
-		ShiftSourcePositionsBuffer(_audioState.bufferSize);
-
-		return returnbuffer;
+		//CMonoBuffer<float> returnbuffer(circular_buffer.begin(), circular_buffer.begin() + _audioState.bufferSize);
+		//ShiftSourcePositionsBuffer(_audioState.bufferSize);
+		//return returnBuffer;
 	}
 
-	int CWaveguide::GetIndexOfCirculaBuffer(boost::circular_buffer<float>::iterator it) {
-		return (it - circular_buffer.begin());
-	}
+	//int CWaveguide::GetIndexOfCirculaBuffer(boost::circular_buffer<float>::iterator it) {
+	//	return (it - circular_buffer.begin());
+	//}
 
 	/// Resize the circular buffer
 	void CWaveguide::ResizeCirculaBuffer(size_t newSize) {
@@ -177,9 +205,10 @@ namespace Common {
 		}
 	}
 
-	/// Changes de circular buffer capacity, throwing away the oldest samples
+	/// Changes de circular buffer capacity, throwing away the oldest samples.	
 	void CWaveguide::RsetCirculaBuffer(size_t newSize) { 
 		try {						
+			/// It adds space to future samples on the back side and throws samples from the front side
 			circular_buffer.rset_capacity(newSize);
 		}
 		catch (std::bad_alloc &) {
@@ -188,12 +217,12 @@ namespace Common {
 		}	
 	}
 
-	float CWaveguide::CalculateSourceDistanceChange(const CVector3 & newSourcePosition) {
-		
-		CVector3 sourceOldPosition = GetLastSourcePosition();
-		float distance = CalculateDistance(newSourcePosition, previousListenerPosition) - CalculateDistance(sourceOldPosition, previousListenerPosition);	
-		return distance;
-	}
+	//float CWaveguide::CalculateSourceDistanceChange(const CVector3 & newSourcePosition) {
+	//	
+	//	CVector3 sourceOldPosition = GetLastSourcePosition();
+	//	float distance = CalculateDistance(newSourcePosition, previousListenerPosition); // - CalculateDistance(sourceOldPosition, previousListenerPosition);
+	//	return distance;
+	//}
 
 	const float CWaveguide::CalculateDistance(const CVector3 & position1, const CVector3 & position2) const
 	{
@@ -204,18 +233,18 @@ namespace Common {
 	}
 
 
-	float CWaveguide::CalculateListenerDistanceChange(const CVector3 & newListenerPosition) {
+	//float CWaveguide::CalculateListenerDistanceChange(const CVector3 & newListenerPosition) {
 
-		CVector3 sourcePositionWhenEmited = GetSourcePositionWhenEmmited();
-		float distance = CalculateDistance(newListenerPosition, sourcePositionWhenEmited) - CalculateDistance(previousListenerPosition, sourcePositionWhenEmited);
-		return distance;
-	}
+	//	CVector3 sourcePositionWhenEmited = GetSourcePositionWhenEmmited();
+	//	float distance = CalculateDistance(newListenerPosition, sourcePositionWhenEmited) - CalculateDistance(previousListenerPosition, sourcePositionWhenEmited);
+	//	return distance;
+	//}
 
 	//////////////////////////////////////////////
 
 
 	/// Calculate the new delay in samples.
-	size_t CWaveguide::CalculateDelay(Common::TAudioStateStruct audioState, float soundSpeed, float distanceInMeters)
+	size_t CWaveguide::CalculateDistanceInSamples(Common::TAudioStateStruct audioState, float soundSpeed, float distanceInMeters)
 	{
 		double delaySeconds = distanceInMeters / soundSpeed;		
 		size_t delaySamples = std::nearbyint(delaySeconds * audioState.sampleRate);				
@@ -291,12 +320,12 @@ namespace Common {
 	////////////////////////////
 	// Source Positions Buffer
 	////////////////////////////
-	void CWaveguide::InitSourcePositionBuffer(int numberOFZeroSamples) {		
-		
-		previousSourcePositionsBuffer.clear();
-		CVector3 sourcePosition(0, 0, 0);				
-		TSourcePosition temp(0, numberOFZeroSamples - 1, sourcePosition);
-		previousSourcePositionsBuffer.push_back(temp);
+
+	/// Initialize the source Position Buffer at the begining. It is going to be supposed that the source was in that position since ever.
+	void CWaveguide::InitSourcePositionBuffer(int _numberOFZeroSamples, const CVector3 & _sourcePosition) {		
+		sourcePositionsBuffer.clear();	
+		TSourcePosition temp(0, _numberOFZeroSamples - 1, _sourcePosition); 
+		sourcePositionsBuffer.push_back(temp);
 	}
 
 	void CWaveguide::InsertSourcePositionBuffer(int bufferSize, const CVector3 & _sourcePosition) {
@@ -310,7 +339,7 @@ namespace Common {
 		//ShiftSourcePositionsBuffer(end - begin + 1);
 		
 		TSourcePosition temp(begin, end, sourcePosition);
-		previousSourcePositionsBuffer.push_back(temp);
+		sourcePositionsBuffer.push_back(temp);
 	}
 	void CWaveguide::ShiftSourcePositionsBuffer(int samples){
 		
@@ -318,7 +347,7 @@ namespace Common {
 		
 		int positionToDelete = -1;
 		int index = 0;
-		for (auto &element : previousSourcePositionsBuffer) {
+		for (auto &element : sourcePositionsBuffer) {
 			element.beginIndex = element.beginIndex - samples;
 			element.endIndex = element.endIndex - samples;
 			if (element.endIndex < 0) { 
@@ -330,29 +359,30 @@ namespace Common {
 			index++;
 		}
 		if (positionToDelete != -1) { 
-			previousSourcePositionsBuffer.erase(previousSourcePositionsBuffer.begin() + positionToDelete);
+			sourcePositionsBuffer.erase(sourcePositionsBuffer.begin() + positionToDelete);
 		}
 
 	}
 	
 	/// Get the last source position
 	CVector3 CWaveguide::GetLastSourcePosition() {		
-		if (previousSourcePositionsBuffer.size() == 0) {			
-			CVector3 oldPosition(0, 0, 0);
-			return oldPosition;
+		if (sourcePositionsBuffer.size() == 0) {			
+			CVector3 previousSourcePosition(0, 0, 0);
+			return previousSourcePosition;
 		}
-		else {
-			CVector3 oldPosition(previousSourcePositionsBuffer[previousSourcePositionsBuffer.size() - 1].x, previousSourcePositionsBuffer[previousSourcePositionsBuffer.size() - 1].y, previousSourcePositionsBuffer[previousSourcePositionsBuffer.size() - 1].z);			
-			return previousSourcePositionsBuffer[previousSourcePositionsBuffer.size() - 1].GetPosition();			
+		else {			
+			//return sourcePositionsBuffer.back.GetPosition();
+			return sourcePositionsBuffer[sourcePositionsBuffer.size() - 1].GetPosition();			
 		}	
 	}
 
 	// Get the next buffer source position
-	CVector3 CWaveguide::GetSourcePositionWhenEmmited() {		
+	CVector3 CWaveguide::GetSourcePositionWhenEmmited(int bufferSize) {
 		/// TODO Check the buffer size to select the sourceposition, maybe the output buffer will include more than the just first position of the source position buffer
 
-		return previousSourcePositionsBuffer.front.GetPosition();
+		return sourcePositionsBuffer.front().GetPosition();
 	}
+
 
 	// TO BE DELETED
 	//void CWaveguide::CoutCircularBuffer()

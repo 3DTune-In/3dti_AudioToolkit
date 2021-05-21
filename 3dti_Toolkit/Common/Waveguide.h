@@ -57,7 +57,8 @@ namespace Common {
 
 		/** \brief Constructor
 		*/		
-		CWaveguide() : enablePropagationDelay(false) {}
+		//CWaveguide() : enablePropagationDelay(false) {}
+		CWaveguide() : enablePropagationDelay(false), previousListenerPositionInitialized(false) {}
 
 
 		/** \brief Enable propagation delay for this waveguide
@@ -79,8 +80,7 @@ namespace Common {
 
 		/** \brief Insert the new frame into the waveguide
 		*/		
-		//void PushBack(CMonoBuffer<float> & _buffer, const Common::TAudioStateStruct& audioState, float soundSpeed, float currentDistanceToListener);
-		void PushBack(const CMonoBuffer<float> & inputbuffer, const CVector3 & sourcePosition, const Common::TAudioStateStruct& audioState, float soundSpeed/*, float currentDistanceToListener*/);
+		void PushBack(const CMonoBuffer<float> & inputbuffer, const CVector3 & sourcePosition, const CVector3 & _listenerPosition, const Common::TAudioStateStruct& audioState, float soundSpeed);
 		
 		/** \brief Get next frame frame after pass throught the waveguide
 		*/
@@ -92,13 +92,13 @@ namespace Common {
 				
 	private:
 		/// Processes the input buffer according to the movement of the source.
-		void ProcessSourceMovement(const CMonoBuffer<float> & _inputBuffer, const Common::TAudioStateStruct& _audioState, float soundSpeed, const CVector3 & _sourcePosition);
+		void ProcessSourceMovement(const CMonoBuffer<float> & _inputBuffer, const CVector3 & _sourcePosition, const CVector3 & _listenerPosition, const Common::TAudioStateStruct& _audioState, float _soundSpeed);
 		
 		/// Processes the existing samples in the waveguide to obtain an output buffer according to the new listener position.
 		CMonoBuffer<float> ProcessListenerMovement(const Common::TAudioStateStruct& _audioState, const CVector3 & _listenerPosition, float soundSpeed);
 
 		/// Calculate the new delay in samples.
-		size_t CalculateDelay(Common::TAudioStateStruct audioState, float soundSpeed, float distanceToListener);		
+		size_t CalculateDistanceInSamples(Common::TAudioStateStruct audioState, float soundSpeed, float distanceToListener);		
 		
 		/// Resize the circular buffer
 		void ResizeCirculaBuffer(size_t newSize);
@@ -115,16 +115,16 @@ namespace Common {
 		//CMonoBuffer<CVector3> GetSourcePositionsBuffer(size_t size, CVector3 sourcePosition);
 		void InsertSourcePositionBuffer(int bufferSize, const CVector3 & sourcePosition);
 		void InsertSourcePositionBuffer(int begin, int end, const CVector3 & sourcePosition);
-		void InitSourcePositionBuffer(int numberOFZeroSamples);
+		void InitSourcePositionBuffer(int numberOFZeroSamples, const CVector3 & sourcePosition);
 		void ShiftSourcePositionsBuffer(int samples);
-		int GetIndexOfCirculaBuffer(boost::circular_buffer<float>::iterator it);
+		//int GetIndexOfCirculaBuffer(boost::circular_buffer<float>::iterator it);
 		
 		const float CalculateDistance(const CVector3 & position1, const CVector3 & position2) const;
 						
-		float CalculateSourceDistanceChange(const CVector3 & newSourcePosition);
-		float CalculateListenerDistanceChange(const CVector3 & newListenerPosition);
+		//float CalculateSourceDistanceChange(const CVector3 & newSourcePosition);
+		//float CalculateListenerDistanceChange(const CVector3 & newListenerPosition);
 		CVector3 GetLastSourcePosition();
-		CVector3 CWaveguide::GetSourcePositionWhenEmmited();
+		CVector3 GetSourcePositionWhenEmmited(int bufferSize);		
 		
 		///////////////
 		// Vars
@@ -133,8 +133,10 @@ namespace Common {
 		CMonoBuffer<float> mostRecentBuffer;			/// To store the last buffer introduced into the waveguide
 		boost::circular_buffer<float> circular_buffer;	/// To store the samples into the waveguide			
 		
-		vector<TSourcePosition> previousSourcePositionsBuffer;	/// To store the source positions in each frame
+		vector<TSourcePosition> sourcePositionsBuffer;	/// To store the source positions in each frame
 		CVector3 previousListenerPosition;				/// To store the last position of the listener
+		bool previousListenerPositionInitialized;		/// To store if the last position of the listener has been initialized
+		//int previosOutputBufferSamples;
 
 		//TO DO Delete me
 		//int contadorDani; 
