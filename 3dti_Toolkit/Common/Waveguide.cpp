@@ -58,17 +58,17 @@ namespace Common {
 	}
 	
 	/// Return next buffer frame after pass throught the waveguide
-	CMonoBuffer<float> CWaveguide::PopFront(const CVector3 & _listenerPosition, const Common::TAudioStateStruct& _audioState, float _soundSpeed)	{
+	void CWaveguide::PopFront(CMonoBuffer<float> & outbuffer, const CVector3 & _listenerPosition, CVector3 & sourcePositionWhenWasEmitted, const Common::TAudioStateStruct& _audioState, float _soundSpeed)	{
 		
 		// if the propagation delay is not activated, just return the last input buffer
-		if (!enablePropagationDelay) { return mostRecentBuffer; }
+		if (!enablePropagationDelay) { outbuffer = mostRecentBuffer; }
 		
 		// Pop really doesn't pop. The next time a buffer is pushed, it will be removed.  		
 		/*CMonoBuffer<float> returnbuffer(circular_buffer.begin(), circular_buffer.begin() + _audioState.bufferSize);
 		ShiftSourcePositionsBuffer(_audioState.bufferSize);
 		return returnbuffer;*/
 
-		return ProcessListenerMovement(_audioState, _listenerPosition, _soundSpeed);
+		ProcessListenerMovement(outbuffer, _audioState, sourcePositionWhenWasEmitted, _listenerPosition, _soundSpeed);
 	}
 
 	/// Return last frame introduced into the waveguide
@@ -98,91 +98,122 @@ namespace Common {
 			InitSourcePositionBuffer(changeInDelayInSamples, _sourcePosition);			// Introduce first data into the sourcePositionBuffer.
 			// Save data into the circular_buffer	
 			circular_buffer.insert(circular_buffer.end(), _inputBuffer.begin(), _inputBuffer.end());	// Introduce the input buffer into the circular buffer			
-			InsertSourcePositionBuffer(_inputBuffer.size(), _sourcePosition);							// Introduce the source positions into its buffer
+			InsertBackSourcePositionBuffer(_inputBuffer.size(), _sourcePosition);							// Introduce the source positions into its buffer
 		}											
 		else if (changeInDelayInSamples == 0)
 		{
 			//No movement
 			circular_buffer.insert(circular_buffer.end(), _inputBuffer.begin(), _inputBuffer.end());	//introduce the input buffer into the circular buffer			
-			InsertSourcePositionBuffer(_inputBuffer.size(), _sourcePosition);	// introduce the source positions into its buffer						
+			InsertBackSourcePositionBuffer(_inputBuffer.size(), _sourcePosition);	// introduce the source positions into its buffer						
 		}
 		else {
 			// Source Movement
 			// Circular Buffer has to grow and Input buffer has to be expanded or
 			// Circular Buffer has to shrink and Input buffer has to be compressed	
 			// 
-			// A soundsource approaches to you, the sound reach that reach you have a shorter wavelength and a higher frequency --> Time Compresion
+			// A soundsource approaches to you, the sound that reach you have a shorter wavelength and a higher frequency -- insertBufferSize < bufferSize --> Time Compresion
 			// A soundsource moves away from you, the sound waves that reach you have a longer wavelength and lower frequency --> Time expansion
 			
 			int currentDelayInSamples	= circular_buffer.size() - _audioState.bufferSize;		// Calculate current delay in samples		
 			int newDelayInSamples		= changeInDelayInSamples + currentDelayInSamples;		// Calculate the new delay in samples
-			int newBufferSize			= changeInDelayInSamples + _audioState.bufferSize;				// Calculate the expasion/compression
-			if (newBufferSize < 0) {
-				// TO DO Why would this happen?
-				SET_RESULT(RESULT_ERROR_BADALLOC, "Bad alloc in delay buffer in CWaveguide. (newBufferSize < 0)");
-				newBufferSize = 0; // TODO think if this solution is ok?
-			}
-			// Prepare buffer
-			//CMonoBuffer<float> readyToInsertBuffer;			
-			//readyToInsertBuffer.resize(newBufferSize);									
-			// Expand Buffer
-			//ProcessExpansionCompressionMethod(_inputBuffer, readyToInsertBuffer);
-			// Change circular_buffer capacity. This is when you throw away the samples, which are already out.
-			//RsetCirculaBuffer(newDelayInSamples + _audioState.bufferSize);			
-			// Insert into circular buffer 		
-			//circular_buffer.insert(circular_buffer.end(), readyToInsertBuffer.begin(), readyToInsertBuffer.end());	
-
-			// TODO Alternative version that is more optimal, using push_back in the expansion/compression algorith to insert sample by sample directly, 
-			// into the circular buffer. Saves having to create a buffer and insert it at the end. Next two line sinstead the previous four
-
-			// Change circular_buffer capacity. This is when you throw away the samples, which are already out.
-			//int currentSamples = circular_buffer.capacity();			
-			RsetCirculaBuffer(newDelayInSamples + _audioState.bufferSize);
-			//ShiftSourcePositionsBuffer(currentSamples- newDelayInSamples - _audioState.bufferSize);
-
-			// Expand or compress and insert into the cirular buffer			
-			ProcessExpansionCompressionMethod(_inputBuffer, newBufferSize);
-			InsertSourcePositionBuffer(newBufferSize, _sourcePosition);	// introduce the source positions into its buffer			
+			int insertBufferSize		= changeInDelayInSamples + _audioState.bufferSize;		// Calculate the expasion/compression
 			
-		}
+			if (insertBufferSize <= 0) {								
+				// When sound approaches to the lister faster than the sound velocity
+				SetCirculaBufferCapacity(newDelayInSamples + _audioState.bufferSize);		// Remove samples from circular buffer															
+				ResizeSourcePositionsBuffer(circular_buffer.size());						// Remove samples for source positions buffer
+				//Insert nothing to the circular buffer
+				InsertBackSourcePositionBuffer(1, _sourcePosition);							// Insert the last position with zero samples into the source position buffer				
+			}
+			else {
+				// Prepare buffer
+				//CMonoBuffer<float> readyToInsertBuffer;			
+				//readyToInsertBuffer.resize(newBufferSize);									
+				// Expand Buffer
+				//ProcessExpansionCompressionMethod(_inputBuffer, readyToInsertBuffer);
+				// Change circular_buffer capacity. This is when you throw away the samples, which are already out.
+				//RsetCirculaBuffer(newDelayInSamples + _audioState.bufferSize);			
+				// Insert into circular buffer 		
+				//circular_buffer.insert(circular_buffer.end(), readyToInsertBuffer.begin(), readyToInsertBuffer.end());	
 
+				// TODO Alternative version that is more optimal, using push_back in the expansion/compression algorith to insert sample by sample directly, 
+				// into the circular buffer. Saves having to create a buffer and insert it at the end. Next two line sinstead the previous four
+
+				// Change circular_buffer capacity. This is when you throw away the samples, which are already out.
+				//int currentSamples = circular_buffer.capacity();			
+				RsetCirculaBuffer(newDelayInSamples + _audioState.bufferSize);
+				//ShiftSourcePositionsBuffer(currentSamples- newDelayInSamples - _audioState.bufferSize);
+
+				// Expand or compress and insert into the cirular buffer			
+				ProcessExpansionCompressionMethod(_inputBuffer, insertBufferSize);
+				InsertBackSourcePositionBuffer(insertBufferSize, _sourcePosition);	// introduce the source positions into its buffer	
+			}								
+		}
+		CheckIntegritySourcePositionsBuffer();
 	}
 
-	CMonoBuffer<float> CWaveguide::ProcessListenerMovement(const Common::TAudioStateStruct& _audioState, const CVector3 & _listenerPosition, float soundSpeed) {		
-		CVector3 sourcePositionWhenEmited = GetSourcePositionWhenEmmited(_audioState.bufferSize);	// Get the next samples source position
+	void CWaveguide::ProcessListenerMovement(CMonoBuffer<float> & outbuffer, const Common::TAudioStateStruct& _audioState, CVector3 & _sourcePositionWhenWasEmitted, const CVector3 & _listenerPosition, float soundSpeed) {
 		
+		// Get the source position when the nexts samples were emited
+		_sourcePositionWhenWasEmitted = GetSourcePositionWhenEmmited(_audioState.bufferSize);	// Get the next samples source position		
 		// Calculate the new delay taking into account the current listener position respect to the source position when the samples were emmited
-		float currentDistanceToEmitedSource = CalculateDistance(_listenerPosition, sourcePositionWhenEmited);
-		float oldDistanceToEmitedSource = CalculateDistance(previousListenerPosition, sourcePositionWhenEmited);
+		float currentDistanceToEmitedSource = CalculateDistance(_listenerPosition, _sourcePositionWhenWasEmitted);
+		float oldDistanceToEmitedSource = CalculateDistance(previousListenerPosition, _sourcePositionWhenWasEmitted);
 		float distanceDiferenceToEmmitedSource = currentDistanceToEmitedSource - oldDistanceToEmitedSource;
+		previousListenerPosition = _listenerPosition;	// Update Listener position		
 
+		// Calculate delay in samples. 
+		// if it's < 0 --> towards the source. 	// if it's > 0 --> moving away from the source
 		int changeInDelayInSamples = CalculateDistanceInSamples(_audioState, soundSpeed, distanceDiferenceToEmmitedSource);
-		previousListenerPosition = _listenerPosition;													// Update Listener position		
-				
+		// Calculate samples to be extracted from the ciruclar buffer		
 		// An observer moving towards the source measures a higher frequency  --> More than 512 --> Time compression 
 		// An observer moving away from the source measures a lower frequency --> Less than 512 --> Time expansion		
-		int newBufferSize = _audioState.bufferSize - changeInDelayInSamples;	// Calculate the expasion/compression		
+		int samplesToBeExtracted = _audioState.bufferSize - changeInDelayInSamples;	// Calculate the expasion/compression		
 
-		//Get samples from buffer
-		CMonoBuffer<float> extractingBuffer(circular_buffer.begin(), circular_buffer.begin() + newBufferSize /*_audioState.bufferSize*/);
-		ShiftSourcePositionsBuffer(newBufferSize);		// Delete samples that have left the buffer storing the source positions.
+		// In case the listener is moving away from the source faster than the sound speed
+		if (samplesToBeExtracted <= 0) {	
+			samplesToBeExtracted *= -1;		// To operate with a positive number
+			// Increase the buffer capacity so that no samples are lost.
+			RsetCirculaBuffer(circular_buffer.capacity() + _audioState.bufferSize + samplesToBeExtracted);
+			// Introduce zeros at the begging of the buffer
+			CMonoBuffer<float> insertBuffer(samplesToBeExtracted);
+			circular_buffer.insert(circular_buffer.begin(), insertBuffer.begin(), insertBuffer.end());
+			//Introduce the new sample into the buffer of source positions
+			ShiftRightSourcePositionsBuffer(samplesToBeExtracted);
+			InsertFrontSourcePositionBuffer(samplesToBeExtracted, CVector3(0,0,0));
+			// Output a frame of zeros
+			//CMonoBuffer<float> returnBuffer(_audioState.bufferSize);	
+			//return returnBuffer;
+			outbuffer.resize(_audioState.bufferSize);			
+		}
 
-		// Check if it needes to do and expasion or compression
-		if (newBufferSize == _audioState.bufferSize) { return extractingBuffer; }
-		
-		//In case we need to expand or compress
-		
-		// the capacity of the circular buffer must be increased with the samples that have not been removed
-		//int t = circular_buffer.capacity() + _audioState.bufferSize - newBufferSize;
-		RsetCirculaBuffer(circular_buffer.capacity() + _audioState.bufferSize - newBufferSize);
-		
-		// Expand or compress
-		CMonoBuffer<float> returnBuffer;
-		returnBuffer.resize(_audioState.bufferSize);							// Prepare buffer			
-		ProcessExpansionCompressionMethod(extractingBuffer, returnBuffer);		// Expand or compress the buffer
-		return returnBuffer;
-		
-		
+		// In other case Get samples from buffer
+		//CMonoBuffer<float> extractingBuffer(circular_buffer.begin(), circular_buffer.begin() + samplesToBeExtracted /*_audioState.bufferSize*/);				
+		//ShiftLeftSourcePositionsBuffer(samplesToBeExtracted);		// Delete samples that have left the buffer storing the source positions.
+
+
+		if (samplesToBeExtracted == _audioState.bufferSize) { 
+			// If it doesn't needed to do and expasion or compression
+			
+			//CMonoBuffer<float> extractingBuffer(circular_buffer.begin(), circular_buffer.begin() + samplesToBeExtracted /*_audioState.bufferSize*/);						
+			//outbuffer.resize(samplesToBeExtracted);
+			outbuffer.insert(outbuffer.begin(), circular_buffer.begin(), circular_buffer.begin() + samplesToBeExtracted);
+			ShiftLeftSourcePositionsBuffer(samplesToBeExtracted);		// Delete samples that have left the buffer storing the source positions.
+			/*return extractingBuffer*/; 
+		}
+		else {
+			//In case we need to expand or compress
+			CMonoBuffer<float> extractingBuffer(circular_buffer.begin(), circular_buffer.begin() + samplesToBeExtracted /*_audioState.bufferSize*/);
+			ShiftLeftSourcePositionsBuffer(samplesToBeExtracted);		// Delete samples that have left the buffer storing the source positions.					
+			// the capacity of the circular buffer must be increased with the samples that have not been removed		
+			RsetCirculaBuffer(circular_buffer.capacity() + _audioState.bufferSize - samplesToBeExtracted);
+			// Expand or compress the buffer and return it
+			//CMonoBuffer<float> returnBuffer;
+			outbuffer.resize(_audioState.bufferSize);							// Prepare buffer			
+			ProcessExpansionCompressionMethod(extractingBuffer, outbuffer);		// Expand or compress the buffer
+			//return returnBuffer;
+		}
+							
 		// Pop really doesn't pop. The next time a buffer is pushed, it will be removed.  		
 		//CMonoBuffer<float> returnbuffer(circular_buffer.begin(), circular_buffer.begin() + _audioState.bufferSize);
 		//ShiftSourcePositionsBuffer(_audioState.bufferSize);
@@ -204,6 +235,19 @@ namespace Common {
 			return;
 		}
 	}
+
+	/// Changes de circular buffer capacity, throwing away the oldest samples.	
+	void CWaveguide::SetCirculaBufferCapacity(size_t newSize) {
+		try {
+			/// It adds space to future samples on the back side and throws samples from the front side
+			circular_buffer.set_capacity(newSize);
+		}
+		catch (std::bad_alloc &) {
+			SET_RESULT(RESULT_ERROR_BADALLOC, "Bad alloc in delay buffer (pushing back frame)");
+			return;
+		}
+	}
+
 
 	/// Changes de circular buffer capacity, throwing away the oldest samples.	
 	void CWaveguide::RsetCirculaBuffer(size_t newSize) { 
@@ -328,42 +372,81 @@ namespace Common {
 		sourcePositionsBuffer.push_back(temp);
 	}
 
-	void CWaveguide::InsertSourcePositionBuffer(int bufferSize, const CVector3 & _sourcePosition) {
+	void CWaveguide::InsertBackSourcePositionBuffer(int bufferSize, const CVector3 & _sourcePosition) {
 		int begin = circular_buffer.size() - bufferSize;
 		int end = circular_buffer.size() - 1;
-		InsertSourcePositionBuffer(begin, end, _sourcePosition);			// introduce in to the sourcepositionsbuffer	
+		TSourcePosition temp(begin, end, _sourcePosition);
+		sourcePositionsBuffer.push_back(temp);						// introduce in to the sourcepositionsbuffer		
 	}
 
-	void CWaveguide::InsertSourcePositionBuffer(int begin, int end, const CVector3 & sourcePosition) {
-	
-		//ShiftSourcePositionsBuffer(end - begin + 1);
-		
-		TSourcePosition temp(begin, end, sourcePosition);
-		sourcePositionsBuffer.push_back(temp);
+	void CWaveguide::InsertFrontSourcePositionBuffer(int samples, const CVector3 & _sourcePosition) {
+				
+		TSourcePosition temp(0, samples-1, _sourcePosition);
+		sourcePositionsBuffer.insert(sourcePositionsBuffer.begin(), temp);
 	}
-	void CWaveguide::ShiftSourcePositionsBuffer(int samples){
-		
+	
+	/// Shifts all buffer positions to the left, deleting any that become negative. 
+	/// This is because it is assumed that samples will have come out of the circular buffer from the front.
+	void CWaveguide::ShiftLeftSourcePositionsBuffer(int samples){
+
+		vector<int> positionsToDelete;
 		if (samples <= 0) { return; }
 		
-		int positionToDelete = -1;
+		//int positionToDelete = -1;
 		int index = 0;
 		for (auto &element : sourcePositionsBuffer) {
 			element.beginIndex = element.beginIndex - samples;
 			element.endIndex = element.endIndex - samples;
 			if (element.endIndex < 0) { 
 				// Delete
-				positionToDelete = index;
+				//positionToDelete = index;
+				positionsToDelete.push_back(index);
 			}else if (element.beginIndex < 0) { 
 				element.beginIndex = 0;
 			}			
 			index++;
 		}
-		if (positionToDelete != -1) { 
-			sourcePositionsBuffer.erase(sourcePositionsBuffer.begin() + positionToDelete);
+		for (auto &element : positionsToDelete) {
+		//if (positionToDelete != -1) { 
+			sourcePositionsBuffer.erase(sourcePositionsBuffer.begin() + element);
 		}
 
 	}
-	
+
+	/// Shifts all buffer positions to the right. 
+	/// This is because it is assumed that samples will have been added on the front in the circular buffer.
+	void CWaveguide::ShiftRightSourcePositionsBuffer(int samples) {
+
+		if (samples <= 0) { return; }
+		
+		for (auto &element : sourcePositionsBuffer) {
+			element.beginIndex = element.beginIndex + samples;
+			element.endIndex = element.endIndex + samples;
+		
+		}	
+	}
+
+	/// Remove samples from the back side of the buffer in order to have the same size that the circular buffer	
+	void CWaveguide::ResizeSourcePositionsBuffer(int newSize) {
+		
+		vector<int> positionsToDelete;
+		if (newSize <= 0) { return; }
+				
+		for (int i = sourcePositionsBuffer.size() - 1; i > -1; i--) {
+			
+			if (sourcePositionsBuffer[i].beginIndex > newSize - 1) {
+				positionsToDelete.push_back(i);
+			}
+			else if (sourcePositionsBuffer[i].endIndex > newSize - 1) {
+				sourcePositionsBuffer[i].endIndex = newSize -1 ;
+			}			
+		}
+
+		for (auto &element : positionsToDelete) {			
+			sourcePositionsBuffer.erase(sourcePositionsBuffer.begin() + element);
+		}
+	}
+
 	/// Get the last source position
 	CVector3 CWaveguide::GetLastSourcePosition() {		
 		if (sourcePositionsBuffer.size() == 0) {			
@@ -382,7 +465,13 @@ namespace Common {
 
 		return sourcePositionsBuffer.front().GetPosition();
 	}
-
+	
+	void CWaveguide::CheckIntegritySourcePositionsBuffer() {
+		if (sourcePositionsBuffer.size() == 0) { return; }
+		if ((sourcePositionsBuffer[sourcePositionsBuffer.size() - 1].endIndex) != (circular_buffer.size() - 1)) {
+			cout << "error";
+		}
+	}
 
 	// TO BE DELETED
 	//void CWaveguide::CoutCircularBuffer()

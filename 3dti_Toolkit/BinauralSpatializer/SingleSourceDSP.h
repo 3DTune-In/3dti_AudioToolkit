@@ -292,18 +292,7 @@ namespace Binaural {
 		*   \eh On error, an error code is reported to the error handler.
 		*/
 		float GetEarElevation(Common::T_ear ear) const;
-
-		/** \brief Set fixed delay. For testing purposes only, will be removed
-		*   \param [in] fixed delay in milliseconds. 
-		*/
-		//void SetDelay(double milliseconds); 
-
-		/** \brief Recalculates the delay in sound propag. between Source and Listener corresponding to their distance. 
-		*/
-		void CalculateChannelDelay();
-
-
-
+	
 	private:	
 		/////////////
 		// METHODS	
@@ -342,6 +331,7 @@ namespace Binaural {
 		// Calculates the values ot attributes related to the relative position between sound source and
 		// the listener.
 		void CalculateSourceCoordinates();
+		void CalculateSourceCoordinates(Common::CTransform sourceTransform);
 
 
 		///////////////

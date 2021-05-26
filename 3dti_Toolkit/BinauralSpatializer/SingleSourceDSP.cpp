@@ -231,9 +231,19 @@ namespace Binaural {
 	// Process data from input buffer to generate anechoic spatialization (direct path). Overloaded: using internal buffer
 	void CSingleSourceDSP::ProcessAnechoic(CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer)
 	{
-		if (readyForAnechoic) {
-			Common::CTransform listenerTransform = ownerCore->GetListener()->GetListenerTransform();			
-			ProcessAnechoic(channelToListener.PopFront(listenerTransform.GetPosition(), ownerCore->GetAudioState(), ownerCore->GetMagnitudes().GetSoundSpeed()), outLeftBuffer, outRightBuffer);
+		if (readyForAnechoic) {			
+			CMonoBuffer<float> inBuffer;
+			Common::CVector3 sourcePositionToConvolution;												
+			//Get buffer and source position to process
+			Common::CTransform listenerTransform = ownerCore->GetListener()->GetListenerTransform();
+			channelToListener.PopFront(inBuffer, listenerTransform.GetPosition(), sourcePositionToConvolution, ownerCore->GetAudioState(), ownerCore->GetMagnitudes().GetSoundSpeed());			
+			// Calculate source position coordinates
+			Common::CTransform sourcePositionToConvolutionTransform;
+			sourcePositionToConvolutionTransform.SetPosition(sourcePositionToConvolution);						
+			CalculateSourceCoordinates(sourcePositionToConvolutionTransform);
+			cout << "   sourcePosition to covolution: [" << sourcePositionToConvolution.x << ", " << sourcePositionToConvolution.y << ", " << sourcePositionToConvolution.z << "]" << endl;
+			// Process the buffer
+			ProcessAnechoic(inBuffer, outLeftBuffer, outRightBuffer);
 		}
 		else
 		{
@@ -334,7 +344,11 @@ namespace Binaural {
 	}
 
 	// Calculates the values returned by GetEarAzimuth and GetEarElevation
-	void CSingleSourceDSP::CalculateSourceCoordinates()
+	void CSingleSourceDSP::CalculateSourceCoordinates() {
+		CalculateSourceCoordinates(sourceTransform);
+	}
+	
+	void CSingleSourceDSP::CalculateSourceCoordinates(Common::CTransform sourceTransform)
 	{
 
 		//Get azimuth and elevation between listener and source

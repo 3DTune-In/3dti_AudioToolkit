@@ -84,7 +84,7 @@ namespace Common {
 		
 		/** \brief Get next frame frame after pass throught the waveguide
 		*/
-		CMonoBuffer<float> PopFront(const CVector3 & listenerPosition, const Common::TAudioStateStruct& audioState, float soundSpeed);
+		void PopFront(CMonoBuffer<float> & outbuffer, const CVector3 & listenerPosition, CVector3 & sourcePositionWhenWasEmitted, const Common::TAudioStateStruct& audioState, float soundSpeed);
 		
 		/** \brief Get most recent Buffer
 		*/
@@ -95,14 +95,15 @@ namespace Common {
 		void ProcessSourceMovement(const CMonoBuffer<float> & _inputBuffer, const CVector3 & _sourcePosition, const CVector3 & _listenerPosition, const Common::TAudioStateStruct& _audioState, float _soundSpeed);
 		
 		/// Processes the existing samples in the waveguide to obtain an output buffer according to the new listener position.
-		CMonoBuffer<float> ProcessListenerMovement(const Common::TAudioStateStruct& _audioState, const CVector3 & _listenerPosition, float soundSpeed);
+		void ProcessListenerMovement(CMonoBuffer<float> & outbuffer, const Common::TAudioStateStruct& _audioState, CVector3 & sourcePositionWhenWasEmitted, const CVector3 & _listenerPosition, float soundSpeed);
 
 		/// Calculate the new delay in samples.
 		size_t CalculateDistanceInSamples(Common::TAudioStateStruct audioState, float soundSpeed, float distanceToListener);		
 		
 		/// Resize the circular buffer
-		void ResizeCirculaBuffer(size_t newSize);
-		
+		void ResizeCirculaBuffer(size_t newSize);		
+		/// Changes de circular buffer capacity, throwing away the newest samples
+		void CWaveguide::SetCirculaBufferCapacity(size_t newSize);
 		/// Changes de circular buffer capacity, throwing away the oldest samples
 		void CWaveguide::RsetCirculaBuffer(size_t newSize);
 		
@@ -110,14 +111,14 @@ namespace Common {
 		void ProcessExpansionCompressionMethod(const CMonoBuffer<float>& input, CMonoBuffer<float>& output);
 		/// Execute a buffer expansion or compression, and introduce the samples directly into the circular buffer
 		void ProcessExpansionCompressionMethod(const CMonoBuffer<float>& input, int outputSize);		
-		
-		//void ResizeSourcePositionBuffer(size_t newSize, CVector3 sourcePosition);
-		//CMonoBuffer<CVector3> GetSourcePositionsBuffer(size_t size, CVector3 sourcePosition);
-		void InsertSourcePositionBuffer(int bufferSize, const CVector3 & sourcePosition);
-		void InsertSourcePositionBuffer(int begin, int end, const CVector3 & sourcePosition);
+				
+		void InsertBackSourcePositionBuffer(int bufferSize, const CVector3 & sourcePosition);
+		void InsertFrontSourcePositionBuffer(int samples, const CVector3 & sourcePosition);
 		void InitSourcePositionBuffer(int numberOFZeroSamples, const CVector3 & sourcePosition);
-		void ShiftSourcePositionsBuffer(int samples);
-		//int GetIndexOfCirculaBuffer(boost::circular_buffer<float>::iterator it);
+		void ShiftLeftSourcePositionsBuffer(int samples);
+		void ShiftRightSourcePositionsBuffer(int samples);		
+		void ResizeSourcePositionsBuffer(int samples);
+		void CWaveguide::CheckIntegritySourcePositionsBuffer();
 		
 		const float CalculateDistance(const CVector3 & position1, const CVector3 & position2) const;
 						
