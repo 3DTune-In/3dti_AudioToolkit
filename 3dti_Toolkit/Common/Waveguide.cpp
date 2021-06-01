@@ -119,7 +119,7 @@ namespace Common {
 			int insertBufferSize		= changeInDelayInSamples + _audioState.bufferSize;		// Calculate the expasion/compression
 			
 			if (insertBufferSize <= 0) {								
-				// When sound approaches to the lister faster than the sound velocity
+				// When soundsource approaches to the lister faster than the sound velocity
 				SetCirculaBufferCapacity(newDelayInSamples + _audioState.bufferSize);		// Remove samples from circular buffer															
 				ResizeSourcePositionsBuffer(circular_buffer.size());						// Remove samples for source positions buffer
 				//Insert nothing to the circular buffer
@@ -155,7 +155,7 @@ namespace Common {
 	void CWaveguide::ProcessListenerMovement(CMonoBuffer<float> & outbuffer, const Common::TAudioStateStruct& _audioState, CVector3 & _sourcePositionWhenWasEmitted, const CVector3 & _listenerPosition, float soundSpeed) {
 		
 		// Get the source position when the nexts samples were emited
-		_sourcePositionWhenWasEmitted = GetSourcePositionWhenEmmited(_audioState.bufferSize);	// Get the next samples source position		
+		_sourcePositionWhenWasEmitted = GetNextSourcePosition(_audioState.bufferSize);	// Get the next samples source position		
 		// Calculate the new delay taking into account the current listener position respect to the source position when the samples were emmited
 		float currentDistanceToEmitedSource = CalculateDistance(_listenerPosition, _sourcePositionWhenWasEmitted);
 		float oldDistanceToEmitedSource = CalculateDistance(previousListenerPosition, _sourcePositionWhenWasEmitted);
@@ -220,9 +220,9 @@ namespace Common {
 		//return returnBuffer;
 	}
 
-	//int CWaveguide::GetIndexOfCirculaBuffer(boost::circular_buffer<float>::iterator it) {
-	//	return (it - circular_buffer.begin());
-	//}
+	/////////////////////////////
+	/// CIRCULAR BUFFER
+	/////////////////////////////
 
 	/// Resize the circular buffer
 	void CWaveguide::ResizeCirculaBuffer(size_t newSize) {
@@ -261,39 +261,28 @@ namespace Common {
 		}	
 	}
 
-	//float CWaveguide::CalculateSourceDistanceChange(const CVector3 & newSourcePosition) {
-	//	
-	//	CVector3 sourceOldPosition = GetLastSourcePosition();
-	//	float distance = CalculateDistance(newSourcePosition, previousListenerPosition); // - CalculateDistance(sourceOldPosition, previousListenerPosition);
-	//	return distance;
-	//}
+	////////////////
+	// DISTANCE
+	///////////////
 
+	/// Calculate the distance in meters between two positions
 	const float CWaveguide::CalculateDistance(const CVector3 & position1, const CVector3 & position2) const
-	{
-				
+	{				
 		float distance = (position1.x - position2.x) * (position1.x - position2.x) + (position1.y - position2.y) * (position1.y - position2.y) + (position1.z - position2.z) * (position1.z - position2.z);
-		return std::sqrt(distance);
-		//return distance;
+		return std::sqrt(distance);		
 	}
 
-
-	//float CWaveguide::CalculateListenerDistanceChange(const CVector3 & newListenerPosition) {
-
-	//	CVector3 sourcePositionWhenEmited = GetSourcePositionWhenEmmited();
-	//	float distance = CalculateDistance(newListenerPosition, sourcePositionWhenEmited) - CalculateDistance(previousListenerPosition, sourcePositionWhenEmited);
-	//	return distance;
-	//}
-
-	//////////////////////////////////////////////
-
-
-	/// Calculate the new delay in samples.
+	/// Calculate the distance in samples
 	size_t CWaveguide::CalculateDistanceInSamples(Common::TAudioStateStruct audioState, float soundSpeed, float distanceInMeters)
 	{
 		double delaySeconds = distanceInMeters / soundSpeed;		
 		size_t delaySamples = std::nearbyint(delaySeconds * audioState.sampleRate);				
 		return delaySamples;
 	}
+
+	/////////////////////////
+	// Expansion-Compresion
+	/////////////////////////
 
 	/// Execute a buffer expansion or compression
 	void CWaveguide::ProcessExpansionCompressionMethod(const CMonoBuffer<float>& input, CMonoBuffer<float>& output)
@@ -328,8 +317,7 @@ namespace Common {
 
 	/// Execute a buffer expansion or compression
 	void CWaveguide::ProcessExpansionCompressionMethod(const CMonoBuffer<float>& input, int outputSize)
-	{
-		//int outputSize = output.size();
+	{		
 		//Calculate the compresion factor. See technical report
 		float position = 0;
 		float numerator = input.size() - 1;
@@ -372,6 +360,7 @@ namespace Common {
 		sourcePositionsBuffer.push_back(temp);
 	}
 
+	/// Insert at the buffer back the source position for a set of samples
 	void CWaveguide::InsertBackSourcePositionBuffer(int bufferSize, const CVector3 & _sourcePosition) {
 		int begin = circular_buffer.size() - bufferSize;
 		int end = circular_buffer.size() - 1;
@@ -379,8 +368,8 @@ namespace Common {
 		sourcePositionsBuffer.push_back(temp);						// introduce in to the sourcepositionsbuffer		
 	}
 
-	void CWaveguide::InsertFrontSourcePositionBuffer(int samples, const CVector3 & _sourcePosition) {
-				
+	/// Insert at the buffer fromt the source position for a set of samples
+	void CWaveguide::InsertFrontSourcePositionBuffer(int samples, const CVector3 & _sourcePosition) {				
 		TSourcePosition temp(0, samples-1, _sourcePosition);
 		sourcePositionsBuffer.insert(sourcePositionsBuffer.begin(), temp);
 	}
@@ -460,7 +449,7 @@ namespace Common {
 	}
 
 	// Get the next buffer source position
-	CVector3 CWaveguide::GetSourcePositionWhenEmmited(int bufferSize) {
+	CVector3 CWaveguide::GetNextSourcePosition(int bufferSize) {
 		/// TODO Check the buffer size to select the sourceposition, maybe the output buffer will include more than the just first position of the source position buffer
 
 		return sourcePositionsBuffer.front().GetPosition();
@@ -471,23 +460,5 @@ namespace Common {
 		if ((sourcePositionsBuffer[sourcePositionsBuffer.size() - 1].endIndex) != (circular_buffer.size() - 1)) {
 			cout << "error";
 		}
-	}
-
-	// TO BE DELETED
-	//void CWaveguide::CoutCircularBuffer()
-	//{
-	//	cout << "CBu:[";
-	//	for (int i = 0; i < circular_buffer.size(); i++) {
-	//		cout << circular_buffer[i] << ",";
-	//	}
-	//	cout << "]";// << endl;
-	//}
-	//void CWaveguide::CoutBuffer(const CMonoBuffer<float> & _buffer, string bufferName) const
-	//{
-	//	cout << bufferName<<":[";
-	//	for (int i = 0; i < _buffer.size(); i++) {
-	//		cout << _buffer[i] << ",";
-	//	}
-	//	cout << "]";// << endl;
-	//}
+	}	
 }

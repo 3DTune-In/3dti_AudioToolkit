@@ -32,32 +32,9 @@ namespace Common {
 	class CWaveguide
 	{
 	public:
-
-		struct TSourcePosition {
-			float x;
-			float y;
-			float z;
-			int beginIndex;
-			int endIndex;	
-			
-			TSourcePosition(int _beginIndex, int _endIndex, CVector3 _sourcePosition) { 
-				x = _sourcePosition.x;
-				y = _sourcePosition.y;
-				z = _sourcePosition.z;
-				beginIndex = _beginIndex;
-				endIndex = _endIndex;
-			};
-
-			CVector3 GetPosition() {
-				CVector3 position(x, y, z);
-				return position;
-			};
-
-		};
-
+		
 		/** \brief Constructor
-		*/		
-		//CWaveguide() : enablePropagationDelay(false) {}
+		*/				
 		CWaveguide() : enablePropagationDelay(false), previousListenerPositionInitialized(false) {}
 
 
@@ -78,28 +55,53 @@ namespace Common {
 		bool IsPropagationDelayEnabled();
 
 
-		/** \brief Insert the new frame into the waveguide
+		/** \brief Insert a new frame into the waveguide
 		*/		
 		void PushBack(const CMonoBuffer<float> & inputbuffer, const CVector3 & sourcePosition, const CVector3 & _listenerPosition, const Common::TAudioStateStruct& audioState, float soundSpeed);
 		
-		/** \brief Get next frame frame after pass throught the waveguide
+		/** \brief Get next frame to be processed after pass throught the waveguide
 		*/
 		void PopFront(CMonoBuffer<float> & outbuffer, const CVector3 & listenerPosition, CVector3 & sourcePositionWhenWasEmitted, const Common::TAudioStateStruct& audioState, float soundSpeed);
 		
-		/** \brief Get most recent Buffer
+		/** \brief Get most recent Buffer inserted. This is the last buffer inserted using PushBack the method.
 		*/
 		CMonoBuffer<float> GetMostRecentBuffer() const;
 				
 	private:
+		/// Structure for storing the source position of the samples to be inserted into the circular buffer.
+		struct TSourcePosition {
+			float x;
+			float y;
+			float z;
+			int beginIndex;
+			int endIndex;
+
+			TSourcePosition(int _beginIndex, int _endIndex, CVector3 _sourcePosition) {
+				x = _sourcePosition.x;
+				y = _sourcePosition.y;
+				z = _sourcePosition.z;
+				beginIndex = _beginIndex;
+				endIndex = _endIndex;
+			};
+
+			CVector3 GetPosition() {
+				CVector3 position(x, y, z);
+				return position;
+			};
+
+		};
+
 		/// Processes the input buffer according to the movement of the source.
-		void ProcessSourceMovement(const CMonoBuffer<float> & _inputBuffer, const CVector3 & _sourcePosition, const CVector3 & _listenerPosition, const Common::TAudioStateStruct& _audioState, float _soundSpeed);
-		
+		void ProcessSourceMovement(const CMonoBuffer<float> & _inputBuffer, const CVector3 & _sourcePosition, const CVector3 & _listenerPosition, const Common::TAudioStateStruct& _audioState, float _soundSpeed);		
 		/// Processes the existing samples in the waveguide to obtain an output buffer according to the new listener position.
 		void ProcessListenerMovement(CMonoBuffer<float> & outbuffer, const Common::TAudioStateStruct& _audioState, CVector3 & sourcePositionWhenWasEmitted, const CVector3 & _listenerPosition, float soundSpeed);
 
-		/// Calculate the new delay in samples.
+		/// Calculate the distance in meters between two positions
+		const float CalculateDistance(const CVector3 & position1, const CVector3 & position2) const;
+		/// Calculate the distance in samples
 		size_t CalculateDistanceInSamples(Common::TAudioStateStruct audioState, float soundSpeed, float distanceToListener);		
 		
+
 		/// Resize the circular buffer
 		void ResizeCirculaBuffer(size_t newSize);		
 		/// Changes de circular buffer capacity, throwing away the newest samples
@@ -111,38 +113,38 @@ namespace Common {
 		void ProcessExpansionCompressionMethod(const CMonoBuffer<float>& input, CMonoBuffer<float>& output);
 		/// Execute a buffer expansion or compression, and introduce the samples directly into the circular buffer
 		void ProcessExpansionCompressionMethod(const CMonoBuffer<float>& input, int outputSize);		
-				
-		void InsertBackSourcePositionBuffer(int bufferSize, const CVector3 & sourcePosition);
-		void InsertFrontSourcePositionBuffer(int samples, const CVector3 & sourcePosition);
+
+		/// Initialize the source Position Buffer at the begining. It is going to be supposed that the source was in that position since ever.
 		void InitSourcePositionBuffer(int numberOFZeroSamples, const CVector3 & sourcePosition);
-		void ShiftLeftSourcePositionsBuffer(int samples);
+		/// Insert at the buffer back the source position for a set of samples
+		void InsertBackSourcePositionBuffer(int bufferSize, const CVector3 & sourcePosition);
+		/// Insert at the buffer fromt the source position for a set of samples
+		void InsertFrontSourcePositionBuffer(int samples, const CVector3 & sourcePosition);		
+		/// Shifts all buffer positions to the left, deleting any that become negative. 
+		void ShiftLeftSourcePositionsBuffer(int samples);		
+		/// Shifts all buffer positions to the right. 
 		void ShiftRightSourcePositionsBuffer(int samples);		
+		/// Remove samples from the back side of the buffer in order to have the same size that the circular buffer
 		void ResizeSourcePositionsBuffer(int samples);
-		void CWaveguide::CheckIntegritySourcePositionsBuffer();
-		
-		const float CalculateDistance(const CVector3 & position1, const CVector3 & position2) const;
-						
-		//float CalculateSourceDistanceChange(const CVector3 & newSourcePosition);
-		//float CalculateListenerDistanceChange(const CVector3 & newListenerPosition);
+		/// Get the last source position
 		CVector3 GetLastSourcePosition();
-		CVector3 GetSourcePositionWhenEmmited(int bufferSize);		
+		/// Get the next buffer source position
+		CVector3 GetNextSourcePosition(int bufferSize);
+					
 		
+						
+		// TODO Delete me
+		void CWaveguide::CheckIntegritySourcePositionsBuffer();
 		///////////////
 		// Vars
-		///////////////
+		///////////////			   		 	  
 		bool enablePropagationDelay;					/// To store if the propagation delay is enabled or not		
 		CMonoBuffer<float> mostRecentBuffer;			/// To store the last buffer introduced into the waveguide
 		boost::circular_buffer<float> circular_buffer;	/// To store the samples into the waveguide			
 		
 		vector<TSourcePosition> sourcePositionsBuffer;	/// To store the source positions in each frame
 		CVector3 previousListenerPosition;				/// To store the last position of the listener
-		bool previousListenerPositionInitialized;		/// To store if the last position of the listener has been initialized
-		//int previosOutputBufferSamples;
-
-		//TO DO Delete me
-		//int contadorDani; 
-		//void CoutCircularBuffer();
-		//void CoutBuffer(const CMonoBuffer<float> & _buffer, string bufferName) const;
+		bool previousListenerPositionInitialized;		/// To store if the last position of the listener has been initialized		
 	};
 }
 #endif
