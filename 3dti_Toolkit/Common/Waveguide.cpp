@@ -64,10 +64,6 @@ namespace Common {
 		if (!enablePropagationDelay) { outbuffer = mostRecentBuffer; }
 		
 		// Pop really doesn't pop. The next time a buffer is pushed, it will be removed.  		
-		/*CMonoBuffer<float> returnbuffer(circular_buffer.begin(), circular_buffer.begin() + _audioState.bufferSize);
-		ShiftSourcePositionsBuffer(_audioState.bufferSize);
-		return returnbuffer;*/
-
 		ProcessListenerMovement(outbuffer, _audioState, sourcePositionWhenWasEmitted, _listenerPosition, _soundSpeed);
 	}
 
@@ -92,6 +88,7 @@ namespace Common {
 		int changeInDelayInSamples = CalculateDistanceInSamples(_audioState, _soundSpeed, distanceDiferenteToListener);				
 
 		if (circular_buffer.capacity() == 0) {				
+			// This is the first Time
 			// We initialize the buffers the first time, this is when its capacity is zero
 			int newDelayInSamples = CalculateDistanceInSamples(_audioState, _soundSpeed, currentDistanceToListener);
 			ResizeCirculaBuffer(newDelayInSamples + _audioState.bufferSize);			// Buffer has to grow, full of Zeros			
@@ -107,68 +104,52 @@ namespace Common {
 			InsertBackSourcePositionBuffer(_inputBuffer.size(), _sourcePosition);	// introduce the source positions into its buffer						
 		}
 		else {
-			// Source Movement
-			// Circular Buffer has to grow and Input buffer has to be expanded or
-			// Circular Buffer has to shrink and Input buffer has to be compressed	
-			// 
-			// A soundsource approaches to you, the sound that reach you have a shorter wavelength and a higher frequency -- insertBufferSize < bufferSize --> Time Compresion
-			// A soundsource moves away from you, the sound waves that reach you have a longer wavelength and lower frequency --> Time expansion
+			// There a Source Movement			
+			// If source moves towards the listener --> Distance decreases --> Time compression --> insertBufferSize < bufferSize
+			// If source moves away from listener   --> Distance increases --> Time expansion
 			
 			int currentDelayInSamples	= circular_buffer.size() - _audioState.bufferSize;		// Calculate current delay in samples		
 			int newDelayInSamples		= changeInDelayInSamples + currentDelayInSamples;		// Calculate the new delay in samples
 			int insertBufferSize		= changeInDelayInSamples + _audioState.bufferSize;		// Calculate the expasion/compression
 			
 			if (insertBufferSize <= 0) {								
-				// When soundsource approaches to the lister faster than the sound velocity
+				// When soundsource approaches to the lister faster than the sound velocity. Insert nothing to the circular buffer
 				SetCirculaBufferCapacity(newDelayInSamples + _audioState.bufferSize);		// Remove samples from circular buffer															
-				ResizeSourcePositionsBuffer(circular_buffer.size());						// Remove samples for source positions buffer
-				//Insert nothing to the circular buffer
+				ResizeSourcePositionsBuffer(circular_buffer.size());						// Remove samples for source positions buffer				
 				InsertBackSourcePositionBuffer(1, _sourcePosition);							// Insert the last position with zero samples into the source position buffer				
 			}
-			else {
-				// Prepare buffer
-				//CMonoBuffer<float> readyToInsertBuffer;			
-				//readyToInsertBuffer.resize(newBufferSize);									
-				// Expand Buffer
-				//ProcessExpansionCompressionMethod(_inputBuffer, readyToInsertBuffer);
-				// Change circular_buffer capacity. This is when you throw away the samples, which are already out.
-				//RsetCirculaBuffer(newDelayInSamples + _audioState.bufferSize);			
-				// Insert into circular buffer 		
-				//circular_buffer.insert(circular_buffer.end(), readyToInsertBuffer.begin(), readyToInsertBuffer.end());	
-
-				// TODO Alternative version that is more optimal, using push_back in the expansion/compression algorith to insert sample by sample directly, 
-				// into the circular buffer. Saves having to create a buffer and insert it at the end. Next two line sinstead the previous four
-
-				// Change circular_buffer capacity. This is when you throw away the samples, which are already out.
-				//int currentSamples = circular_buffer.capacity();			
-				RsetCirculaBuffer(newDelayInSamples + _audioState.bufferSize);
-				//ShiftSourcePositionsBuffer(currentSamples- newDelayInSamples - _audioState.bufferSize);
-
+			else {				
+				// Change circular_buffer capacity. This is when you throw away the samples, which are already out.				
+				RsetCirculaBuffer(newDelayInSamples + _audioState.bufferSize);				
 				// Expand or compress and insert into the cirular buffer			
 				ProcessExpansionCompressionMethod(_inputBuffer, insertBufferSize);
-				InsertBackSourcePositionBuffer(insertBufferSize, _sourcePosition);	// introduce the source positions into its buffer	
+				// Introduce the source positions into its buffer	
+				InsertBackSourcePositionBuffer(insertBufferSize, _sourcePosition);	
 			}								
 		}
-		CheckIntegritySourcePositionsBuffer();
+		CheckIntegritySourcePositionsBuffer();	//To be deleted
 	}
+
 
 	void CWaveguide::ProcessListenerMovement(CMonoBuffer<float> & outbuffer, const Common::TAudioStateStruct& _audioState, CVector3 & _sourcePositionWhenWasEmitted, const CVector3 & _listenerPosition, float soundSpeed) {
 		
 		// Get the source position when the nexts samples were emited
-		_sourcePositionWhenWasEmitted = GetNextSourcePosition(_audioState.bufferSize);	// Get the next samples source position		
+		_sourcePositionWhenWasEmitted = GetNextSourcePosition(_audioState.bufferSize);			
 		// Calculate the new delay taking into account the current listener position respect to the source position when the samples were emmited
 		float currentDistanceToEmitedSource = CalculateDistance(_listenerPosition, _sourcePositionWhenWasEmitted);
 		float oldDistanceToEmitedSource = CalculateDistance(previousListenerPosition, _sourcePositionWhenWasEmitted);
 		float distanceDiferenceToEmmitedSource = currentDistanceToEmitedSource - oldDistanceToEmitedSource;
-		previousListenerPosition = _listenerPosition;	// Update Listener position		
+		// Update Listener position		
+		previousListenerPosition = _listenerPosition;
 
 		// Calculate delay in samples. 
-		// if it's < 0 --> towards the source. 	// if it's > 0 --> moving away from the source
+		// if it's < 0 --> moving towards the source. 	// if it's > 0 --> moving away from the source
 		int changeInDelayInSamples = CalculateDistanceInSamples(_audioState, soundSpeed, distanceDiferenceToEmmitedSource);
+		
 		// Calculate samples to be extracted from the ciruclar buffer		
 		// An observer moving towards the source measures a higher frequency  --> More than 512 --> Time compression 
 		// An observer moving away from the source measures a lower frequency --> Less than 512 --> Time expansion		
-		int samplesToBeExtracted = _audioState.bufferSize - changeInDelayInSamples;	// Calculate the expasion/compression		
+		int samplesToBeExtracted = _audioState.bufferSize - changeInDelayInSamples;			
 
 		// In case the listener is moving away from the source faster than the sound speed
 		if (samplesToBeExtracted <= 0) {	
@@ -181,25 +162,16 @@ namespace Common {
 			//Introduce the new sample into the buffer of source positions
 			ShiftRightSourcePositionsBuffer(samplesToBeExtracted);
 			InsertFrontSourcePositionBuffer(samplesToBeExtracted, CVector3(0,0,0));
-			// Output a frame of zeros
-			//CMonoBuffer<float> returnBuffer(_audioState.bufferSize);	
-			//return returnBuffer;
+			// Output a frame of zeros			
 			outbuffer.resize(_audioState.bufferSize);			
 		}
 
-		// In other case Get samples from buffer
-		//CMonoBuffer<float> extractingBuffer(circular_buffer.begin(), circular_buffer.begin() + samplesToBeExtracted /*_audioState.bufferSize*/);				
-		//ShiftLeftSourcePositionsBuffer(samplesToBeExtracted);		// Delete samples that have left the buffer storing the source positions.
-
-
+		// In other case Get samples from buffer		
 		if (samplesToBeExtracted == _audioState.bufferSize) { 
 			// If it doesn't needed to do and expasion or compression
-			
-			//CMonoBuffer<float> extractingBuffer(circular_buffer.begin(), circular_buffer.begin() + samplesToBeExtracted /*_audioState.bufferSize*/);						
-			//outbuffer.resize(samplesToBeExtracted);
+			//outbuffer.clear();			
 			outbuffer.insert(outbuffer.begin(), circular_buffer.begin(), circular_buffer.begin() + samplesToBeExtracted);
-			ShiftLeftSourcePositionsBuffer(samplesToBeExtracted);		// Delete samples that have left the buffer storing the source positions.
-			/*return extractingBuffer*/; 
+			ShiftLeftSourcePositionsBuffer(samplesToBeExtracted);		// Delete samples that have left the buffer storing the source positions.			
 		}
 		else {
 			//In case we need to expand or compress
@@ -207,17 +179,11 @@ namespace Common {
 			ShiftLeftSourcePositionsBuffer(samplesToBeExtracted);		// Delete samples that have left the buffer storing the source positions.					
 			// the capacity of the circular buffer must be increased with the samples that have not been removed		
 			RsetCirculaBuffer(circular_buffer.capacity() + _audioState.bufferSize - samplesToBeExtracted);
-			// Expand or compress the buffer and return it
-			//CMonoBuffer<float> returnBuffer;
+			// Expand or compress the buffer and return it			
 			outbuffer.resize(_audioState.bufferSize);							// Prepare buffer			
-			ProcessExpansionCompressionMethod(extractingBuffer, outbuffer);		// Expand or compress the buffer
-			//return returnBuffer;
-		}
-							
-		// Pop really doesn't pop. The next time a buffer is pushed, it will be removed.  		
-		//CMonoBuffer<float> returnbuffer(circular_buffer.begin(), circular_buffer.begin() + _audioState.bufferSize);
-		//ShiftSourcePositionsBuffer(_audioState.bufferSize);
-		//return returnBuffer;
+			ProcessExpansionCompressionMethod(extractingBuffer, outbuffer);		// Expand or compress the buffer			
+		}							
+		// Pop really doesn't pop. The next time a buffer is pushed, it will be removed.  				
 	}
 
 	/////////////////////////////
