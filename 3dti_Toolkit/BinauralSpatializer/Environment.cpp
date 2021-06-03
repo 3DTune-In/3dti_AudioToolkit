@@ -606,14 +606,14 @@ namespace Binaural {
 			}
 
 			//Check if the source is in the same position as the listener head. If yes, do not apply spatialization to this source
-			if (eachSource->distanceToListener < ownerCore->GetListener()->GetHeadRadius())
+			if (eachSource->GetCurrentDistanceSourceListener() < ownerCore->GetListener()->GetHeadRadius())
 			{
 				continue;
 			}
 
 			// Get azimuth, elevation and distance from listener to each source
 			// We precompute everything, to minimize per-sample computations. 
-			Common::CTransform sourceTransform = eachSource->GetSourceTransform();
+			Common::CTransform sourceTransform = eachSource->GetCurrentSourceTransform();
 			Common::CVector3 vectorToSource = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(sourceTransform);
 
 			float sourceDistance = vectorToSource.GetDistance();
@@ -810,14 +810,14 @@ namespace Binaural {
 			}
 
 			//Check if the source is in the same position as the listener head. If yes, do not apply spatialization to this source
-			if (eachSource->distanceToListener < ownerCore->GetListener()->GetHeadRadius())
+			if (eachSource->GetCurrentDistanceSourceListener() < ownerCore->GetListener()->GetHeadRadius())
 			{
 				continue;
 			}
 
 			// Get azimuth, elevation and distance from listener to each source
 			// We precompute everything, to minimize per-sample computations. 
-			Common::CTransform sourceTransform = eachSource->GetSourceTransform();
+			Common::CTransform sourceTransform = eachSource->GetCurrentSourceTransform();
 			Common::CVector3 vectorToSource = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(sourceTransform);
 			float sourceElevation = vectorToSource.GetElevationRadians();
 			float sinElevationAbs = std::fabs(std::sin(sourceElevation));	// TEST: adding power to W channel to compensate for the lack of Z channel
@@ -1036,14 +1036,14 @@ namespace Binaural {
 			}
 
 			//Check if the source is in the same position as the listener head. If yes, do not apply spatialization to this source
-			if (eachSource->distanceToListener < ownerCore->GetListener()->GetHeadRadius())
+			if (eachSource->GetCurrentDistanceSourceListener() < ownerCore->GetListener()->GetHeadRadius())
 			{
 				continue;
 			}
 
 			// Get azimuth, elevation and distance from listener to each source
 			// We precompute everything, to minimize per-sample computations. 
-			Common::CTransform sourceTransform = eachSource->GetSourceTransform();
+			Common::CTransform sourceTransform = eachSource->GetCurrentSourceTransform();
 			Common::CVector3 vectorToSource = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(sourceTransform);
 
 			float sourceElevation = vectorToSource.GetElevationRadians();

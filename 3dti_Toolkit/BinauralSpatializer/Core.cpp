@@ -231,7 +231,8 @@ namespace Binaural {
 	void CCore::CalculateSourceCoordinates() {
 		for (auto eachSource : audioSources)
 		{
-			eachSource->CalculateSourceCoordinates();
+			//eachSource->CalculateSourceCoordinates();
+			eachSource->CalculateCurrentSourceCoordinates();
 		}
 	}
 
