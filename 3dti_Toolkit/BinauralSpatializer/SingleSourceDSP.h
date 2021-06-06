@@ -100,12 +100,6 @@ namespace Binaural {
 		*/
 		const Common::CTransform & GetEffectiveSourceTransform() const;
 		
-		/** \brief Get current distance between source and Listener
-		*	\retval float reference to current distance between the positions of source and listener
-		*   \eh Nothing is reported to the error handler.
-		*/
-		const float & GetCurrentDistanceSourceListener() const;
-
 		/** \brief Get the attenuation in anechoic process for a given distance 	
 		*	\param [in] distance distance for checking attenuation
 		*	\retval gain attenuation, as gain (typically, between 0 and 1)		
@@ -331,6 +325,14 @@ namespace Binaural {
 		/////////////
 		// METHODS	
 		/////////////
+
+		/** \brief Get current distance between source and Listener
+		*	\retval float reference to current distance between the positions of source and listener
+		*   \eh Nothing is reported to the error handler.
+		*/
+		const float & GetCurrentDistanceSourceListener() const;
+
+
 		void ProcessAnechoic(const CMonoBuffer<float> & _inBuffer, CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer, Common::CVector3 & vectorToListener, float & distanceToListener, float & leftElevation, float & leftAzimuth, float & rightElevation, float & rightAzimuth, float & centerElevation, float & centerAzimuth, float & interauralAzimuth);
 
 		// Make the spatialization using HRTF convolution
