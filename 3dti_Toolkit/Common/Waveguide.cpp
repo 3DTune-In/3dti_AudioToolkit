@@ -361,9 +361,13 @@ namespace Common {
 			}			
 			index++;
 		}
-		for (auto &element : positionsToDelete) {
-		//if (positionToDelete != -1) { 
-			sourcePositionsBuffer.erase(sourcePositionsBuffer.begin() + element);
+		for (int i = positionsToDelete.size() - 1; i > -1; i--) {
+			//if (positionsToDelete[i] < sourcePositionsBuffer.size()) {
+				sourcePositionsBuffer.erase(sourcePositionsBuffer.begin() + positionsToDelete[i]);
+			//}
+			/*else {
+				SET_RESULT(RESULT_ERROR_BADALLOC, "Bad alloc in sourcePositionsBuffer (CWageguide::ShiftLeftSourcePositionsBuffer)");
+			}*/
 		}
 
 	}
