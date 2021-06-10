@@ -61,10 +61,13 @@ namespace Common {
 	void CWaveguide::PopFront(CMonoBuffer<float> & outbuffer, const CVector3 & _listenerPosition, CVector3 & sourcePositionWhenWasEmitted, const Common::TAudioStateStruct& _audioState, float _soundSpeed)	{
 		
 		// if the propagation delay is not activated, just return the last input buffer
-		if (!enablePropagationDelay) { outbuffer = mostRecentBuffer; }
-		
-		// Pop really doesn't pop. The next time a buffer is pushed, it will be removed.  		
-		ProcessListenerMovement(outbuffer, _audioState, sourcePositionWhenWasEmitted, _listenerPosition, _soundSpeed);
+		if (!enablePropagationDelay) { 
+			outbuffer = mostRecentBuffer; 
+		}
+		else {
+			// Pop really doesn't pop. The next time a buffer is pushed, it will be removed.  		
+			ProcessListenerMovement(outbuffer, _audioState, sourcePositionWhenWasEmitted, _listenerPosition, _soundSpeed);
+		}				
 	}
 
 	/// Return last frame introduced into the waveguide
@@ -361,13 +364,8 @@ namespace Common {
 			}			
 			index++;
 		}
-		for (int i = positionsToDelete.size() - 1; i > -1; i--) {
-			//if (positionsToDelete[i] < sourcePositionsBuffer.size()) {
-				sourcePositionsBuffer.erase(sourcePositionsBuffer.begin() + positionsToDelete[i]);
-			//}
-			/*else {
-				SET_RESULT(RESULT_ERROR_BADALLOC, "Bad alloc in sourcePositionsBuffer (CWageguide::ShiftLeftSourcePositionsBuffer)");
-			}*/
+		for (int i = positionsToDelete.size() - 1; i > -1; i--) {			
+				sourcePositionsBuffer.erase(sourcePositionsBuffer.begin() + positionsToDelete[i]);			
 		}
 
 	}
