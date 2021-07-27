@@ -447,7 +447,7 @@ namespace Common {
 
 		result.x = y*_rightHand.z - z*_rightHand.y;
 		result.y = z*_rightHand.x - x*_rightHand.z;
-		result.x = x*_rightHand.y - y*_rightHand.x;
+		result.z = x*_rightHand.y - y*_rightHand.x;
 
 		return result;
 	}
