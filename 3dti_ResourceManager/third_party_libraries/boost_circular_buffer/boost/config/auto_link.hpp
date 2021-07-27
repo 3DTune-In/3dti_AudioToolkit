@@ -28,9 +28,6 @@ BOOST_AUTO_LINK_NOMANGLE: Specifies that we should link to BOOST_LIB_NAME.lib,
 BOOST_AUTO_LINK_TAGGED:   Specifies that we link to libraries built with the --layout=tagged option.
                           This is essentially the same as the default name-mangled version, but without
                           the compiler name and version, or the Boost version.  Just the build options.
-BOOST_AUTO_LINK_SYSTEM:   Specifies that we link to libraries built with the --layout=system option.
-                          This is essentially the same as the non-name-mangled version, but with
-                          the prefix to differentiate static and dll builds
 
 These macros will be undef'ed at the end of the header, further this header
 has no include guards - so be sure to include it only once from your library!
@@ -51,7 +48,6 @@ BOOST_LIB_PREFIX
    + BOOST_LIB_ARCH_AND_MODEL_OPT
    "-"
    + BOOST_LIB_VERSION
-   + BOOST_LIB_SUFFIX
 
 These are defined as:
 
@@ -79,7 +75,6 @@ BOOST_LIB_ARCH_AND_MODEL_OPT: The architecture and address model
 
 BOOST_LIB_VERSION:    The Boost version, in the form x_y, for Boost version x.y.
 
-BOOST_LIB_SUFFIX:     Static/import libraries extension (".lib", ".a") for the compiler.
 
 ***************************************************************************/
 
@@ -99,11 +94,9 @@ BOOST_LIB_SUFFIX:     Static/import libraries extension (".lib", ".a") for the c
 // Only include what follows for known and supported compilers:
 //
 #if defined(BOOST_MSVC) \
-    || defined(BOOST_EMBTC_WINDOWS) \
-    || defined(BOOST_BORLANDC) \
+    || defined(__BORLANDC__) \
     || (defined(__MWERKS__) && defined(_WIN32) && (__MWERKS__ >= 0x3000)) \
-    || (defined(__ICL) && defined(_MSC_EXTENSIONS) && (_MSC_VER >= 1200)) \
-    || (defined(BOOST_CLANG) && defined(BOOST_WINDOWS) && defined(_MSC_VER) && (__clang_major__ >= 4))
+    || (defined(__ICL) && defined(_MSC_EXTENSIONS) && (_MSC_VER >= 1200))
 
 #ifndef BOOST_VERSION_HPP
 #  include <boost/version.hpp>
@@ -177,26 +170,12 @@ BOOST_LIB_SUFFIX:     Static/import libraries extension (".lib", ".a") for the c
      // vc14:
 #    define BOOST_LIB_TOOLSET "vc140"
 
-#  elif defined(BOOST_MSVC) && (BOOST_MSVC < 1920)
+#  elif defined(BOOST_MSVC)
 
      // vc14.1:
 #    define BOOST_LIB_TOOLSET "vc141"
 
-#  elif defined(BOOST_MSVC)
-
-     // vc14.2:
-#    define BOOST_LIB_TOOLSET "vc142"
-
-#  elif defined(BOOST_EMBTC_WINDOWS)
-
-     // Embarcadero Clang based compilers:
-#    if defined(BOOST_EMBTC_WIN32C)
-#      define BOOST_LIB_TOOLSET "bcb32"
-#    elif defined(BOOST_EMBTC_WIN64)
-#      define BOOST_LIB_TOOLSET "bcb64"
-#    endif
-
-#  elif defined(BOOST_BORLANDC)
+#  elif defined(__BORLANDC__)
 
      // CBuilder 6:
 #    define BOOST_LIB_TOOLSET "bcb"
@@ -215,11 +194,6 @@ BOOST_LIB_SUFFIX:     Static/import libraries extension (".lib", ".a") for the c
 
      // Metrowerks CodeWarrior 9.x
 #    define BOOST_LIB_TOOLSET "cw9"
-
-#  elif defined(BOOST_CLANG) && defined(BOOST_WINDOWS) && defined(_MSC_VER) && (__clang_major__ >= 4)
-
-     // Clang on Windows
-#    define BOOST_LIB_TOOLSET "clangw" BOOST_STRINGIZE(__clang_major__)
 
 #  endif
 #endif // BOOST_LIB_TOOLSET
@@ -346,32 +320,12 @@ BOOST_LIB_SUFFIX:     Static/import libraries extension (".lib", ".a") for the c
 
 #  endif
 
-#elif defined(BOOST_EMBTC_WINDOWS)
-
-#  ifdef _RTLDLL
-
-#     if defined(_DEBUG)
-#         define BOOST_LIB_RT_OPT "-d"
-#     else
-#         define BOOST_LIB_RT_OPT
-#     endif
-
-#  else
-
-#     if defined(_DEBUG)
-#         define BOOST_LIB_RT_OPT "-sd"
-#     else
-#         define BOOST_LIB_RT_OPT "-s"
-#     endif
-
-#  endif
-
-#elif defined(BOOST_BORLANDC)
+#elif defined(__BORLANDC__)
 
 //
 // figure out whether we want the debug builds or not:
 //
-#if BOOST_BORLANDC > 0x561
+#if __BORLANDC__ > 0x561
 #pragma defineonoption BOOST_BORLAND_DEBUG -v
 #endif
 //
@@ -389,7 +343,7 @@ BOOST_LIB_SUFFIX:     Static/import libraries extension (".lib", ".a") for the c
 #     elif defined(BOOST_BORLAND_DEBUG)
 #         define BOOST_LIB_RT_OPT "-d"
 #     elif defined(BOOST_DEBUG_PYTHON) && defined(BOOST_LINKING_PYTHON)
-#         define BOOST_LIB_RT_OPT "-y"
+#         define BOOST_LIB_RT_OPT -y
 #     else
 #         define BOOST_LIB_RT_OPT
 #     endif
@@ -447,36 +401,25 @@ BOOST_LIB_SUFFIX:     Static/import libraries extension (".lib", ".a") for the c
       && defined(BOOST_LIB_ARCH_AND_MODEL_OPT) \
       && defined(BOOST_LIB_VERSION)
 
-#if defined(BOOST_EMBTC_WIN64)
-#  define BOOST_LIB_SUFFIX ".a"
-#else
-#  define BOOST_LIB_SUFFIX ".lib"
-#endif
-
-#ifdef BOOST_AUTO_LINK_NOMANGLE
-#  pragma comment(lib, BOOST_STRINGIZE(BOOST_LIB_NAME) BOOST_LIB_SUFFIX)
+#ifdef BOOST_AUTO_LINK_TAGGED
+#  pragma comment(lib, BOOST_LIB_PREFIX BOOST_STRINGIZE(BOOST_LIB_NAME) BOOST_LIB_THREAD_OPT BOOST_LIB_RT_OPT ".lib")
 #  ifdef BOOST_LIB_DIAGNOSTIC
-#     pragma message ("Linking to lib file: " BOOST_STRINGIZE(BOOST_LIB_NAME) BOOST_LIB_SUFFIX)
+#     pragma message ("Linking to lib file: " BOOST_LIB_PREFIX BOOST_STRINGIZE(BOOST_LIB_NAME) BOOST_LIB_THREAD_OPT BOOST_LIB_RT_OPT ".lib")
 #  endif
-#elif defined(BOOST_AUTO_LINK_TAGGED)
-#  pragma comment(lib, BOOST_LIB_PREFIX BOOST_STRINGIZE(BOOST_LIB_NAME) BOOST_LIB_THREAD_OPT BOOST_LIB_RT_OPT BOOST_LIB_ARCH_AND_MODEL_OPT BOOST_LIB_SUFFIX)
+#elif defined(BOOST_AUTO_LINK_NOMANGLE)
+#  pragma comment(lib, BOOST_STRINGIZE(BOOST_LIB_NAME) ".lib")
 #  ifdef BOOST_LIB_DIAGNOSTIC
-#     pragma message ("Linking to lib file: " BOOST_LIB_PREFIX BOOST_STRINGIZE(BOOST_LIB_NAME) BOOST_LIB_THREAD_OPT BOOST_LIB_RT_OPT BOOST_LIB_ARCH_AND_MODEL_OPT BOOST_LIB_SUFFIX)
-#  endif
-#elif defined(BOOST_AUTO_LINK_SYSTEM)
-#  pragma comment(lib, BOOST_LIB_PREFIX BOOST_STRINGIZE(BOOST_LIB_NAME) BOOST_LIB_SUFFIX)
-#  ifdef BOOST_LIB_DIAGNOSTIC
-#     pragma message ("Linking to lib file: " BOOST_LIB_PREFIX BOOST_STRINGIZE(BOOST_LIB_NAME) BOOST_LIB_SUFFIX)
+#     pragma message ("Linking to lib file: " BOOST_STRINGIZE(BOOST_LIB_NAME) ".lib")
 #  endif
 #elif defined(BOOST_LIB_BUILDID)
-#  pragma comment(lib, BOOST_LIB_PREFIX BOOST_STRINGIZE(BOOST_LIB_NAME) "-" BOOST_LIB_TOOLSET BOOST_LIB_THREAD_OPT BOOST_LIB_RT_OPT BOOST_LIB_ARCH_AND_MODEL_OPT "-" BOOST_LIB_VERSION "-" BOOST_STRINGIZE(BOOST_LIB_BUILDID) BOOST_LIB_SUFFIX)
+#  pragma comment(lib, BOOST_LIB_PREFIX BOOST_STRINGIZE(BOOST_LIB_NAME) "-" BOOST_LIB_TOOLSET BOOST_LIB_THREAD_OPT BOOST_LIB_RT_OPT BOOST_LIB_ARCH_AND_MODEL_OPT "-" BOOST_LIB_VERSION "-" BOOST_STRINGIZE(BOOST_LIB_BUILDID) ".lib")
 #  ifdef BOOST_LIB_DIAGNOSTIC
-#     pragma message ("Linking to lib file: " BOOST_LIB_PREFIX BOOST_STRINGIZE(BOOST_LIB_NAME) "-" BOOST_LIB_TOOLSET BOOST_LIB_THREAD_OPT BOOST_LIB_RT_OPT BOOST_LIB_ARCH_AND_MODEL_OPT "-" BOOST_LIB_VERSION "-" BOOST_STRINGIZE(BOOST_LIB_BUILDID) BOOST_LIB_SUFFIX)
+#     pragma message ("Linking to lib file: " BOOST_LIB_PREFIX BOOST_STRINGIZE(BOOST_LIB_NAME) "-" BOOST_LIB_TOOLSET BOOST_LIB_THREAD_OPT BOOST_LIB_RT_OPT BOOST_LIB_ARCH_AND_MODEL_OPT "-" BOOST_LIB_VERSION "-" BOOST_STRINGIZE(BOOST_LIB_BUILDID) ".lib")
 #  endif
 #else
-#  pragma comment(lib, BOOST_LIB_PREFIX BOOST_STRINGIZE(BOOST_LIB_NAME) "-" BOOST_LIB_TOOLSET BOOST_LIB_THREAD_OPT BOOST_LIB_RT_OPT BOOST_LIB_ARCH_AND_MODEL_OPT "-" BOOST_LIB_VERSION BOOST_LIB_SUFFIX)
+#  pragma comment(lib, BOOST_LIB_PREFIX BOOST_STRINGIZE(BOOST_LIB_NAME) "-" BOOST_LIB_TOOLSET BOOST_LIB_THREAD_OPT BOOST_LIB_RT_OPT BOOST_LIB_ARCH_AND_MODEL_OPT "-" BOOST_LIB_VERSION ".lib")
 #  ifdef BOOST_LIB_DIAGNOSTIC
-#     pragma message ("Linking to lib file: " BOOST_LIB_PREFIX BOOST_STRINGIZE(BOOST_LIB_NAME) "-" BOOST_LIB_TOOLSET BOOST_LIB_THREAD_OPT BOOST_LIB_RT_OPT BOOST_LIB_ARCH_AND_MODEL_OPT "-" BOOST_LIB_VERSION BOOST_LIB_SUFFIX)
+#     pragma message ("Linking to lib file: " BOOST_LIB_PREFIX BOOST_STRINGIZE(BOOST_LIB_NAME) "-" BOOST_LIB_TOOLSET BOOST_LIB_THREAD_OPT BOOST_LIB_RT_OPT BOOST_LIB_ARCH_AND_MODEL_OPT "-" BOOST_LIB_VERSION ".lib")
 #  endif
 #endif
 
@@ -519,6 +462,5 @@ BOOST_LIB_SUFFIX:     Static/import libraries extension (".lib", ".a") for the c
 #if defined(BOOST_DYN_LINK)
 #  undef BOOST_DYN_LINK
 #endif
-#if defined(BOOST_LIB_SUFFIX)
-#  undef BOOST_LIB_SUFFIX
-#endif
+
+

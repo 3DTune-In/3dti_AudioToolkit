@@ -25,7 +25,7 @@
 
 namespace boost {
 
-#if defined( BOOST_CODEGEARC )
+#if defined( __CODEGEARC__ )
 template <class T> struct is_pointer : public integral_constant<bool, __is_pointer(T)>{};
 #else
 template <class T> struct is_pointer : public false_type{};

@@ -19,7 +19,7 @@
 #  include BOOST_ABI_PREFIX
 #endif
 
-#if defined( BOOST_BORLANDC )
+#if defined( __BORLANDC__ )
 #pragma nopushoptwarn
 #endif
 

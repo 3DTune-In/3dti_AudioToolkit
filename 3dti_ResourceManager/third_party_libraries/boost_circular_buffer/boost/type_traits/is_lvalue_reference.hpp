@@ -25,7 +25,7 @@
 
 namespace boost {
 
-#if defined( BOOST_CODEGEARC )
+#if defined( __CODEGEARC__ )
    template <class T> struct is_lvalue_reference : public integral_constant<bool, __is_reference(T)>{};
 #else
 

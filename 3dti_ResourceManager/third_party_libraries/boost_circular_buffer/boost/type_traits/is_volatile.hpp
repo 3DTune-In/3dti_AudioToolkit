@@ -26,7 +26,7 @@
 
 namespace boost {
 
-#if defined( BOOST_CODEGEARC )
+#if defined( __CODEGEARC__ )
 
    template <class T>
    struct is_volatile : public integral_constant<bool, __is_volatile(T)> {};

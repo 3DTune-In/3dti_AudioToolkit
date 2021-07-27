@@ -59,7 +59,7 @@
 //
 // Borland version of numeric_limits lacks __int64 specialisation:
 //
-#ifdef BOOST_BORLANDC
+#ifdef __BORLANDC__
 #  define BOOST_NO_MS_INT64_NUMERIC_LIMITS
 #endif
 
@@ -187,7 +187,6 @@
 #  define BOOST_NO_CXX11_HDR_ATOMIC
 #  define BOOST_NO_CXX11_STD_ALIGN
 #  define BOOST_NO_CXX11_ADDRESSOF
-#  define BOOST_NO_CXX11_HDR_EXCEPTION
 
 #if defined(__has_include)
 #if !__has_include(<shared_mutex>)

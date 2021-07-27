@@ -67,8 +67,6 @@ typedef bool_<false>       false_;
 //              nat
 //////////////////////////////////////
 struct nat{};
-struct nat2{};
-struct nat3{};
 
 //////////////////////////////////////
 //          yes_type/no_type

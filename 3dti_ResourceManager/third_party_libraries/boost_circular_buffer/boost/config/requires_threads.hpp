@@ -54,7 +54,7 @@
 //  Compaq Tru64 Unix cxx
 #   error "Compiler threading support is not turned on. Please set the correct command line options for threading: -pthread"
 
-#elif defined BOOST_BORLANDC
+#elif defined __BORLANDC__
 //  Borland
 #   error "Compiler threading support is not turned on. Please set the correct command line options for threading: -tWM"
 
