@@ -105,9 +105,9 @@ namespace Common {
 		/// Resize the circular buffer
 		void ResizeCirculaBuffer(size_t newSize);		
 		/// Changes de circular buffer capacity, throwing away the newest samples
-		void CWaveguide::SetCirculaBufferCapacity(size_t newSize);
+		void SetCirculaBufferCapacity(size_t newSize);
 		/// Changes de circular buffer capacity, throwing away the oldest samples
-		void CWaveguide::RsetCirculaBuffer(size_t newSize);
+		void RsetCirculaBuffer(size_t newSize);
 		
 		/// Execute a buffer expansion or compression
 		void ProcessExpansionCompressionMethod(const CMonoBuffer<float>& input, CMonoBuffer<float>& output);
@@ -134,7 +134,7 @@ namespace Common {
 		
 						
 		// TODO Delete me
-		void CWaveguide::CheckIntegritySourcePositionsBuffer();
+		void CheckIntegritySourcePositionsBuffer();
 		///////////////
 		// Vars
 		///////////////			   		 	  
