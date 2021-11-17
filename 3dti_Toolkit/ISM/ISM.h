@@ -40,6 +40,12 @@ public:
 	*/
 	void SetupShoeBoxRoom(float length, float width, float height); 
 
+	/** \brief returns the main room
+	*	\details returns a Room object containing the definition of the main room (without image walls)
+	*	\param [out] mainRoom.
+	*/
+	Room getRoom();
+
 	/** \brief Makes one of the room's walls active
 	*	\details Sets the i-th wall of the room as active and therefore reflective.
 	*	\param [in] index of the wall to be active.

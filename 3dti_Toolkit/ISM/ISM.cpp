@@ -7,6 +7,11 @@ void ISM::SetupShoeBoxRoom(float length, float width, float height)
 	originalSource.createImages(mainRoom,Common::CVector3(0,0,0),reflectionOrder); //FIXME:the listener location is fake
 }
 
+Room ISM::getRoom()
+{
+	return mainRoom;
+}
+
 void ISM::enableWall(int wallIndex)
 {
 	mainRoom.enableWall(wallIndex);
