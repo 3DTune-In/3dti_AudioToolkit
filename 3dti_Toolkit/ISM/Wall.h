@@ -24,7 +24,6 @@
 #include <vector>
 #include <Common/Vector3.h>
 
-# define LENGTH_OF_NORMALS 0.2
 class Wall
 {
 public:
