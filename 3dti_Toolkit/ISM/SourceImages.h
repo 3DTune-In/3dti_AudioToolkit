@@ -23,11 +23,12 @@
 #include "Room.h"
 #include <Common/Vector3.h>
 
-
+//Struct to store all the data of the image sources
 struct ImageSourceData
 {
-	Common::CVector3 location;
-	bool visible;
+	Common::CVector3 location;						//Location of the image source
+	bool visible;									//If the source is visible it should be rendered
+	std::vector<Wall> reflectionWalls;				//list of walls where the source has reflected (last reflection first)
 };
 
 
@@ -84,8 +85,8 @@ class SourceImages
 	*/
 	int getNumberOfVisibleImages(int reflectionOrder, Common::CVector3 listenerLocation);
 
-	/** \brief
-	*	\details
+	/** \brief creates all the image sources reflected in the walls upto the reflection order
+	*	\details 
 	*	\param [in]
 	*   \param [in]
 	*/
@@ -118,6 +119,15 @@ private:
 *   \param [in] _reflectionWall.
 */
 	void setReflectionWall(Wall _reflectionWall);
+	void setReflectionWalls(std::vector<Wall> reflectionWalls);
+
+	/** \brief
+	*	\details
+	*	\param [in]
+	*   \param [in]
+	*/
+	void createImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder, std::vector<Wall> reflectionWalls);
+
 
 
 	////////////
@@ -125,11 +135,10 @@ private:
 	////////////
 
 
-	std::vector<Wall> walls;								//DEPRECATED: List of walls where the source will be reflected. Not used any more, as each image source reminds its reflection wall
+	std::vector<Wall> reflectionWalls;		//vector containing the walls where the sound has been reflected in inverse order (last reflection first)
 	Wall reflectionWall;									//Wall which produced current image as a reflection
 	Room surroundingRoom;									//Room to generate further images reflectin in its walls
 	Common::CVector3 sourceLocation;						//Original source location
-
 	std::vector<SourceImages> images;						//recursive list of images
 
 

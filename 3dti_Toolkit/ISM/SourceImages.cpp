@@ -81,6 +81,7 @@ void SourceImages::getImageData(std::vector<ImageSourceData> &imageSourceDataLis
 			{
 				ImageSourceData temp;
 				temp.location = images.at(i).getLocation();
+				temp.reflectionWalls = images.at(i).reflectionWalls;
 				Common::CVector3 reflectionPoint = images.at(i).getReflectionWall().getIntersectionPointWithLine(images.at(i).getLocation(), listenerLocation);
 				float distanceToBorder, sharpness;
 				if (images.at(i).getReflectionWall().checkPointInsideWall(reflectionPoint, distanceToBorder, sharpness) > 0)
@@ -109,12 +110,22 @@ void SourceImages::setReflectionWall(Wall _reflectionWall)
 	reflectionWall = _reflectionWall;
 }
 
+void SourceImages::setReflectionWalls(std::vector<Wall> _reflectionWalls)
+{
+	reflectionWalls = _reflectionWalls;
+}
+
 Wall SourceImages::getReflectionWall()
 {
 	return reflectionWall;
 }
 
 void SourceImages::createImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder)
+{
+	createImages(_room, listenerLocation, reflectionOrder, reflectionWalls);
+}
+
+void SourceImages::createImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder, std::vector<Wall> reflectionWalls)
 {
 	reflectionOrder--;
 	std::vector<Wall> walls = _room.getWalls();
@@ -131,6 +142,8 @@ void SourceImages::createImages(Room _room, Common::CVector3 listenerLocation, i
 			{
 				tempSourceImage.setLocation(tempImageLocation);
 				tempSourceImage.setReflectionWall(walls.at(i));
+				reflectionWalls.push_back(walls.at(i));
+				tempSourceImage.reflectionWalls= reflectionWalls;
 
 				if (reflectionOrder > 0)
 				{
@@ -141,11 +154,12 @@ void SourceImages::createImages(Room _room, Common::CVector3 listenerLocation, i
 						Wall tempWall = walls.at(i).getImageWall(walls.at(j));
 						tempRoom.insertWall(tempWall);
 					}
-					tempSourceImage.createImages(tempRoom, listenerLocation, reflectionOrder);
+					tempSourceImage.createImages(tempRoom, listenerLocation, reflectionOrder, reflectionWalls);
 					surroundingRoom = tempRoom;
 				}
 
 				images.push_back(tempSourceImage);
+				reflectionWalls.pop_back();
 			}
 		}
 	}
@@ -163,7 +177,7 @@ void SourceImages::updateImages()
 void SourceImages::refreshImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder)
 {
 	images.clear();
-	createImages(_room, listenerLocation, reflectionOrder);
+	createImages(_room, listenerLocation, reflectionOrder, reflectionWalls);
 }
 
 
