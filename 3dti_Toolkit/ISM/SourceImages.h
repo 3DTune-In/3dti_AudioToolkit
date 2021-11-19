@@ -23,125 +23,129 @@
 #include "Room.h"
 #include <Common/Vector3.h>
 
-//Struct to store all the data of the image sources
-struct ImageSourceData
+namespace ISM
 {
-	Common::CVector3 location;						//Location of the image source
-	bool visible;									//If the source is visible it should be rendered
-	std::vector<Wall> reflectionWalls;				//list of walls where the source has reflected (last reflection first)
-};
+
+	//Struct to store all the data of the image sources
+	struct ImageSourceData
+	{
+		Common::CVector3 location;						//Location of the image source
+		bool visible;									//If the source is visible it should be rendered
+		std::vector<Wall> reflectionWalls;				//list of walls where the source has reflected (last reflection first)
+	};
 
 
 
-class SourceImages
-{
+	class SourceImages
+	{
 	public:
-	////////////
-	// Methods
-	////////////
+		////////////
+		// Methods
+		////////////
 
-	/** \brief changes the location of the original source
-	*	\details Sets a new location for the original source and updates all images accordingly.
-	*   \param [in] _location: new location for the original source.
-	*/
-	void setLocation(Common::CVector3 _location);
+		/** \brief changes the location of the original source
+		*	\details Sets a new location for the original source and updates all images accordingly.
+		*   \param [in] _location: new location for the original source.
+		*/
+		void setLocation(Common::CVector3 _location);
 
-	/** \brief Returns the location of the original source
-	*   \param [out] Location: Current location for the original source.
-	*/
-	Common::CVector3 getLocation();
+		/** \brief Returns the location of the original source
+		*   \param [out] Location: Current location for the original source.
+		*/
+		Common::CVector3 getLocation();
 
-	/** \brief Returns the first order reflections of the original source
-	*   \param [out] Images: vector with the first order reflection images.
-	*/
-	std::vector<SourceImages> getImages();
+		/** \brief Returns the first order reflections of the original source
+		*   \param [out] Images: vector with the first order reflection images.
+		*/
+		std::vector<SourceImages> getImages();
 
-	/** \brief Returns the locations of all images but the original source
-	*   \details this method recurively goes through the image tree to collect all the image locations
-	*   \param [out] imageSourceList: vector containing all image locations.
-	*   \param [in] reflectionOrder: needed to trim the recursive tree
-	*/
-	void getImageLocations(std::vector<Common::CVector3> &imageSourceList, int reflectionOrder);
+		/** \brief Returns the locations of all images but the original source
+		*   \details this method recurively goes through the image tree to collect all the image locations
+		*   \param [out] imageSourceList: vector containing all image locations.
+		*   \param [in] reflectionOrder: needed to trim the recursive tree
+		*/
+		void getImageLocations(std::vector<Common::CVector3> &imageSourceList, int reflectionOrder);
 
-	/** \brief Returns data of all image sources
-	*	\details This method returns the location of all image sources and wether they are visible or not, not including the
-		original source (direct path).
-	*	\param [out] ImageSourceData: Vector containing the data of the image sources
-	*   \param [in] reflectionOrder: needed to trim the recursive tree
-	*/
-	void getImageData(std::vector<ImageSourceData> &imageSourceDataList, Common::CVector3 listenerLocation, int reflectionOrder);
+		/** \brief Returns data of all image sources
+		*	\details This method returns the location of all image sources and wether they are visible or not, not including the
+			original source (direct path).
+		*	\param [out] ImageSourceData: Vector containing the data of the image sources
+		*   \param [in] reflectionOrder: needed to trim the recursive tree
+		*/
+		void getImageData(std::vector<ImageSourceData> &imageSourceDataList, Common::CVector3 listenerLocation, int reflectionOrder);
 
-	/** \brief Returns the  wall where the reflecion produced this image
-	*   \param [out] Reflection wall.
-	*/
-	Wall getReflectionWall();
+		/** \brief Returns the  wall where the reflecion produced this image
+		*   \param [out] Reflection wall.
+		*/
+		Wall getReflectionWall();
 
-	/** \brief Returns the number of images whcih are visible to teh listener (real reflections) 
-	*	\details Given a location of the listener, this method computes how many images are active because they are visible to the listener
-				 To do so it iterates the whole recursive tree up to a given order checking it the sources are visible or not
-	*	\param [in] ReflectionOrder: number of reflections cosidered.
-	*   \param [in] ListenerLocation: Location of the Listener in the 3DTI toolkit
-	*	\param [out] Number_Images: number of visible images.
-	*/
-	int getNumberOfVisibleImages(int reflectionOrder, Common::CVector3 listenerLocation);
+		/** \brief Returns the number of images whcih are visible to teh listener (real reflections)
+		*	\details Given a location of the listener, this method computes how many images are active because they are visible to the listener
+					 To do so it iterates the whole recursive tree up to a given order checking it the sources are visible or not
+		*	\param [in] ReflectionOrder: number of reflections cosidered.
+		*   \param [in] ListenerLocation: Location of the Listener in the 3DTI toolkit
+		*	\param [out] Number_Images: number of visible images.
+		*/
+		int getNumberOfVisibleImages(int reflectionOrder, Common::CVector3 listenerLocation);
 
-	/** \brief creates all the image sources reflected in the walls upto the reflection order
-	*	\details 
-	*	\param [in]
-	*   \param [in]
-	*/
-	void createImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder);
+		/** \brief creates all the image sources reflected in the walls upto the reflection order
+		*	\details
+		*	\param [in]
+		*   \param [in]
+		*/
+		void createImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder);
 
-	/** \brief
-	*	\details
-	*	\param [in]
-	*   \param [in]
-	*/
-	void updateImages();
+		/** \brief
+		*	\details
+		*	\param [in]
+		*   \param [in]
+		*/
+		void updateImages();
 
-	/** \brief refresh source images
-	*	\details removes all the images and creates them again to refresh which ones are active. This method
-	*			 should be invoked after disabling or enabling walls
-	*	\param [in]
-	*   \param [in]
-	*/
-	void refreshImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder);
+		/** \brief refresh source images
+		*	\details removes all the images and creates them again to refresh which ones are active. This method
+		*			 should be invoked after disabling or enabling walls
+		*	\param [in]
+		*   \param [in]
+		*/
+		void refreshImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder);
 
-private:
+	private:
 
-///////////////////
-// Private Methods
-///////////////////
+		///////////////////
+		// Private Methods
+		///////////////////
 
-/** \brief sets the wall where this image was reflected
-*	\details The first source, which model the original (not reflected) source has not a reflection wall, but all teh images
-			 should have teh wall where the reflecion is modeled in order to make furtehr calculations
-*   \param [in] _reflectionWall.
-*/
-	void setReflectionWall(Wall _reflectionWall);
-	void setReflectionWalls(std::vector<Wall> reflectionWalls);
+		/** \brief sets the wall where this image was reflected
+		*	\details The first source, which model the original (not reflected) source has not a reflection wall, but all teh images
+					 should have teh wall where the reflecion is modeled in order to make furtehr calculations
+		*   \param [in] _reflectionWall.
+		*/
+		void setReflectionWall(Wall _reflectionWall);
+		void setReflectionWalls(std::vector<Wall> reflectionWalls);
 
-	/** \brief
-	*	\details
-	*	\param [in]
-	*   \param [in]
-	*/
-	void createImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder, std::vector<Wall> reflectionWalls);
-
-
-
-	////////////
-	// Attributes
-	////////////
+		/** \brief
+		*	\details
+		*	\param [in]
+		*   \param [in]
+		*/
+		void createImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder, std::vector<Wall> reflectionWalls);
 
 
-	std::vector<Wall> reflectionWalls;		//vector containing the walls where the sound has been reflected in inverse order (last reflection first)
-	Wall reflectionWall;									//Wall which produced current image as a reflection
-	Room surroundingRoom;									//Room to generate further images reflectin in its walls
-	Common::CVector3 sourceLocation;						//Original source location
-	std::vector<SourceImages> images;						//recursive list of images
+
+		////////////
+		// Attributes
+		////////////
 
 
-	float diffraction = 1.0f;
-};
+		std::vector<Wall> reflectionWalls;		//vector containing the walls where the sound has been reflected in inverse order (last reflection first)
+		Wall reflectionWall;									//Wall which produced current image as a reflection
+		Room surroundingRoom;									//Room to generate further images reflectin in its walls
+		Common::CVector3 sourceLocation;						//Original source location
+		std::vector<SourceImages> images;						//recursive list of images
 
+
+		float diffraction = 1.0f;
+	};
+
+}//namespace ISM
