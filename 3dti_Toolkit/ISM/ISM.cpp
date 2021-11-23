@@ -18,19 +18,19 @@ namespace ISM
 	void ISM::enableWall(int wallIndex)
 	{
 		mainRoom.enableWall(wallIndex);
-		originalSource.refreshImages(mainRoom, Common::CVector3(0, 0, 0), reflectionOrder); //FIXME:the listener location is fake
+		originalSource.createImages(mainRoom, Common::CVector3(0, 0, 0), reflectionOrder); //FIXME:the listener location is fake
 	}
 
 	void ISM::disableWall(int wallIndex)
 	{
 		mainRoom.disableWall(wallIndex);
-		originalSource.refreshImages(mainRoom, Common::CVector3(0, 0, 0), reflectionOrder); //FIXME:the listener location is fake
+		originalSource.createImages(mainRoom, Common::CVector3(0, 0, 0), reflectionOrder); //FIXME:the listener location is fake
 	}
 
 	void ISM::setReflectionOrder(int _reflectionOrder)
 	{
 		reflectionOrder = _reflectionOrder;
-		originalSource.refreshImages(mainRoom, Common::CVector3(0, 0, 0), reflectionOrder); //(0,0,0) is used instead of listener location. We should consider to change listener location by the center of the room
+		originalSource.createImages(mainRoom, Common::CVector3(0, 0, 0), reflectionOrder); //(0,0,0) is used instead of listener location. We should consider to change listener location by the center of the room
 	}
 
 	int ISM::getReflectionOrder()

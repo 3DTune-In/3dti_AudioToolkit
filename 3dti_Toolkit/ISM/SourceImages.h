@@ -102,13 +102,6 @@ namespace ISM
 		*/
 		void updateImages();
 
-		/** \brief refresh source images
-		*	\details removes all the images and creates them again to refresh which ones are active. This method
-		*			 should be invoked after disabling or enabling walls
-		*	\param [in]
-		*   \param [in]
-		*/
-		void refreshImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder);
 
 	private:
 
