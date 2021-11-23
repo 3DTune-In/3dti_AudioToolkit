@@ -5,6 +5,7 @@ namespace ISM
 
 	void Room::setupShoebox(float length, float width, float height)
 	{
+		walls.clear();
 		Wall front, back, left, right, ceiling, floor;
 		front.insertCorner(length / 2, width / 2, height / 2);
 		front.insertCorner(length / 2, width / 2, -height / 2);
