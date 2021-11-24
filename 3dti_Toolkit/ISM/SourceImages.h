@@ -23,6 +23,8 @@
 #include "Room.h"
 #include <Common/Vector3.h>
 
+#define VISIBILITY_MARGIN	0.2
+
 namespace ISM
 {
 
@@ -31,6 +33,7 @@ namespace ISM
 	{
 		Common::CVector3 location;						//Location of the image source
 		bool visible;									//If the source is visible it should be rendered
+		float visibility;								//1 if visible, 0 if not, something in the middle if in the transition, where the transition is +/-VISIBILITY_MARGIN width
 		std::vector<Wall> reflectionWalls;				//list of walls where the source has reflected (last reflection first)
 	};
 

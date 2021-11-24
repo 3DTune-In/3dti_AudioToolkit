@@ -77,24 +77,27 @@ namespace ISM
 		{
 			reflectionOrder--;
 			for (int i = 0; i < images.size(); i++)
+
 			{
 				if (images.at(i).reflectionWall.isActive())//////////////////////////////////////////////////////////////////
 				{
 					ImageSourceData temp;
 					temp.location = images.at(i).getLocation();
 					temp.reflectionWalls = images.at(i).reflectionWalls;
-					Common::CVector3 reflectionPoint = images.at(i).getReflectionWall().getIntersectionPointWithLine(images.at(i).getLocation(), listenerLocation);
-					float distanceToBorder, sharpness;
-					if (images.at(i).getReflectionWall().checkPointInsideWall(reflectionPoint, distanceToBorder, sharpness) > 0)
+					temp.visible = true;	//We hypothesise that it is visible and in case on founding a wall where it is not, this will become false
+					temp.visibility = 1.0;	//We hypothesise that it is fully visible. Otherwise, this will become lower
+					for (int j = 0; j < temp.reflectionWalls.size(); j++)
 					{
-						temp.visible = true;
-					}
-					else
-					{
-						temp.visible = false;
+						Common::CVector3 reflectionPoint = temp.reflectionWalls.at(j).getIntersectionPointWithLine(images.at(i).getLocation(), listenerLocation);
+						float distanceToBorder, sharpness;
+						temp.reflectionWalls.at(j).checkPointInsideWall(reflectionPoint, distanceToBorder, sharpness);
+						float visibility = 0.5 + distanceToBorder / (VISIBILITY_MARGIN * 2.0);  // >1 if further inside than VISIBILITY_MARGIN and <-1 if further outside than VISIBILITY_MARGIN
+						if (visibility > 1) visibility = 1;
+						if (visibility < 0) visibility = 0;
+						temp.visibility *= visibility;
+						temp.visible &= (visibility > 0);
 					}
 					imageSourceDataList.push_back(temp);
-
 					if (reflectionOrder > 0)
 					{
 						images.at(i).getImageData(imageSourceDataList, listenerLocation, reflectionOrder);
