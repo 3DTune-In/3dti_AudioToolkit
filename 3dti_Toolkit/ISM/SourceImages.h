@@ -82,15 +82,6 @@ namespace ISM
 		*/
 		Wall getReflectionWall();
 
-		/** \brief Returns the number of images whcih are visible to teh listener (real reflections)
-		*	\details Given a location of the listener, this method computes how many images are active because they are visible to the listener
-					 To do so it iterates the whole recursive tree up to a given order checking it the sources are visible or not
-		*	\param [in] ReflectionOrder: number of reflections cosidered.
-		*   \param [in] ListenerLocation: Location of the Listener in the 3DTI toolkit
-		*	\param [out] Number_Images: number of visible images.
-		*/
-		int getNumberOfVisibleImages(int reflectionOrder, Common::CVector3 listenerLocation);
-
 		/** \brief creates all the image sources reflected in the walls upto the reflection order
 		*	\details
 		*	\param [in]

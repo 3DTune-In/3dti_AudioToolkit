@@ -7,32 +7,6 @@
 namespace ISM
 {
 
-	//FIXME: the condition of visibility is wrong and should be fixed only the first reflection after the source is checked 
-	int SourceImages::getNumberOfVisibleImages(int reflectionOrder, Common::CVector3 listenerLocation)
-	{
-		int subtotal = 0;
-		if (reflectionOrder > 0)
-		{
-			reflectionOrder--;
-			for (int i = 0; i < images.size(); i++)
-			{
-				Common::CVector3 reflectionPoint = images.at(i).getReflectionWall().getIntersectionPointWithLine(images[i].getLocation(), listenerLocation);
-				float distanceToBorder, sharpness;
-				if (images.at(i).getReflectionWall().checkPointInsideWall(reflectionPoint, distanceToBorder, sharpness) > 0)
-				{
-					subtotal++;
-				}
-				subtotal += images.at(i).getNumberOfVisibleImages(reflectionOrder, listenerLocation);
-			}
-			return subtotal;
-		}
-		else
-		{
-			return 0;
-		}
-
-	}
-
 	void SourceImages::setLocation(Common::CVector3 _location)
 	{
 		sourceLocation = _location;
@@ -91,7 +65,7 @@ namespace ISM
 						Common::CVector3 reflectionPoint = temp.reflectionWalls.at(j).getIntersectionPointWithLine(images.at(i).getLocation(), listenerLocation);
 						float distanceToBorder, sharpness;
 						temp.reflectionWalls.at(j).checkPointInsideWall(reflectionPoint, distanceToBorder, sharpness);
-						float visibility = 0.5 + distanceToBorder / (VISIBILITY_MARGIN * 2.0);  // >1 if further inside than VISIBILITY_MARGIN and <-1 if further outside than VISIBILITY_MARGIN
+						float visibility = 0.5 + distanceToBorder / (THRESHOLD_BORDER * 2.0);  // >1 if further inside than VISIBILITY_MARGIN and <-1 if further outside than VISIBILITY_MARGIN
 						if (visibility > 1) visibility = 1;
 						if (visibility < 0) visibility = 0;
 						temp.visibility *= visibility;

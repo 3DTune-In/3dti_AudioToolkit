@@ -24,6 +24,10 @@
 #include <vector>
 #include <Common/Vector3.h>
 
+#ifndef THRESHOLD_BORDER
+#define THRESHOLD_BORDER 0.3f
+#endif
+
 namespace ISM
 {
 
