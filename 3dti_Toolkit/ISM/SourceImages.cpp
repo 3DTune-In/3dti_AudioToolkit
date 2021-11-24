@@ -97,6 +97,7 @@ namespace ISM
 						temp.visibility *= visibility;
 						temp.visible &= (visibility > 0);
 					}
+					temp.visibility = pow(temp.visibility, (1 / (float)temp.reflectionWalls.size()));
 					imageSourceDataList.push_back(temp);
 					if (reflectionOrder > 0)
 					{
