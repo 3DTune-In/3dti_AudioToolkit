@@ -60,6 +60,23 @@ namespace ISM
 		shoeBox = true;
 	}
 
+	void Room::setupRoomGeometry(RoomGeometry roomGeometry)
+	{
+		walls.clear();
+		for (int i = 0; i < roomGeometry.walls.size(); i++)
+		{
+			Wall tempWall;
+			for (int j = 0; j < roomGeometry.walls.at(i).size(); j++)
+			{
+				tempWall.insertCorner(roomGeometry.corners.at(roomGeometry.walls.at(i).at(j)));
+			}
+			insertWall(tempWall);
+		}
+		shoeBox = false;
+	}
+
+
+
 	void Room::insertWall(Wall _newWall)
 	{
 		walls.push_back(_newWall);

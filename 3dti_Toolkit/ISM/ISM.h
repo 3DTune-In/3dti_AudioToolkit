@@ -42,6 +42,12 @@ namespace ISM
 		*/
 		void SetupShoeBoxRoom(float length, float width, float height);
 
+		/** \brief Initializes the object with a shoebox room
+		*	\details creates a room with arbitrary geometry by means of defining all its corners and the walls as polygons with those corners
+		*	\param [in] roomGeometry: struct containing all the vertices and walls
+		*/
+		void setupArbitraryRoom(RoomGeometry roomGeometry);
+
 		/** \brief returns the main room
 		*	\details returns a Room object containing the definition of the main room (without image walls)
 		*	\param [out] mainRoom.

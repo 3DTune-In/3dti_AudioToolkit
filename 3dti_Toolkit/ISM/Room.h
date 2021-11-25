@@ -25,6 +25,11 @@
 
 namespace ISM
 {
+	struct RoomGeometry
+	{
+		std::vector<Common::CVector3> corners;
+		std::vector<std::vector<int>> walls;
+	};
 
 	class Room
 	{
@@ -41,6 +46,12 @@ namespace ISM
 		*	\param [in] height: extension of the room along the Z axis
 		*/
 		void setupShoebox(float width, float length, float height);
+
+		/** \brief Initializes the object with a shoebox room
+		*	\details creates a room with arbitrary geometry by means of defining all its corners and the walls as polygons with those corners
+		*	\param [in] roomGeometry: struct containing all the vertices and walls
+		*/
+		void setupRoomGeometry(RoomGeometry roomGeometry);
 
 		/** \brief insert a new wall in the room
 		*	\details Instead of using the setup method, this method can be used to create any arbitrary room. It should be

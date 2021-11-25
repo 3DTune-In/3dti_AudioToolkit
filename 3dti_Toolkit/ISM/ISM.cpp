@@ -9,6 +9,12 @@ namespace ISM
 		originalSource.createImages(mainRoom, Common::CVector3(0, 0, 0), reflectionOrder); //FIXME:the listener location is fake
 	}
 
+	void ISM::setupArbitraryRoom(RoomGeometry roomGeometry)
+	{
+		mainRoom.setupRoomGeometry(roomGeometry);
+		originalSource.createImages(mainRoom, Common::CVector3(0, 0, 0), reflectionOrder); //FIXME:the listener location is fake
+	}
+	
 	Room ISM::getRoom()
 	{
 		return mainRoom;
