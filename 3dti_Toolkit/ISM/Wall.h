@@ -131,7 +131,12 @@ namespace ISM
 					when the point is in the wall's plane and within the limits defined by the wall's corners. If the point is not int wall's plane
 					or if the point is outside the polygon defined by the wall's corners, it returns a negative value.
 		*	\param [in] Point: point to be checked.
-		*	\param [out] Result: positive value if the point is within the wall's plane and plygon and negativve value otherwise.
+		*	\param [out] Result: 0 --> Point is not in the wall's plane or distanceToBorder > THRESHOLD_BORDER
+		                         1 --> Point is inside the wall 
+									     visibility (sharpness) = 1.0 if distanceToBorder > THRESHOLD_BORDER
+									     visibility (sharpness) is between [1.0 ,  0.5) if distanceToBorder < THRESHOLD_BORDER
+								 2 --> Point is coming out of the wall
+								         visibility (sharpness) is between (0.5 ,  0] if distanceToBorder <= THRESHOLD_BORDER
 		*/
 		int checkPointInsideWall(Common::CVector3 point, float &distanceNearestEdge, float &sharpness);
 

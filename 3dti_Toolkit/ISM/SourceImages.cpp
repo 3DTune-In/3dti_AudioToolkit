@@ -63,11 +63,13 @@ namespace ISM
 					for (int j = 0; j < temp.reflectionWalls.size(); j++)
 					{
 						Common::CVector3 reflectionPoint = temp.reflectionWalls.at(j).getIntersectionPointWithLine(images.at(i).getLocation(), listenerLocation);
-						float distanceToBorder, sharpness;
-						temp.reflectionWalls.at(j).checkPointInsideWall(reflectionPoint, distanceToBorder, sharpness);
-						float visibility = 0.5 + distanceToBorder / (THRESHOLD_BORDER * 2.0);  // >1 if further inside than VISIBILITY_MARGIN and <-1 if further outside than VISIBILITY_MARGIN
+						float distanceToBorder, visibility;
+						
+						temp.reflectionWalls.at(j).checkPointInsideWall(reflectionPoint, distanceToBorder, visibility);
+						/*float visibility = 0.5 + distanceToBorder / (THRESHOLD_BORDER * 2.0);  // >1 if further inside than VISIBILITY_MARGIN and <-1 if further outside than VISIBILITY_MARGIN
 						if (visibility > 1) visibility = 1;
 						if (visibility < 0) visibility = 0;
+						*/
 						temp.visibility *= visibility;
 						temp.visible &= (visibility > 0);
 					}

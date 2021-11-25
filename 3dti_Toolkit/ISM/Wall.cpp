@@ -218,7 +218,8 @@ namespace ISM
 		float modulus = getDistanceFromPoint(point);
 		if (modulus > THRESHOLD)
 		{
-			return 0;              // Point is not in the wall's plane
+			sharpness = 0.0;
+			return 0;                           // Point is not in the wall's plane
 			//return FALSE;        
 		}
 
@@ -257,7 +258,7 @@ namespace ISM
 				sharpness = 0.5 + distanceNearestEdge / (2.0 * THRESHOLD_BORDER);
 			else
 				sharpness = 1.0;
-			return 1;                           // Point is inside the wall,
+			return 1;                               // Point is inside the wall,
 			//return TRUE;
 		}
 		else
@@ -268,8 +269,11 @@ namespace ISM
 				sharpness = 0.5 + distanceNearestEdge / (2.0 * THRESHOLD_BORDER);
 				return 2;                           // Point is coming out of the wall
 			}
-			else
-				return 0;
+			else 
+			{
+				sharpness = 0.0;
+				return 0;                           // Point is outside Wall
+			}
 			//return FALSE;
 		}
 
