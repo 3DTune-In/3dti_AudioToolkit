@@ -5,6 +5,14 @@ namespace ISM
 
 	void Room::setupShoebox(float length, float width, float height)
 	{
+		//If the room was previously set up as a shoebox, it will keep the wall properties if it is redifined with a new shoeboxSetup
+		std::vector<Wall> previousWalls;
+		if (shoeBox)
+		{
+			previousWalls = walls;
+		}
+
+		// Now we can clear the walls in case there was a previous definition to set the room up from scratch
 		walls.clear();
 		Wall front, back, left, right, ceiling, floor;
 		front.insertCorner(length / 2, width / 2, height / 2);
@@ -38,7 +46,18 @@ namespace ISM
 		ceiling.insertCorner(length / 2, width / 2, height / 2);
 		insertWall(ceiling);
 
+		if (shoeBox)
+		{
+			for (int i = 0; i < previousWalls.size(); i++)
+			{
+				if (!previousWalls.at(i).isActive())
+				{
+					walls.at(i).disable();
+				}
+			}
+		}
 
+		shoeBox = true;
 	}
 
 	void Room::insertWall(Wall _newWall)

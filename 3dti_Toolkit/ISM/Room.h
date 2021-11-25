@@ -78,6 +78,7 @@ namespace ISM
 		// Attributes
 		////////////
 
+		bool shoeBox = false;				//Flag indicating if the room was set up as a shoebox
 		std::vector<Wall> walls;            //Vector with all the walls of the room
 	};
 
