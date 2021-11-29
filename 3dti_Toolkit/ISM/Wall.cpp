@@ -1,7 +1,7 @@
 #include "Wall.h"
 
 #ifndef THRESHOLD
-#define THRESHOLD 0.000001f
+#define THRESHOLD 0.00001f
 #endif
 
 #ifndef THRESHOLD_BORDER
@@ -216,11 +216,10 @@ namespace ISM
 	int  Wall::checkPointInsideWall(Common::CVector3 point, float &distanceNearestEdge, float &sharpness)
 	{
 		float modulus = getDistanceFromPoint(point);
-		if (modulus > THRESHOLD)
+		if (modulus > 5*THRESHOLD)
 		{
 			sharpness = 0.0;
-			return 0;                           // Point is not in the wall's plane
-			//return FALSE;        
+			return 0;                           // Point is not in the wall's plane       
 		}
 
 		double m1, m2, anglesum = 0, costheta, anglediff;
@@ -242,7 +241,6 @@ namespace ISM
 				distanceNearestEdge = 0.0f;
 				sharpness = 0.5f;
 				return 1;                       // Point is on a corner of the wall,
-				//return TRUE;                  // Point is on a corner of the wall,
 			}
 			else
 				costheta = (p1.x*p2.x + p1.y*p2.y + p1.z*p2.z) / (m1*m2);
@@ -259,7 +257,6 @@ namespace ISM
 			else
 				sharpness = 1.0;
 			return 1;                               // Point is inside the wall,
-			//return TRUE;
 		}
 		else
 		{   // Point is outside Wall
@@ -274,9 +271,7 @@ namespace ISM
 				sharpness = 0.0;
 				return 0;                           // Point is outside Wall
 			}
-			//return FALSE;
 		}
-
 	}
 
 	float Wall::calculateDistanceNearestEdge(Common::CVector3 point) {
