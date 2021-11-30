@@ -187,7 +187,7 @@ namespace ISM
 		// Attributes
 		////////////
 		std::vector<Common::CVector3> polygon;	// corners of the wall
-		float absortion = 0;					// Absortion coeficient (0 = no absortion; 1 = no reflection)
+		float absortion = 0;					// absortion coeficient (absorved energy / incident energy) 
 		bool active = true;						//sets wether the wall is active or not (if false, the wall is transparent)
 
 		float A, B, C, D;						// General Plane Eq.: Ax + By + Cz + D = 0

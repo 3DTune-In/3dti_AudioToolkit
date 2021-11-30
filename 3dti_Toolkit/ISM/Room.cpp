@@ -98,6 +98,10 @@ namespace ISM
 		}
 	}
 
+	void Room::setWallAbsortion(int wallIndex, float absortion)
+	{
+		walls.at(wallIndex).setAbsortion(absortion);
+	}
 
 	std::vector<Wall> Room::getWalls()
 	{

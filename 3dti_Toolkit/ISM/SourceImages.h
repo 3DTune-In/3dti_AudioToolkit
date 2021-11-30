@@ -35,6 +35,7 @@ namespace ISM
 		bool visible;									//If the source is visible it should be rendered
 		float visibility;								//1 if visible, 0 if not, something in the middle if in the transition, where the transition is +/-VISIBILITY_MARGIN width
 		std::vector<Wall> reflectionWalls;				//list of walls where the source has reflected (last reflection first)
+		float reflection;								//coeficient to be applied to simulate walls' absortion
 	};
 
 

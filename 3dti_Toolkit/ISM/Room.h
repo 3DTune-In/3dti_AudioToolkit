@@ -72,6 +72,14 @@ namespace ISM
 		*/
 		void disableWall(int wallIndex);
 
+		/** \brief sets the absortion coeficient of one wall
+		*	\details Sets the absortion coeficient (absorved eergy / incident energy) of the 
+		*            i-th wall of the room.
+		*	\param [in] index of the wall.
+		*	\param [in] absortion coeficient
+		*/
+		void setWallAbsortion(int wallIndex, float absortion);
+
 		/** \brief Returns a vector of walls containing all the walls of the room.
 		*	\param [out] Walls: vector of walls with all the walls of the room.
 		*/

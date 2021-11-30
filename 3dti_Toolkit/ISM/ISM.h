@@ -34,8 +34,8 @@ namespace ISM
 		////////////
 
 		/** \brief Initializes the object with a shoebox room
-		*	\details creates six walls conforming a shoebox room with 0,0,0 at the center. It must be used right after
-					 creating the empty object.
+		*	\details creates six walls conforming a shoebox room with 0,0,0 at the center. Wall order is: front, left, right,back, floor, ceiling.
+		*			 It must be used right after creating the empty object.
 		*	\param [in] width: extension of the room along the Y axis.
 		*	\param [in] length: extension of the room along the X axis.
 		*	\param [in] height: extension of the room along the Z axis
@@ -47,6 +47,12 @@ namespace ISM
 		*	\param [in] roomGeometry: struct containing all the vertices and walls
 		*/
 		void setupArbitraryRoom(RoomGeometry roomGeometry);
+
+		/** \brief Sets walls' absortion
+		*	\details sets the absortion coeficient (absroved energy / incident energy) of each wall of the main room
+		*	\param [in] absortions: vector containing the absortion coeficient of each wall. Same order as in setup
+		*/
+		void setAbsortion(std::vector<float> _absortions);
 
 		/** \brief returns the main room
 		*	\details returns a Room object containing the definition of the main room (without image walls)

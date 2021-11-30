@@ -60,6 +60,7 @@ namespace ISM
 					temp.reflectionWalls = images.at(i).reflectionWalls;
 					temp.visible = true;	//We hypothesise that it is visible and in case on founding a wall where it is not, this will become false
 					temp.visibility = 1.0;	//We hypothesise that it is fully visible. Otherwise, this will become lower
+					temp.reflection = 1.0;	//We start asuming pure reflective walls 
 					for (int j = 0; j < temp.reflectionWalls.size(); j++)
 					{
 						Common::CVector3 reflectionPoint = temp.reflectionWalls.at(j).getIntersectionPointWithLine(images.at(i).getLocation(), listenerLocation);
@@ -72,6 +73,7 @@ namespace ISM
 						*/
 						temp.visibility *= visibility;
 						temp.visible &= (visibility > 0);
+						temp.reflection *= sqrt(1 - temp.reflectionWalls.at(j).getAbsortion());
 					}
 					temp.visibility = pow(temp.visibility, (1 / (float)temp.reflectionWalls.size()));
 					imageSourceDataList.push_back(temp);

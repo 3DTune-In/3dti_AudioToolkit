@@ -190,6 +190,7 @@ namespace ISM
 			Common::CVector3 tempImageCorner = getImagePoint(corners.at(i));
 			tempWall.insertCorner(tempImageCorner);
 		}
+		tempWall.absortion = _wall.absortion;
 		if (!_wall.isActive()) tempWall.disable();
 		return tempWall;
 	}
