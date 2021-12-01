@@ -22,6 +22,7 @@
 #include "Room.h"
 #include "SourceImages.h"
 #include <Common/Vector3.h>
+#include <Common/Buffer.h>
 
 namespace ISM
 {
@@ -104,10 +105,18 @@ namespace ISM
 
 		/** \brief Returns data of all image sources
 		*	\details This method returns the location of all image sources and wether they are visible or not, not including the
-			original source (direct path).
+		*	original source (direct path).
 		*	\param [out] ImageSourceData: Vector containing the data of the image sources
 		*/
 		std::vector<ImageSourceData> getImageSourceData(Common::CVector3 listenerLocation);
+
+		/** \brief Proccess audio buffers to apply wall absortion
+		*	\details Process all audio buffers (one per image source) colouring them according to wall absortion
+		*			 It does not apply delay, nor attenuation due to distance, nor spatialisation
+		*	\param [in] inBuffer: audio input buffer to be copied with colour in outputs
+		*	\param [out] outbufffer: vector of buffers with audio to be spatialised for each image source
+		*/
+		void proccess(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation);
 
 	private:
 		////////////

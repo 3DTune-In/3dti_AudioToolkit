@@ -79,6 +79,21 @@ namespace ISM
 		return imageSourceList;
 	}
 
+	void ISM::proccess(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation)
+	{
+		std::vector<ImageSourceData> images = getImageSourceData(listenerLocation);
+		for (int i = 0; i < imageBuffers.size(); i++)
+		{
+			if (images.at(i).visibility)
+			{
+				for (int j = 0; j < inBuffer.size(); j++)
+				{
+					imageBuffers.at(i).at(j) = images.at(i).reflection*inBuffer.at(j);
+				}
+			}
+		}
+	}
+
 }//namespace ISM
 
 
