@@ -91,6 +91,16 @@ namespace ISM
 		*/
 		std::vector<Room> getImageRooms();
 
+		/** \brief Checks wether a 3D point is inside the room or not.
+		*	\details Returns the result of checking wether a 3D point is inside the room or not and the distance to teh nearest wall 
+		*            which is positive if the point is inside the room and negative if it is outside. This method assumes that the room is convex
+					 and that all the walls are properly defined declaring their corners clockwise as seen from inside the room.
+		*	\param [in] point: 3D point to be checked.
+		*	\param [out] distance to nearest wall passed by reference
+		*	\param [out] Result: returned boolean indicating if the point is inside the room (true) or not (false)
+		*/
+		bool checkPointInsideRoom(Common::CVector3 point, float &distanceNearestWall);
+
 
 	private:
 		////////////

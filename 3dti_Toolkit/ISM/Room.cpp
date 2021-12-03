@@ -127,4 +127,9 @@ namespace ISM
 		return roomList;
 	}
 
+	bool Room::checkPointInsideRoom(Common::CVector3 point, float &distanceNearestWall)
+	{
+
+	}
+
 } //namespace ISM
