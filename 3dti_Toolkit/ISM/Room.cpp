@@ -129,7 +129,61 @@ namespace ISM
 
 	bool Room::checkPointInsideRoom(Common::CVector3 point, float &distanceNearestWall)
 	{
+		float distanceToPlane = FLT_MAX;
+		bool inside;
 
+		inside = true;
+		for (int i = 0; i < walls.size(); i++)
+		{
+			if (walls.at(i).isActive())
+			{
+
+				Common::CVector3 normal, farthestCorner, center, p, p1, p2;
+				center = walls.at(i).getCenter();
+				farthestCorner = center;
+				normal = walls.at(i).getNormal();
+
+				std::vector<Common::CVector3> corners;
+				Wall tWall = walls.at(i);
+				corners = tWall.getCorners();
+
+				float tempDistanceToPlane = walls.at(i).getDistanceFromPoint(point);
+				if (tempDistanceToPlane < distanceToPlane) distanceToPlane = tempDistanceToPlane;
+				
+				double distance = 0, d;
+				for (int j = 0; j < corners.size(); j++)
+				{
+					p.x = point.x - corners[j].x;
+					p.y = point.y - corners[j].y;
+					p.z = point.z - corners[j].z;
+					d = p.GetDistance();
+					if (d > distance)
+					{
+						distance = d;
+						farthestCorner = corners[j];
+					}
+				}
+				p = farthestCorner;
+
+			    //p = center;
+
+				p1.x = p.x - point.x;
+				p1.y = p.y - point.y;
+				p1.z = p.z - point.z;
+
+				p2.x = - normal.x;
+				p2.y = - normal.y;
+				p2.z = - normal.z;
+
+				float dP;
+				dP = p2.DotProduct(p1);
+			if (p2.DotProduct(p1) < - 0.1)
+     		   inside=false;
+			}
+		}
+
+		distanceNearestWall = distanceToPlane;
+		return inside;
 	}
 
 } //namespace ISM
