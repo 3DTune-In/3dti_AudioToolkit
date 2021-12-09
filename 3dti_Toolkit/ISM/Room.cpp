@@ -74,9 +74,7 @@ namespace ISM
 		}
 		shoeBox = false;
 	}
-
-
-
+		
 	void Room::insertWall(Wall _newWall)
 	{
 		walls.push_back(_newWall);
@@ -150,7 +148,7 @@ namespace ISM
 				float tempDistanceToPlane = walls.at(i).getDistanceFromPoint(point);
 				if (tempDistanceToPlane < distanceToPlane) distanceToPlane = tempDistanceToPlane;
 				
-				double distance = 0, d;
+				double distance = 0.0, d;
 				for (int j = 0; j < corners.size(); j++)
 				{
 					p.x = point.x - corners[j].x;
@@ -164,8 +162,7 @@ namespace ISM
 					}
 				}
 				p = farthestCorner;
-
-			    //p = center;
+				//p = center;
 
 				p1.x = p.x - point.x;
 				p1.y = p.y - point.y;
@@ -177,8 +174,8 @@ namespace ISM
 
 				float dP;
 				dP = p2.DotProduct(p1);
-			if (p2.DotProduct(p1) < - 0.1)
-     		   inside=false;
+				if (dP < 0.0f)
+     				inside = false;
 			}
 		}
 
