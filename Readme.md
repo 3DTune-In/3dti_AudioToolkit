@@ -159,4 +159,4 @@ The 3D Tune-In Toolkit and the 3D Tune-In Resource Management Package software t
 
 We would like to acknowledge Dr. Brian FG Katz and his team for their contributions in the field of sound spatialization, which were used as the basis for part of this software.
 
-The Baer&Moore implementation of the frequency smearing algorithm was possible thanks to Michael Stone @ University of Manchester, who kindly shared with us his MATLAB code.
+The Baer&Moore frequency smearing model is an implementation of code written by members of the Auditory Perception Group, University of Cambridge, translated and curated in MATLAB by former member Michael Stone, now at University of Manchester. The smearing algorithm is described here: T. Baer and B.C.J. Moore, Effects of spectral smearing on the intelligibility of sentences in the presence of noise, J. Acoust. Soc. Am. 94: 1229-1241 (1993)
