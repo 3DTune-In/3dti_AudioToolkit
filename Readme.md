@@ -158,3 +158,5 @@ The 3D Tune-In Toolkit and the 3D Tune-In Resource Management Package software t
 ![European Union](docs/images/EU_flag.png "European Union") This project has received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No 644051. 
 
 We would like to acknowledge Dr. Brian FG Katz and his team for their contributions in the field of sound spatialization, which were used as the basis for part of this software.
+
+The Baer&Moore implementation of the frequency smearing algorithm was possible thanks to Michael Stone @ University of Manchester, who kindly shared with us his MATLAB code.
