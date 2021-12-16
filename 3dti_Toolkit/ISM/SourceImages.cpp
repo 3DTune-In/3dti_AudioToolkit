@@ -1,4 +1,5 @@
 #include "SourceImages.h"
+#include <cmath>
 
 //#ifndef THRESHOLD_BORDER
 //#define THRESHOLD_BORDER 0.2f

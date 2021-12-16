@@ -1,4 +1,5 @@
 #include "Wall.h"
+#include <cmath>
 
 #ifndef THRESHOLD
 #define THRESHOLD 0.00001f
