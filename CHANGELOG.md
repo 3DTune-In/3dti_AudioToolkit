@@ -5,6 +5,36 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Binaural
+`Added` 
+ - CSingleSourceDSP: The new CWaveguide class has been incorporated, adding a new simulator for: propagation delay between source and listener and doppler effect in case of source or listener movement.
+ - New public methods in CSingleSourceDSP:
+	 * void EnablePropagationDelay();
+	 * void DisablePropagationDelay();
+     * bool IsPropagationDelayEnabled();
+	 * float GetCurrentEarAzimuth(Common::T_ear ear) const;
+	 * float GetEffectiveEarAzimuth(Common::T_ear ear) const;
+	 * float GetCurrentEarElevation(Common::T_ear ear) const;
+	 * float GetEffectiveEarElevation(Common::T_ear ear) const;
+     * const Common::CTransform & GetCurrentSourceTransform() const;
+	 * const Common::CTransform & GetEffectiveSourceTransform() const;
+`Removed`
+ - Public methods removed from CSingleSourceDSP:
+     * void ProcessAnechoic(const CMonoBuffer<float> & inBuffer, CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer);
+	 * void ProcessAnechoic(const CMonoBuffer<float> & inBuffer, CStereoBuffer<float> & outBuffer);
+	 * float GetEarAzimuth( Common::T_ear ear ) const;
+	 * const Common::CTransform & GetSourceTransform() const;
+
+`Changed`
+ -  
+
+### Common
+`Added`
+ - New class in CWaveguide. It provides a waveguide simulation, to simulate the distance and doppler effect betwenn a source and the listener
+   
+ 
+## [M20190724] - AudioToolkit_v1.4 M20190724
+
 ### HAHLSimulation
 A new frequency smearing algorithm is implemented, based on Moore's algorithm. The developer can choose between this new algorithm or the old one and configure them independently for each ear.
 

@@ -34,6 +34,7 @@
 #include <Common/FarDistanceEffects.h>
 #include <BinauralSpatializer/UPCAnechoic.h>
 #include <Common/FiltersChain.h>
+#include <Common/Waveguide.h>
 
 //#define USE_UPC_WITHOUT_MEMORY
 #define EPSILON 0.0001f
@@ -75,11 +76,11 @@ namespace Binaural {
 		*/
 		void SetBuffer(CMonoBuffer<float> & buffer);					
 
-		/** \brief Get internal buffer
+		/** \brief Get copy of internal buffer
 		*	\retval buffer internal buffer content
 		*   \eh Nothing is reported to the error handler.
 		*/
-		const CMonoBuffer<float> GetBuffer() const;						
+		CMonoBuffer<float> GetBuffer() const;						
 
 		/** \brief Move source (position and orientation)
 		*	\param [in] _sourceTransform new position and orientation of source
@@ -87,12 +88,18 @@ namespace Binaural {
 		*/
 		void SetSourceTransform(Common::CTransform _sourceTransform);
 
-		/** \brief Get source transform (position and orientation)
+		/** \brief Get current source transform (position and orientation)
 		*	\retval transform reference to current position and orientation of source
 		*   \eh Nothing is reported to the error handler.
 		*/
-		const Common::CTransform & GetSourceTransform() const;
-																			
+		const Common::CTransform & GetCurrentSourceTransform() const;
+								
+		/** \brief Get effective source transform (position and orientation). The position and orientation of the source currently in operation.
+		*	\retval transform reference to current position and orientation of source
+		*   \eh Nothing is reported to the error handler.
+		*/
+		const Common::CTransform & GetEffectiveSourceTransform() const;
+		
 		/** \brief Get the attenuation in anechoic process for a given distance 	
 		*	\param [in] distance distance for checking attenuation
 		*	\retval gain attenuation, as gain (typically, between 0 and 1)		
@@ -229,6 +236,21 @@ namespace Binaural {
 		*/
 		void SetSpatializationMode(TSpatializationMode _spatializationMode);
 
+		/** \brief Enable propagation delay for this waveguide
+		*   \eh Nothing is reported to the error handler.
+		*/
+		void EnablePropagationDelay();
+
+		/** \brief Disable propagation delay for this waveguide
+		*   \eh Nothing is reported to the error handler.
+		*/
+		void DisablePropagationDelay();
+
+		/** \brief Get the flag for propagation delay enabling
+		*	\retval propagationDelayEnabled if true, propagation delay simulation is enabled for this source
+		*   \eh Nothing is reported to the error handler.
+		*/
+		bool IsPropagationDelayEnabled();
 
 		/** \brief Get the current spatialization mode for this source
 		*	\retval spatializationMode Current spatialization mode for this source
@@ -255,32 +277,63 @@ namespace Binaural {
 		*	\param [out] outLeftBuffer output mono buffer with spatialized audio for the left channel
 		*	\param [out] outRightBuffer output mono buffer with spatialized audio for the right channel
 		*   \eh On error, an error code is reported to the error handler.
+		*   \deprecated { Use instead SetBuffer(inBuffer) and later ProcessAnechoic(CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer)}
 		*/
+		//[[deprecated ("Use instead SetBuffer(inBuffer) and later ProcessAnechoic(CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer)")]]
 		void ProcessAnechoic(const CMonoBuffer<float> & inBuffer, CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer);
 
 		/** \brief Process data from input buffer to generate anechoic spatialization (direct path)
 		*	\param [in] inBuffer input buffer with anechoic audio
 		*	\param [out] outBuffer output stereo buffer with spatialized audio for the both channels
 		*   \eh On error, an error code is reported to the error handler.
+		*   \deprecated { Use instead SetBuffer(inBuffer) and later ProcessAnechoic(CStereoBuffer<float> & outBuffer)}
 		*/
+		//[[deprecated ("Use instead SetBuffer(inBuffer) and later ProcessAnechoic(CStereoBuffer<float> & outBuffer)")]]
 		void ProcessAnechoic(const CMonoBuffer<float> & inBuffer, CStereoBuffer<float> & outBuffer);
 
 		/** \brief Returns the azimuth of the specified ear.
 		*	\param [in] ear must be Common::T_ear::LEFT or Common::T_ear::RIGHT
 		*   \eh On error, an error code is reported to the error handler.
-		*/
-		float GetEarAzimuth( Common::T_ear ear ) const;
-
-		/** \brief Returns the elevation of the specified ear.
+		*/		
+		//float GetEarAzimuth( Common::T_ear ear ) const;
+		
+		/** \brief Returns the current azimuth of the specified ear.
 		*	\param [in] ear must be Common::T_ear::LEFT or Common::T_ear::RIGHT
 		*   \eh On error, an error code is reported to the error handler.
 		*/
-		float GetEarElevation(Common::T_ear ear) const;
+		float GetCurrentEarAzimuth(Common::T_ear ear) const;
+		
+		/** \brief Returns the effective azimuth of the specified ear.
+		*	\param [in] ear must be Common::T_ear::LEFT or Common::T_ear::RIGHT
+		*   \eh On error, an error code is reported to the error handler.
+		*/
+		float GetEffectiveEarAzimuth(Common::T_ear ear) const;
+		
+		/** \brief Returns the current elevation of the specified ear.
+		*	\param [in] ear must be Common::T_ear::LEFT or Common::T_ear::RIGHT
+		*   \eh On error, an error code is reported to the error handler.
+		*/
+		float GetCurrentEarElevation(Common::T_ear ear) const;
 
+		/** \brief Returns the effective elevation of the specified ear.
+		*	\param [in] ear must be Common::T_ear::LEFT or Common::T_ear::RIGHT
+		*   \eh On error, an error code is reported to the error handler.
+		*/
+		float GetEffectiveEarElevation(Common::T_ear ear) const;
+	
 	private:	
 		/////////////
 		// METHODS	
 		/////////////
+
+		/** \brief Get current distance between source and Listener
+		*	\retval float reference to current distance between the positions of source and listener
+		*   \eh Nothing is reported to the error handler.
+		*/
+		const float & GetCurrentDistanceSourceListener() const;
+
+
+		void ProcessAnechoic(const CMonoBuffer<float> & _inBuffer, CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer, Common::CVector3 & vectorToListener, float & distanceToListener, float & leftElevation, float & leftAzimuth, float & rightElevation, float & rightAzimuth, float & centerElevation, float & centerAzimuth, float & interauralAzimuth);
 
 		// Make the spatialization using HRTF convolution
 		void ProcessHRTF(CMonoBuffer<float> &inBuffer, CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer, float leftAzimuth, float leftElevation, float rightAzimuth, float rightElevation, float _azCenter, float _elCenter);
@@ -312,16 +365,22 @@ namespace Binaural {
 		// In orther to obtain the position where the HRIR is needed, this method calculate the projection of each ear in the sphere where the HRTF has been measured
 		const Common::CVector3 GetSphereProjectionPosition(Common::CVector3 vectorToEar, Common::CVector3 earLocalPosition, float distance) const;
 
-		// Calculates the values ot attributes related to the relative position between sound source and
-		// the listener.
-		void CalculateSourceCoordinates();
-				
+		/// Calculates the parameters derived from the source and listener position, starting from the current source position.
+		void CalculateCurrentSourceCoordinates();
+		/// Calculates the parameters derived from the source and listener position, starting from the effective source position.
+		void CalculateEffectiveSourceCoordinates();
+		/// Calculates the parameters derived from the source and listener position
+		void CalculateSourceCoordinates(Common::CTransform _sourceTransform, Common::CVector3 & _vectorToListener, float & _distanceToListener, float & leftElevation, float & leftAzimuth, float & rightElevation, float & rightAzimuth, float & centerElevation, float & centerAzimuth, float & interauralAzimuth);
+
+
 		///////////////
 		// ATTRIBUTES
 		///////////////
 		const CCore* ownerCore;					// Reference to the core where information shared by all sources is stored (listener, room and audio state attributes)	
-		Common::CTransform sourceTransform;		// Position and orientation of source
-		CMonoBuffer<float> internalBuffer;		// Buffer storage
+		Common::CTransform currentSourceTransform;		// Last position and orientation of soundsource set by APP
+		Common::CTransform effectiveSourceTransform;	// Position and orientation of the source with which you are currently operating.
+
+		Common::CWaveguide channelToListener;     // Channel to listener. Beware that this will not work if more than one listener. 
 					
 	#ifdef USE_FREQUENCY_COVOLUTION_WITHOUT_PARTITIONS_ANECHOIC
 		Common::CFconvolver outputLeft;   						// Object to make the inverse fft of the left channel
@@ -356,19 +415,37 @@ namespace Binaural {
 		
 		TSpatializationMode spatializationMode; //Select the spatialization method
 
-		float leftAzimuth;     // Left ear's azimuth
-		float leftElevation;   // Left ear's elevation
+		//float leftAzimuth;     // Left ear's azimuth
+		//float leftElevation;   // Left ear's elevation
+		//float rightAzimuth;    // Right ear's azimuth
+		//float rightElevation;  // Right ear's elevation
+		//float centerAzimuth;   // Azimuth from the center of the head
+		//float centerElevation; // Elevation from the center of the head 
+		//float distanceToListener; // Distance to the listener
+		//float interauralAzimuth;  // Iteraural azimuth
+		//Common::CVector3 vectorToListener;  // Vector to the listener
+		
 
-		float rightAzimuth;    // Right ear's azimuth
-		float rightElevation;  // Right ear's elevation
+		float currentLeftAzimuth;					// Left ear's azimuth
+		float currentLeftElevation;					// Left ear's elevation
+		float currentRightAzimuth;					// Right ear's azimuth
+		float currentRightElevation;				// Right ear's elevation
+		float currentCenterAzimuth;					// Azimuth from the center of the head
+		float currentCenterElevation;				// Elevation from the center of the head
+		float currentDistanceToListener;			// Distance to the listener
+		float currentInterauralAzimuth;				// Iteraural azimuth
+		Common::CVector3 currentVectorToListener;	// Vector to the listener
 
-		float centerAzimuth;   // Azimuth from the center of the head
-		float centerElevation; // Elevation from the center of the head 
+		float effectiveLeftAzimuth;					// Left ear's azimuth
+		float effectiveLeftElevation;				// Left ear's elevation
+		float effectiveRightAzimuth;				// Right ear's azimuth
+		float effectiveRightElevation;				// Right ear's elevation
+		float effectiveCenterAzimuth;				// Azimuth from the center of the head
+		float effectiveCenterElevation;				// Elevation from the center of the head
+		float effectiveDistanceToListener;			// Distance to the listener
+		float effectiveInterauralAzimuth;			// Iteraural azimuth
+		Common::CVector3 effectiveVectorToListener;	// Vector to the listener
 
-		float distanceToListener; // Distance to the listener
-		float interauralAzimuth;  // Iteraural azimuth
-
-		Common::CVector3 vectorToListener;  // Vector to the listener
 
 		friend class CEnvironment;		//Friend Class definition
 		friend class CCore;				//Friend Class definition		
