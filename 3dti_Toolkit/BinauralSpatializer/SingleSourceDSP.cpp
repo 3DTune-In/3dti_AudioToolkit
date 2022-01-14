@@ -237,7 +237,23 @@ namespace Binaural {
 	};
 
 	/////////////////////////////
+	//
 	// PROCESS METHODS
+	//
+	// ProcessAnechoic(CStereoBuffer<float> &)
+	//    ||
+	//    \/
+	// ProcessAnechoic(CMonoBuffer<float> &, CMonoBuffer<float> &)
+	//    ||   >>> Propagation delay
+	//    ||
+	//    ||   ProcessAnechoic(const CMonoBuffer<float> &, CStereoBuffer<float> &)
+	//    ||      ||
+	//    ||      \/
+	//    ||   ProcessAnechoic(const CMonoBuffer<float> &, CMonoBuffer<float> &, CMonoBuffer<float> &)
+	//    ||      ||
+	//    \/      \/
+	// ProcessAnechoic(const CMonoBuffer<float> &, CMonoBuffer<float> &, CMonoBuffer<float> &, Common::CVector3 &, float &, float &, float &, float &, float &, float &, float &, float &)
+	//         >>> HRTF/SHM/No spatialization, Near Field, Far field, Attenuation
 	/////////////////////////////
 
 	// Process data from input buffer to generate anechoic spatialization (direct path). Overloaded: using internal buffer
