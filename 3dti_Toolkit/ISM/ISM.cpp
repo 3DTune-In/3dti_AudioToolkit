@@ -23,6 +23,16 @@ namespace ISM
 		}
 		originalSource.createImages(mainRoom, Common::CVector3(0, 0, 0), reflectionOrder); //FIXME:the listener location is fake
 	}
+
+	void ISM::setAbsortion(std::vector<std::vector<float>> absortionsBands)
+	{
+		for (int i = 0; i < mainRoom.getWalls().size(); i++)
+		{
+			mainRoom.setWallAbsortion(i, absortionsBands.at(i));
+		}
+		originalSource.createImages(mainRoom, Common::CVector3(0, 0, 0), reflectionOrder); //FIXME:the listener location is fake
+
+	}
 	
 	Room ISM::getRoom()
 	{

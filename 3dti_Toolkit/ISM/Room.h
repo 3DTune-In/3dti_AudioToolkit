@@ -79,6 +79,10 @@ namespace ISM
 		*	\param [in] absortion coeficient
 		*/
 		void setWallAbsortion(int wallIndex, float absortion);
+		/**
+		\overload
+		*/
+		void setWallAbsortion(int wallIndex, std::vector<float> absortionBands);
 
 		/** \brief Returns a vector of walls containing all the walls of the room.
 		*	\param [out] Walls: vector of walls with all the walls of the room.

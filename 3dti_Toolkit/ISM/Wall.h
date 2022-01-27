@@ -28,6 +28,11 @@
 #define THRESHOLD_BORDER 0.3f
 #endif
 
+#ifndef NUM_BAND_ABSORTION
+#define NUM_BAND_ABSORTION 6
+#endif
+
+
 namespace ISM
 {
 
@@ -69,11 +74,20 @@ namespace ISM
 		*	\param [in] Absortion: absortion coeficient of the wall (expressed as a number between 0 (no absortion) and 1 (total absortion).
 		*/
 		void setAbsortion(float _absortion);
+		/**
+		\overload
+		*/
+		void setAbsortion(std::vector<float> _absortionBands);
 
 		/** \brief Returns the absortion coeficient of the wall.
 		*	\param [out] Absortion: absortion oeficient of the wall.
 		*/
 		float getAbsortion();
+
+		/**
+		\overload
+		*/
+		std::vector<float> getAbsortion(std::vector<float> _absortionBands);
 
 		/** \brief Returns the normal vector to the wall. If the wall is properly defined, it points towards inside the room.
 		*	\param [out] Normal: normal vector to the wall.
@@ -188,6 +202,7 @@ namespace ISM
 		////////////
 		std::vector<Common::CVector3> polygon;	// corners of the wall
 		float absortion = 0;					// absortion coeficient (absorved energy / incident energy) 
+		std::vector<float> absortionBands {0};  // absortion coeficients for each octave Band
 		bool active = true;						//sets wether the wall is active or not (if false, the wall is transparent)
 
 		float A, B, C, D;						// General Plane Eq.: Ax + By + Cz + D = 0
