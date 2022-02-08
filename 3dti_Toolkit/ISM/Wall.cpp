@@ -71,7 +71,7 @@ namespace ISM
 		return absortion;
 	}
 
-	std::vector<float> Wall::getAbsortion(std::vector<float> _absortionBands)
+	std::vector<float> Wall::getAbsortionB()
 	{
 		return absortionBands;
 	}

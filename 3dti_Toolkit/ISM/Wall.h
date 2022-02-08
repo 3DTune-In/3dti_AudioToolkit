@@ -84,10 +84,10 @@ namespace ISM
 		*/
 		float getAbsortion();
 
-		/**
-		\overload
+		/** \brief Returns the vector with absortion coeficients of the wall. 
+		*	\param [out] Absortion: absortion oeficient of the wall.
 		*/
-		std::vector<float> getAbsortion(std::vector<float> _absortionBands);
+		std::vector<float> getAbsortionB();
 
 		/** \brief Returns the normal vector to the wall. If the wall is properly defined, it points towards inside the room.
 		*	\param [out] Normal: normal vector to the wall.
@@ -202,7 +202,7 @@ namespace ISM
 		////////////
 		std::vector<Common::CVector3> polygon;	// corners of the wall
 		float absortion = 0;					// absortion coeficient (absorved energy / incident energy) 
-		std::vector<float> absortionBands {0};  // absortion coeficients for each octave Band
+		std::vector<float> absortionBands;      // absortion coeficients for each octave Band
 		bool active = true;						//sets wether the wall is active or not (if false, the wall is transparent)
 
 		float A, B, C, D;						// General Plane Eq.: Ax + By + Cz + D = 0

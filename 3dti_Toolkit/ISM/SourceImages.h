@@ -36,6 +36,7 @@ namespace ISM
 		float visibility;								//1 if visible, 0 if not, something in the middle if in the transition, where the transition is +/-VISIBILITY_MARGIN width
 		std::vector<Wall> reflectionWalls;				//list of walls where the source has reflected (last reflection first)
 		float reflection;								//coeficient to be applied to simulate walls' absortion
+		std::vector<float> reflectionBands;             //coeficients, for each octave Band, to be applied to simulate walls' absortion
 	};
 
 
@@ -131,8 +132,7 @@ namespace ISM
 		Room surroundingRoom;									//Room to generate further images reflectin in its walls
 		Common::CVector3 sourceLocation;						//Original source location
 		std::vector<SourceImages> images;						//recursive list of images
-
-
+		
 		float diffraction = 1.0f;
 	};
 

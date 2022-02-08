@@ -61,6 +61,10 @@ namespace ISM
 					temp.visible = true;	//We hypothesise that it is visible and in case on founding a wall where it is not, this will become false
 					temp.visibility = 1.0;	//We hypothesise that it is fully visible. Otherwise, this will become lower
 					temp.reflection = 1.0;	//We start asuming pure reflective walls 
+					temp.reflectionBands.empty(); 	//We start asuming pure reflective walls 
+					for (int k = 0; k < NUM_BAND_ABSORTION; k++)
+						temp.reflectionBands.push_back(1.0);	//We start asuming pure reflective walls 
+
 					for (int j = 0; j < temp.reflectionWalls.size(); j++)
 					{
 						Common::CVector3 reflectionPoint = temp.reflectionWalls.at(j).getIntersectionPointWithLine(images.at(i).getLocation(), listenerLocation);
@@ -73,7 +77,22 @@ namespace ISM
 						*/
 						temp.visibility *= visibility;
 						temp.visible &= (visibility > 0);
-						temp.reflection *= sqrt(1 - temp.reflectionWalls.at(j).getAbsortion());
+
+						//reflection as scalar value
+						temp.reflection *= sqrt(1 - temp.reflectionWalls.at(j).getAbsortion()); 
+						// /*
+						//reflection as vector
+						std::vector<float> absortionBands = temp.reflectionWalls.at(j).getAbsortionB();
+						if (temp.reflectionBands.size() == absortionBands.size()) {
+							for (int k = 0; k < absortionBands.size(); k++)
+								temp.reflectionBands[k] *= sqrt(1 - absortionBands[k]);
+						}
+						else {
+							// error
+							for (int k = 0; k < temp.reflectionBands.size(); k++)
+								temp.reflectionBands[k] *= sqrt(1 - absortionBands[k]);
+						}
+                        //*/
 					}
 					temp.visibility = pow(temp.visibility, (1 / (float)temp.reflectionWalls.size()));
 					imageSourceDataList.push_back(temp);

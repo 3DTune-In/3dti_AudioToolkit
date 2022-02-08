@@ -99,7 +99,12 @@ namespace ISM
 			{
 				for (int j = 0; j < inBuffer.size(); j++)
 				{
-					imageBuffers.at(i).at(j) = images.at(i).reflection*inBuffer.at(j);
+					//Absorption as a scalar value
+					//imageBuffers.at(i).at(j) = images.at(i).reflection*inBuffer.at(j);
+
+					//Absorption as a vector. We use band-6: NUM_BAND_ABSORTION-1
+					imageBuffers.at(i).at(j) = images.at(i).reflectionBands[NUM_BAND_ABSORTION-1]*inBuffer.at(j);
+					
 				}
 			}
 		}
