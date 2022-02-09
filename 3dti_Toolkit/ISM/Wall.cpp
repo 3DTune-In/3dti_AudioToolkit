@@ -62,9 +62,19 @@ namespace ISM
 		absortion = _absortion;
 	}
 
+	void Wall::setAbsortion (std::vector<float> _absortionBands)
+	{
+		absortionBands = _absortionBands;
+	}
+
 	float Wall::getAbsortion()
 	{
 		return absortion;
+	}
+
+	std::vector<float> Wall::getAbsortionB()
+	{
+		return absortionBands;
 	}
 
 	Common::CVector3 Wall::getNormal()
@@ -192,6 +202,7 @@ namespace ISM
 			tempWall.insertCorner(tempImageCorner);
 		}
 		tempWall.absortion = _wall.absortion;
+		tempWall.absortionBands = _wall.absortionBands;
 		if (!_wall.isActive()) tempWall.disable();
 		return tempWall;
 	}
