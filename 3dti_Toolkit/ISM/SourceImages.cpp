@@ -1,5 +1,6 @@
 #include "SourceImages.h"
 #include <cmath>
+#include <Common/BiquadFilter.h>
 
 //#ifndef THRESHOLD_BORDER
 //#define THRESHOLD_BORDER 0.2f
@@ -162,6 +163,29 @@ namespace ISM
 						surroundingRoom = tempRoom;
 					}
 
+					tempSourceImage.FilterBank.RemoveFilters();
+
+					//////////////////////
+					float frec_init = 125;                 //Frequency of the first band 125 Hz !!!!
+					float samplingFrec = 44100.0;          //SAMPLING_RATE,  !!!!
+					
+					float bandFrequency = frec_init;       //First band
+					      //float filterFrequencyStep = std::pow(2, 1.0f / (bandsPerOctave*filtersPerBand));
+					      //float filterFrequency = bandFrequency / ((float)(trunc(filtersPerBand / 2))*filterFrequencyStep);
+					float filterFrequencyStep = 2.0;
+					float filterFrequency = bandFrequency;
+					// Compute Q for all filters
+					      //float octaveStep = 1.0f / ((float)filtersPerBand * bandsPerOctave);
+					float octaveStepPow = 2.0;
+					float Q_BPF = std::sqrt(octaveStepPow) / (octaveStepPow - 1.0f);
+					for (int k = 0; k < NUM_BAND_ABSORTION; k++) 
+					{
+						shared_ptr<Common::CBiquadFilter> filter;
+						filter = tempSourceImage.FilterBank.AddFilter();
+						filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::BANDPASS);
+						filterFrequency *= filterFrequencyStep;
+					}
+					/////////////////////////
 					images.push_back(tempSourceImage);
 					reflectionWalls.pop_back();
 				}

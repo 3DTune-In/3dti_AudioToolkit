@@ -22,6 +22,7 @@
 #pragma once
 #include "Room.h"
 #include <Common/Vector3.h>
+#include <Common/FiltersBank.h>
 
 #define VISIBILITY_MARGIN	0.2
 
@@ -37,6 +38,7 @@ namespace ISM
 		std::vector<Wall> reflectionWalls;				//list of walls where the source has reflected (last reflection first)
 		float reflection;								//coeficient to be applied to simulate walls' absortion
 		std::vector<float> reflectionBands;             //coeficients, for each octave Band, to be applied to simulate walls' absortion
+			
 	};
 
 
@@ -134,6 +136,8 @@ namespace ISM
 		std::vector<SourceImages> images;						//recursive list of images
 		
 		float diffraction = 1.0f;
+
+		Common::CFiltersBank FilterBank;
 	};
 
 }//namespace ISM
