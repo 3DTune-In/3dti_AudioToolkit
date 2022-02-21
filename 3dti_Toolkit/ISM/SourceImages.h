@@ -38,7 +38,9 @@ namespace ISM
 		std::vector<Wall> reflectionWalls;				//list of walls where the source has reflected (last reflection first)
 		float reflection;								//coeficient to be applied to simulate walls' absortion
 		std::vector<float> reflectionBands;             //coeficients, for each octave Band, to be applied to simulate walls' absortion
-			
+
+		//ImageSourceData(Common::CFiltersBank &ref) : FilterBank{ ref } {}
+		//Common::CFiltersBank &FilterBank;
 	};
 
 
@@ -101,6 +103,10 @@ namespace ISM
 		void updateImages();
 
 
+		//void processImageData(ata> &imageSourceDataList, Common::CVector3 listenerLocation, int reflectionOrder);
+
+
+
 	private:
 
 		///////////////////
@@ -122,8 +128,7 @@ namespace ISM
 		*/
 		void createImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder, std::vector<Wall> reflectionWalls);
 
-
-
+		
 		////////////
 		// Attributes
 		////////////

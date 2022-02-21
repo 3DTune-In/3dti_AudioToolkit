@@ -5,7 +5,7 @@ namespace ISM
 
 	void ISM::SetupShoeBoxRoom(float length, float width, float height)
 	{
-		mainRoom.setupShoebox(length, width, height);
+		mainRoom.setupShoeBox(length, width, height);
 		originalSource.createImages(mainRoom, Common::CVector3(0, 0, 0), reflectionOrder); //FIXME:the listener location is fake
 	}
 
@@ -104,7 +104,7 @@ namespace ISM
 
 					//Absorption as a vector. We use band-6: NUM_BAND_ABSORTION-1
 					imageBuffers.at(i).at(j) = images.at(i).reflectionBands[NUM_BAND_ABSORTION-1]*inBuffer.at(j);
-					
+										
 				}
 			}
 		}

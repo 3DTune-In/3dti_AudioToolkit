@@ -40,12 +40,12 @@ namespace ISM
 
 		/** \brief Initializes the object with a shoebox room
 		*	\details creates six walls conforming a shoebox room with 0,0,0 at the center. It must be used right after
-					 creating the empty object.
-		*	\param [in] width: extension of the room along the Y axis.
+		*			 creating the empty object.
 		*	\param [in] length: extension of the room along the X axis.
+		*	\param [in] width: extension of the room along the Y axis.
 		*	\param [in] height: extension of the room along the Z axis
 		*/
-		void setupShoebox(float width, float length, float height);
+		void setupShoeBox(float length, float width, float height);
 
 		/** \brief Initializes the object with a shoebox room
 		*	\details creates a room with arbitrary geometry by means of defining all its corners and the walls as polygons with those corners

@@ -57,6 +57,7 @@ namespace ISM
 			{
 				if (images.at(i).reflectionWall.isActive())//////////////////////////////////////////////////////////////////
 				{
+					//ImageSourceData temp(FilterBank);
 					ImageSourceData temp;
 					temp.location = images.at(i).getLocation();
 					temp.reflectionWalls = images.at(i).reflectionWalls;
@@ -88,6 +89,7 @@ namespace ISM
 						if (temp.reflectionBands.size() == absortionBands.size()) {
 							for (int k = 0; k < absortionBands.size(); k++)
 								temp.reflectionBands[k] *= sqrt(1 - absortionBands[k]);
+
 						}
 						else {
 							// error

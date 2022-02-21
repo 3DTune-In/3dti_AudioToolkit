@@ -4,7 +4,7 @@
 namespace ISM
 {
 
-	void Room::setupShoebox(float length, float width, float height)
+	void Room::setupShoeBox(float length, float width, float height)
 	{
 		//If the room was previously set up as a shoebox, it will keep the wall properties if it is redifined with a new shoeboxSetup
 		std::vector<Wall> previousWalls;
