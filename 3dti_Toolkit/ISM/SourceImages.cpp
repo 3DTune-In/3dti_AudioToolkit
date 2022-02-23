@@ -83,7 +83,7 @@ namespace ISM
 
 						//reflection as scalar value
 						temp.reflection *= sqrt(1 - temp.reflectionWalls.at(j).getAbsortion()); 
-						// /*
+						
 						//reflection as vector
 						std::vector<float> absortionBands = temp.reflectionWalls.at(j).getAbsortionB();
 						if (temp.reflectionBands.size() == absortionBands.size()) {
@@ -96,7 +96,7 @@ namespace ISM
 							for (int k = 0; k < temp.reflectionBands.size(); k++)
 								temp.reflectionBands[k] *= sqrt(1 - absortionBands[k]);
 						}
-                        //*/
+                        
 					}
 					temp.visibility = pow(temp.visibility, (1 / (float)temp.reflectionWalls.size()));
 					imageSourceDataList.push_back(temp);
