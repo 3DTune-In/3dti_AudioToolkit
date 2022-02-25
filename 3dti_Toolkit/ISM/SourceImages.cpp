@@ -169,7 +169,7 @@ namespace ISM
 
 					//////////////////////
 					float frec_init = 125;                 //Frequency of the first band 125 Hz !!!!
-					float samplingFrec = 44100.0;          //SAMPLING_RATE,  !!!!
+					float samplingFrec = 44100.0;          //SAMPLING_RATE,  !!!! FIXME
 					
 					float bandFrequency = frec_init;       //First band
 					      //float filterFrequencyStep = std::pow(2, 1.0f / (bandsPerOctave*filtersPerBand));
