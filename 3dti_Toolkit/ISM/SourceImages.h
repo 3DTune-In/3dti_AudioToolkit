@@ -113,12 +113,9 @@ namespace ISM
 		// Private Methods
 		///////////////////
 
-		/** \brief sets the wall where this image was reflected
-		*	\details The first source, which model the original (not reflected) source has not a reflection wall, but all teh images
-					 should have teh wall where the reflecion is modeled in order to make furtehr calculations
-		*   \param [in] _reflectionWall.
+		/** \brief sets the vector of walls where this image was reflected
+		*   \param [in] _reflectionWalls.
 		*/
-		void setReflectionWall(Wall _reflectionWall);
 		void setReflectionWalls(std::vector<Wall> reflectionWalls);
 
 		/** \brief
@@ -135,7 +132,6 @@ namespace ISM
 
 
 		std::vector<Wall> reflectionWalls;		//vector containing the walls where the sound has been reflected in inverse order (last reflection first)
-		Wall reflectionWall;									//Wall which produced current image as a reflection
 		Room surroundingRoom;									//Room to generate further images reflectin in its walls
 		Common::CVector3 sourceLocation;						//Original source location
 		std::vector<SourceImages> images;						//recursive list of images

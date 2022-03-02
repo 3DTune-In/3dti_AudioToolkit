@@ -33,7 +33,7 @@ namespace ISM
 			reflectionOrder--;
 			for (int i = 0; i < images.size(); i++)
 			{
-				if (images.at(i).reflectionWall.isActive())
+				if (images.at(i).reflectionWalls.back().isActive())
 				{
 					imageSourceList.push_back(images.at(i).getLocation());
 					if (reflectionOrder > 0)
@@ -55,7 +55,7 @@ namespace ISM
 			for (int i = 0; i < images.size(); i++)
 
 			{
-				if (images.at(i).reflectionWall.isActive())//////////////////////////////////////////////////////////////////
+				if (images.at(i).reflectionWalls.back().isActive())//////////////////////////////////////////////////////////////////
 				{
 					//ImageSourceData temp(FilterBank);
 					ImageSourceData temp;
@@ -111,11 +111,6 @@ namespace ISM
 	}
 
 
-	void SourceImages::setReflectionWall(Wall _reflectionWall)
-	{
-		reflectionWall = _reflectionWall;
-	}
-
 	void SourceImages::setReflectionWalls(std::vector<Wall> _reflectionWalls)
 	{
 		reflectionWalls = _reflectionWalls;
@@ -123,7 +118,7 @@ namespace ISM
 
 	Wall SourceImages::getReflectionWall()
 	{
-		return reflectionWall;
+		return reflectionWalls.back();
 	}
 
 	void SourceImages::createImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder)
@@ -148,7 +143,6 @@ namespace ISM
 				if ((listenerLocation - sourceLocation).GetDistance() < (listenerLocation - tempImageLocation).GetDistance())
 				{
 					tempSourceImage.setLocation(tempImageLocation);
-					tempSourceImage.setReflectionWall(walls.at(i));
 					reflectionWalls.push_back(walls.at(i));
 					tempSourceImage.reflectionWalls = reflectionWalls;
 
