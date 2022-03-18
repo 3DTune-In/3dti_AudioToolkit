@@ -129,61 +129,63 @@ namespace ISM
 
 	void SourceImages::createImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder, std::vector<Wall> reflectionWalls)
 	{
-		reflectionOrder--;
-		std::vector<Wall> walls = _room.getWalls();
-		for (int i = 0; i < walls.size(); i++)
+		if (reflectionOrder > 0) //if the overall reflection order is 0 no images at all should be created
 		{
-			if (walls.at(i).isActive())
+			reflectionOrder--;
+			std::vector<Wall> walls = _room.getWalls();
+			for (int i = 0; i < walls.size(); i++)  //for each wall an image is created
 			{
-				SourceImages tempSourceImage;
-				Common::CVector3 tempImageLocation = walls[i].getImagePoint(sourceLocation);
-
-				// if the image is closer to the listener than the previous original, that reflection is not real and should not be included
-				// this is equivalent to determine wether source and listener are on the same side of the wall or not
-				if ((listenerLocation - sourceLocation).GetDistance() < (listenerLocation - tempImageLocation).GetDistance())
+				if (walls.at(i).isActive()) //if the wall is not active, its image is not created
 				{
-					tempSourceImage.setLocation(tempImageLocation);
-					reflectionWalls.push_back(walls.at(i));
-					tempSourceImage.reflectionWalls = reflectionWalls;
+					SourceImages tempSourceImage;
+					Common::CVector3 tempImageLocation = walls[i].getImagePoint(sourceLocation);
 
-					if (reflectionOrder > 0)
+					// if the image is closer to the listener than the previous original, that reflection is not real and should not be included
+					// this is equivalent to determine wether source and listener are on the same side of the wall or not
+					if ((listenerLocation - sourceLocation).GetDistance() < (listenerLocation - tempImageLocation).GetDistance())
 					{
-						// We need to calculate the image room before asking for all the new images
-						Room tempRoom;
-						for (int j = 0; j < walls.size(); j++)
+						tempSourceImage.setLocation(tempImageLocation);
+						reflectionWalls.push_back(walls.at(i));
+						tempSourceImage.reflectionWalls = reflectionWalls;
+
+						if (reflectionOrder > 0)  //Still higher order reflections: we need to create images of the image just created
 						{
-							Wall tempWall = walls.at(i).getImageWall(walls.at(j));
-							tempRoom.insertWall(tempWall);
+							// We need to calculate the image room before asking for all the new images
+							Room tempRoom;
+							for (int j = 0; j < walls.size(); j++)
+							{
+								Wall tempWall = walls.at(i).getImageWall(walls.at(j));
+								tempRoom.insertWall(tempWall);
+							}
+							tempSourceImage.createImages(tempRoom, listenerLocation, reflectionOrder, reflectionWalls);
 						}
-						tempSourceImage.createImages(tempRoom, listenerLocation, reflectionOrder, reflectionWalls);
-						surroundingRoom = tempRoom;
-					}
 
-					tempSourceImage.FilterBank.RemoveFilters();
+						tempSourceImage.FilterBank.RemoveFilters();
 
-					//////////////////////
-					float frec_init = 125;                 //Frequency of the first band 125 Hz !!!!
-					float samplingFrec = 44100.0;          //SAMPLING_RATE,  !!!! FIXME
-					
-					float bandFrequency = frec_init;       //First band
-					      //float filterFrequencyStep = std::pow(2, 1.0f / (bandsPerOctave*filtersPerBand));
-					      //float filterFrequency = bandFrequency / ((float)(trunc(filtersPerBand / 2))*filterFrequencyStep);
-					float filterFrequencyStep = 2.0;
-					float filterFrequency = bandFrequency;
-					// Compute Q for all filters
-					      //float octaveStep = 1.0f / ((float)filtersPerBand * bandsPerOctave);
-					float octaveStepPow = 2.0;
-					float Q_BPF = std::sqrt(octaveStepPow) / (octaveStepPow - 1.0f);
-					for (int k = 0; k < NUM_BAND_ABSORTION; k++) 
-					{
-						shared_ptr<Common::CBiquadFilter> filter;
-						filter = tempSourceImage.FilterBank.AddFilter();
-						filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::BANDPASS);
-						filterFrequency *= filterFrequencyStep;
+						//////////////////////
+						float frec_init = 125;                 //Frequency of the first band 125 Hz !!!!
+						float samplingFrec = 44100.0;          //SAMPLING_RATE,  !!!! FIXME
+
+						float bandFrequency = frec_init;       //First band
+							  //float filterFrequencyStep = std::pow(2, 1.0f / (bandsPerOctave*filtersPerBand));
+							  //float filterFrequency = bandFrequency / ((float)(trunc(filtersPerBand / 2))*filterFrequencyStep);
+						float filterFrequencyStep = 2.0;
+						float filterFrequency = bandFrequency;
+						// Compute Q for all filters
+							  //float octaveStep = 1.0f / ((float)filtersPerBand * bandsPerOctave);
+						float octaveStepPow = 2.0;
+						float Q_BPF = std::sqrt(octaveStepPow) / (octaveStepPow - 1.0f);
+						for (int k = 0; k < NUM_BAND_ABSORTION; k++)
+						{
+							shared_ptr<Common::CBiquadFilter> filter;
+							filter = tempSourceImage.FilterBank.AddFilter();
+							filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::BANDPASS);
+							filterFrequency *= filterFrequencyStep;
+						}
+						/////////////////////////
+						images.push_back(tempSourceImage);
+						reflectionWalls.pop_back();
 					}
-					/////////////////////////
-					images.push_back(tempSourceImage);
-					reflectionWalls.pop_back();
 				}
 			}
 		}

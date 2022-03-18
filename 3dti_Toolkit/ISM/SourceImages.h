@@ -132,9 +132,8 @@ namespace ISM
 
 
 		std::vector<Wall> reflectionWalls;		//vector containing the walls where the sound has been reflected in inverse order (last reflection first)
-		Room surroundingRoom;									//Room to generate further images reflectin in its walls
-		Common::CVector3 sourceLocation;						//Original source location
-		std::vector<SourceImages> images;						//recursive list of images
+		Common::CVector3 sourceLocation;		//Original source location
+		std::vector<SourceImages> images;		//recursive list of images
 		
 		float diffraction = 1.0f;
 
