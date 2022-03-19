@@ -136,6 +136,7 @@ namespace ISM
 		std::vector<SourceImages> images;		//recursive list of images
 		
 		float diffraction = 1.0f;
+		std::vector<float> reflectionBands;             //coeficients, for each octave Band, to be applied to simulate walls' absortion
 
 		Common::CFiltersBank FilterBank;
 	};

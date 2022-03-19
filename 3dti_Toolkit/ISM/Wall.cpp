@@ -74,6 +74,11 @@ namespace ISM
 
 	std::vector<float> Wall::getAbsortionB()
 	{
+		if (absortionBands.size() == 0) //if absortion is not set as frequency dependent, the overall absortion is returned per band
+		{
+			std::vector<float> fakeAbsortionBands(NUM_BAND_ABSORTION, absortion);
+			return fakeAbsortionBands;
+		}
 		return absortionBands;
 	}
 

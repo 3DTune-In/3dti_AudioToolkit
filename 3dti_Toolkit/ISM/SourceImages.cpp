@@ -148,21 +148,9 @@ namespace ISM
 						reflectionWalls.push_back(walls.at(i));
 						tempSourceImage.reflectionWalls = reflectionWalls;
 
-						if (reflectionOrder > 0)  //Still higher order reflections: we need to create images of the image just created
-						{
-							// We need to calculate the image room before asking for all the new images
-							Room tempRoom;
-							for (int j = 0; j < walls.size(); j++)
-							{
-								Wall tempWall = walls.at(i).getImageWall(walls.at(j));
-								tempRoom.insertWall(tempWall);
-							}
-							tempSourceImage.createImages(tempRoom, listenerLocation, reflectionOrder, reflectionWalls);
-						}
-
 						tempSourceImage.FilterBank.RemoveFilters();
 
-						//////////////////////
+						////////////////////// Set up an equalisation filterbank to simulate frequency dependent absortion
 						float frec_init = 125;                 //Frequency of the first band 125 Hz !!!!
 						float samplingFrec = 44100.0;          //SAMPLING_RATE,  !!!! FIXME
 
@@ -175,14 +163,37 @@ namespace ISM
 							  //float octaveStep = 1.0f / ((float)filtersPerBand * bandsPerOctave);
 						float octaveStepPow = 2.0;
 						float Q_BPF = std::sqrt(octaveStepPow) / (octaveStepPow - 1.0f);
+
+						std::vector<float> temp(NUM_BAND_ABSORTION, 1.0);	//creates band reflections and initialise them to 1.0
+						tempSourceImage.reflectionBands = temp;
+
 						for (int k = 0; k < NUM_BAND_ABSORTION; k++)
 						{
 							shared_ptr<Common::CBiquadFilter> filter;
 							filter = tempSourceImage.FilterBank.AddFilter();
 							filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::BANDPASS);
+							//Set the reflection coefficient of each band according to absortion coeficients of reflectionWalls
+							for (int j = 0; j < reflectionWalls.size(); j++)
+							{
+								tempSourceImage.reflectionBands[k] *= sqrt(1 - reflectionWalls.at(j).getAbsortionB().at(k));
+							}
+							filter->SetGeneralGain(tempSourceImage.reflectionBands.at(k));	//FIXME: the gain per band is dulicated (inside the filters and  in reflectionBands attribute
+
 							filterFrequency *= filterFrequencyStep;
 						}
 						/////////////////////////
+
+						if (reflectionOrder > 0)  //Still higher order reflections: we need to create images of the image just created
+						{
+							// We need to calculate the image room before asking for all the new images
+							Room tempRoom;
+							for (int j = 0; j < walls.size(); j++)
+							{
+								Wall tempWall = walls.at(i).getImageWall(walls.at(j));
+								tempRoom.insertWall(tempWall);
+							}
+							tempSourceImage.createImages(tempRoom, listenerLocation, reflectionOrder, reflectionWalls);
+						}
 						images.push_back(tempSourceImage);
 						reflectionWalls.pop_back();
 					}
