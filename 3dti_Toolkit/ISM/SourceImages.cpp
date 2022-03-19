@@ -55,25 +55,27 @@ namespace ISM
 			for (int i = 0; i < images.size(); i++)
 
 			{
-				if (images.at(i).reflectionWalls.back().isActive())//////////////////////////////////////////////////////////////////
+				if (images.at(i).reflectionWalls.back().isActive())////////////////FIXME: Is this necessary? no images were created if the wall is not active
 				{
-					//ImageSourceData temp(FilterBank);
 					ImageSourceData temp;
 					temp.location = images.at(i).getLocation();
 					temp.reflectionWalls = images.at(i).reflectionWalls;
 					temp.visible = true;	//We hypothesise that it is visible and in case on founding a wall where it is not, this will become false
 					temp.visibility = 1.0;	//We hypothesise that it is fully visible. Otherwise, this will become lower
-					temp.reflection = 1.0;	//We start asuming pure reflective walls 
-					temp.reflectionBands.empty(); 	//We start asuming pure reflective walls 
-					for (int k = 0; k < NUM_BAND_ABSORTION; k++)
-						temp.reflectionBands.push_back(1.0);	//We start asuming pure reflective walls 
 
-					for (int j = 0; j < temp.reflectionWalls.size(); j++)
+					//FIXME: this frequency independent reflection is deprecated
+					temp.reflection = 1.0;	//We start asuming pure reflective walls 
+
+					temp.reflectionBands = images.at(i).reflectionBands;
+
+					//Check visibility through all reflection walls and compute a visibility coeficient
+					for (int j = 0; j < temp.reflectionWalls.size(); j++) 
 					{
 						Common::CVector3 reflectionPoint = temp.reflectionWalls.at(j).getIntersectionPointWithLine(images.at(i).getLocation(), listenerLocation);
 						float distanceToBorder, visibility;
 						
 						temp.reflectionWalls.at(j).checkPointInsideWall(reflectionPoint, distanceToBorder, visibility);
+						//FIXME: remove this old code under comments:
 						/*float visibility = 0.5 + distanceToBorder / (THRESHOLD_BORDER * 2.0);  // >1 if further inside than VISIBILITY_MARGIN and <-1 if further outside than VISIBILITY_MARGIN
 						if (visibility > 1) visibility = 1;
 						if (visibility < 0) visibility = 0;
@@ -81,29 +83,15 @@ namespace ISM
 						temp.visibility *= visibility;
 						temp.visible &= (visibility > 0);
 
-						//reflection as scalar value
+						//reflection as scalar value FIXME: this frequency independent reflection is deprecated
 						temp.reflection *= sqrt(1 - temp.reflectionWalls.at(j).getAbsortion()); 
-						
-						//reflection as vector
-						std::vector<float> absortionBands = temp.reflectionWalls.at(j).getAbsortionB();
-						if (temp.reflectionBands.size() == absortionBands.size()) {
-							for (int k = 0; k < absortionBands.size(); k++)
-								temp.reflectionBands[k] *= sqrt(1 - absortionBands[k]);
-
-						}
-						else {
-							// error
-							for (int k = 0; k < temp.reflectionBands.size(); k++)
-								temp.reflectionBands[k] *= sqrt(1 - absortionBands[k]);
-						}
-                        
+                     
 					}
 					temp.visibility = pow(temp.visibility, (1 / (float)temp.reflectionWalls.size()));
-					imageSourceDataList.push_back(temp);
-					if (reflectionOrder > 0)
-					{
-						images.at(i).getImageData(imageSourceDataList, listenerLocation, reflectionOrder);
-					}
+
+					imageSourceDataList.push_back(temp);  //Once created, the image source data is added to the list
+
+					images.at(i).getImageData(imageSourceDataList, listenerLocation, reflectionOrder); //recurse to the next level
 				}
 			}
 		}
