@@ -103,8 +103,15 @@ namespace ISM
 		void updateImages();
 
 
-		//void processImageData(ata> &imageSourceDataList, Common::CVector3 listenerLocation, int reflectionOrder);
-
+		/** \brief Adds wall absortion to the sound
+		*	\details Recursively process all source images providing an independent buffer for each of them with the original sound filtered
+					 by the wall absortions. For non visible sources the output buffer contains zeros
+		*	\param [in] inBuffer: original buffer used for all images
+		*   \param [out] imageBuffers: vector of buffers with the sound filtered (One buffer per image)
+		*	\param [in] listenerLocation: needed to know visibility of sources
+		*	\param [in] reflectionOrder: depth parameter used in the recursion
+		*/
+		void processAbsortion(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation, int reflectionOrder);
 
 
 	private:
@@ -125,7 +132,6 @@ namespace ISM
 		*/
 		void createImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder, std::vector<Wall> reflectionWalls);
 
-		
 		////////////
 		// Attributes
 		////////////

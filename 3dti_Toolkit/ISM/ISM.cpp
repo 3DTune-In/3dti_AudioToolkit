@@ -91,9 +91,12 @@ namespace ISM
 
 	void ISM::proccess(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation)
 	{
-		std::vector<ImageSourceData> images = getImageSourceData(listenerLocation);
-		ASSERT(imageBuffers.size() == images.size(), RESULT_ERROR_BADSIZE, "Vector of buffers to be processed by ISM should be the same size as the number of image sources", "");
-		for (int i = 0; i < imageBuffers.size(); i++)
+		originalSource.processAbsortion(inBuffer, imageBuffers, listenerLocation,reflectionOrder);
+
+//		std::vector<ImageSourceData> images = getImageSourceData(listenerLocation);
+//		ASSERT(imageBuffers.size() == images.size(), RESULT_ERROR_BADSIZE, "Vector of buffers to be processed by ISM should be the same size as the number of image sources", "");
+
+/*		for (int i = 0; i < imageBuffers.size(); i++)
 		{
 			if (images.at(i).visibility)
 			{
@@ -101,13 +104,10 @@ namespace ISM
 				{
 					//Absorption as a scalar value
 					imageBuffers.at(i).at(j) = images.at(i).reflection*inBuffer.at(j);
-
-					//Absorption as a vector. We use band-6: NUM_BAND_ABSORTION-1
-					//imageBuffers.at(i).at(j) = images.at(i).reflectionBands[NUM_BAND_ABSORTION-1]*inBuffer.at(j);
-										
 				}
 			}
 		}
+*/
 	}
 
 }//namespace ISM

@@ -199,5 +199,23 @@ namespace ISM
 		}
 	}
 
+	void SourceImages::processAbsortion(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation, int reflectionOrder)
+	{
+		if (reflectionOrder > 0)
+		{
+			reflectionOrder--;
+			for (int i = 0; i < images.size();i++)  //process buffers for each of the image sources, adding the result to the output vector of buffers
+			{
+				CMonoBuffer<float> tempBuffer(inBuffer.size(), 0.0);
+				images.at(i).FilterBank.Process(inBuffer, tempBuffer);
+				//TODO: apply visibility, which should be calculated when something moves, not every frame. To to this, visibility should be 
+				// an attribute of SourceImages, and updated in the update method. Then, getSourceImageData can get visibility from the 
+				// attribute and it is not necessary to calculate there again
+				imageBuffers.push_back(tempBuffer);
+				images.at(i).processAbsortion(inBuffer, imageBuffers, listenerLocation, reflectionOrder);
+			}
+		}
+	}
+
 
 }//namespace ISM
