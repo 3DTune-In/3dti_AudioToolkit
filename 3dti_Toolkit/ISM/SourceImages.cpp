@@ -61,9 +61,6 @@ namespace ISM
 					temp.location = images.at(i).getLocation();
 					temp.reflectionWalls = images.at(i).reflectionWalls;
 
-					//FIXME: this frequency independent reflection is deprecated
-					temp.reflection = 1.0;	//We start asuming pure reflective walls 
-
 					temp.reflectionBands = images.at(i).reflectionBands;
 
 					temp.visibility = images.at(i).visibility;

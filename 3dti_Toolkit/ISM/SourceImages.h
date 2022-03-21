@@ -36,11 +36,7 @@ namespace ISM
 		bool visible;									//If the source is visible it should be rendered
 		float visibility;								//1 if visible, 0 if not, something in the middle if in the transition, where the transition is +/-VISIBILITY_MARGIN width
 		std::vector<Wall> reflectionWalls;				//list of walls where the source has reflected (last reflection first)
-		float reflection;								//coeficient to be applied to simulate walls' absortion
 		std::vector<float> reflectionBands;             //coeficients, for each octave Band, to be applied to simulate walls' absortion
-
-		//ImageSourceData(Common::CFiltersBank &ref) : FilterBank{ ref } {}
-		//Common::CFiltersBank &FilterBank;
 	};
 
 
@@ -90,16 +86,18 @@ namespace ISM
 		Wall getReflectionWall();
 
 		/** \brief creates all the image sources reflected in the walls upto the reflection order
-		*	\details
-		*	\param [in]
-		*   \param [in]
+		*	\details Creates a recursive tree of imagesources using all active walls up to the reflection order depth. This methos should be
+					 called every time the room geometry changes (walls are set as active or inactive) or the reflection order changes
+		*	\param [in] Room: the original room surounding the original source
+		*   \param [in] Listener location
+		*	\param [in] reflectionOrder: depth of the recursive tree
 		*/
 		void createImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder);
 
-		/** \brief
-		*	\details
-		*	\param [in]
-		*   \param [in]
+		/** \brief updates imege source location, reflection and visibility
+		*	\details Updates the recursive image source tree with the source locations and computes refelction coefficients and visibility 
+					 to be applied when process
+		*	\param [in] listerner Location
 		*/
 		void updateImages(Common::CVector3 listenerLocation);
 
@@ -142,7 +140,7 @@ namespace ISM
 		Common::CVector3 sourceLocation;		//Original source location
 		std::vector<SourceImages> images;		//recursive list of images
 		
-		float visibility = 1.0f;				//1.0 if visiblo, 0.0 if not, something in the middle if the ray is close to the border of walls
+		float visibility = 1.0f;				//1.0 if visible, 0.0 if not, something in the middle if the ray is close to the border of walls
 		bool visible = true;					//false when visibility = 0, true otherwise
 		std::vector<float> reflectionBands;     //coeficients, for each octave Band, to be applied to simulate walls' absortion
 

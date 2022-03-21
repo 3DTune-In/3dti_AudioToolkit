@@ -101,7 +101,6 @@ namespace ISM
 			{
 				for (int j = 0; j < inBuffer.size(); j++)
 				{
-					//Absorption as a scalar value
 					imageBuffers.at(i).at(j) = images.at(i).visibility*inBuffer.at(j);
 				}
 			}
