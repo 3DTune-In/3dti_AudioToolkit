@@ -9,10 +9,10 @@
 namespace ISM
 {
 
-	void SourceImages::setLocation(Common::CVector3 _location)
+	void SourceImages::setLocation(Common::CVector3 _location, Common::CVector3 listenerLocation)
 	{
 		sourceLocation = _location;
-		updateImages();
+		updateImages(listenerLocation);
 	}
 
 	Common::CVector3 SourceImages::getLocation()
@@ -60,8 +60,8 @@ namespace ISM
 					ImageSourceData temp;
 					temp.location = images.at(i).getLocation();
 					temp.reflectionWalls = images.at(i).reflectionWalls;
-					temp.visible = true;	//We hypothesise that it is visible and in case on founding a wall where it is not, this will become false
-					temp.visibility = 1.0;	//We hypothesise that it is fully visible. Otherwise, this will become lower
+//					temp.visible = true;	//We hypothesise that it is visible and in case on founding a wall where it is not, this will become false
+//					temp.visibility = 1.0;	//We hypothesise that it is fully visible. Otherwise, this will become lower
 
 					//FIXME: this frequency independent reflection is deprecated
 					temp.reflection = 1.0;	//We start asuming pure reflective walls 
@@ -69,26 +69,24 @@ namespace ISM
 					temp.reflectionBands = images.at(i).reflectionBands;
 
 					//Check visibility through all reflection walls and compute a visibility coeficient
-					for (int j = 0; j < temp.reflectionWalls.size(); j++) 
-					{
-						Common::CVector3 reflectionPoint = temp.reflectionWalls.at(j).getIntersectionPointWithLine(images.at(i).getLocation(), listenerLocation);
-						float distanceToBorder, visibility;
+//					for (int j = 0; j < temp.reflectionWalls.size(); j++) 
+//					{
+//						Common::CVector3 reflectionPoint = temp.reflectionWalls.at(j).getIntersectionPointWithLine(images.at(i).getLocation(), listenerLocation);
+//						float distanceToBorder, visibility;
 						
-						temp.reflectionWalls.at(j).checkPointInsideWall(reflectionPoint, distanceToBorder, visibility);
+//						temp.reflectionWalls.at(j).checkPointInsideWall(reflectionPoint, distanceToBorder, visibility);
 						//FIXME: remove this old code under comments:
-						/*float visibility = 0.5 + distanceToBorder / (THRESHOLD_BORDER * 2.0);  // >1 if further inside than VISIBILITY_MARGIN and <-1 if further outside than VISIBILITY_MARGIN
-						if (visibility > 1) visibility = 1;
-						if (visibility < 0) visibility = 0;
-						*/
-						temp.visibility *= visibility;
-						temp.visible &= (visibility > 0);
+//						temp.visibility *= visibility;
+//						temp.visible &= (visibility > 0);
 
 						//reflection as scalar value FIXME: this frequency independent reflection is deprecated
-						temp.reflection *= sqrt(1 - temp.reflectionWalls.at(j).getAbsortion()); 
+//						temp.reflection *= sqrt(1 - temp.reflectionWalls.at(j).getAbsortion()); 
                      
-					}
-					temp.visibility = pow(temp.visibility, (1 / (float)temp.reflectionWalls.size()));
+//					}
+//					temp.visibility = pow(temp.visibility, (1 / (float)temp.reflectionWalls.size()));
 
+					temp.visibility = images.at(i).visibility;
+					temp.visible = images.at(i).visible;
 					imageSourceDataList.push_back(temp);  //Once created, the image source data is added to the list
 
 					images.at(i).getImageData(imageSourceDataList, listenerLocation, reflectionOrder); //recurse to the next level
@@ -113,6 +111,7 @@ namespace ISM
 	{
 		images.clear();
 		createImages(_room, listenerLocation, reflectionOrder, reflectionWalls);
+		updateImages(listenerLocation);
 	}
 
 	void SourceImages::createImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder, std::vector<Wall> reflectionWalls)
@@ -132,7 +131,7 @@ namespace ISM
 					// this is equivalent to determine wether source and listener are on the same side of the wall or not
 					if ((listenerLocation - sourceLocation).GetDistance() < (listenerLocation - tempImageLocation).GetDistance())
 					{
-						tempSourceImage.setLocation(tempImageLocation);
+						tempSourceImage.setLocation(tempImageLocation,listenerLocation);
 						reflectionWalls.push_back(walls.at(i));
 						tempSourceImage.reflectionWalls = reflectionWalls;
 
@@ -190,13 +189,26 @@ namespace ISM
 		}
 	}
 
-	void SourceImages::updateImages()
+	void SourceImages::updateImages(Common::CVector3 listenerLocation)
 	{
 		for (int i = 0; i < images.size(); i++)
 		{
-			//FIXME: When some images disappear or reappear, this has to be done differently
-			images[i].setLocation(images.at(i).getReflectionWall().getImagePoint(sourceLocation));
+			images[i].setLocation(images.at(i).getReflectionWall().getImagePoint(sourceLocation),listenerLocation);
 		}
+
+		//Check visibility through all reflection walls and compute a visibility coeficient
+		visibility = 1.0;	//We hypothesise that it is fully visible. Otherwise, this will become lower
+		visible = true;
+		for (int j = 0; j < reflectionWalls.size(); j++)
+		{
+			Common::CVector3 reflectionPoint = reflectionWalls.at(j).getIntersectionPointWithLine(sourceLocation, listenerLocation);
+			float distanceToBorder, wallVisibility;
+
+			reflectionWalls.at(j).checkPointInsideWall(reflectionPoint, distanceToBorder, wallVisibility);
+			visibility *= wallVisibility;
+			visible &= (wallVisibility > 0);
+		}
+		visibility = pow(visibility, (1 / (float)reflectionWalls.size()));
 	}
 
 	void SourceImages::processAbsortion(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation, int reflectionOrder)

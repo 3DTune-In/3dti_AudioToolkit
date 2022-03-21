@@ -62,9 +62,9 @@ namespace ISM
 		return reflectionOrder;
 	}
 
-	void ISM::setSourceLocation(Common::CVector3 location)
+	void ISM::setSourceLocation(Common::CVector3 location,Common::CVector3 listenerLocation)
 	{
-		originalSource.setLocation(location);
+		originalSource.setLocation(location,listenerLocation);
 
 	}
 

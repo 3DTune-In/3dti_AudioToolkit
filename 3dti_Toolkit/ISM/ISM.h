@@ -94,8 +94,9 @@ namespace ISM
 		/** \brief Sets the source location
 		*	\details This method sets the location of the original source (direct path).
 		*	\param [in] location: location of the direct path source
+		*   \param [in] listenerLocation: location of the listener, needed to calculate image source visibility.
 		*/
-		void setSourceLocation(Common::CVector3 location);
+		void setSourceLocation(Common::CVector3 location, Common::CVector3 listenerLocation);
 
 		/** \brief Returns the source location
 		*	\details This method returns the location of the original source (direct path).

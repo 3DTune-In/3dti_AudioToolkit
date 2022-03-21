@@ -55,8 +55,9 @@ namespace ISM
 		/** \brief changes the location of the original source
 		*	\details Sets a new location for the original source and updates all images accordingly.
 		*   \param [in] _location: new location for the original source.
+		*   \param [in] listenerLocation: location of the listener, needed to calculate image source visibility.
 		*/
-		void setLocation(Common::CVector3 _location);
+		void setLocation(Common::CVector3 _location, Common::CVector3 listenerLocation);
 
 		/** \brief Returns the location of the original source
 		*   \param [out] Location: Current location for the original source.
@@ -100,7 +101,7 @@ namespace ISM
 		*	\param [in]
 		*   \param [in]
 		*/
-		void updateImages();
+		void updateImages(Common::CVector3 listenerLocation);
 
 
 		/** \brief Adds wall absortion to the sound
@@ -141,8 +142,9 @@ namespace ISM
 		Common::CVector3 sourceLocation;		//Original source location
 		std::vector<SourceImages> images;		//recursive list of images
 		
-		float diffraction = 1.0f;
-		std::vector<float> reflectionBands;             //coeficients, for each octave Band, to be applied to simulate walls' absortion
+		float visibility = 1.0f;				//1.0 if visiblo, 0.0 if not, something in the middle if the ray is close to the border of walls
+		bool visible = true;					//false when visibility = 0, true otherwise
+		std::vector<float> reflectionBands;     //coeficients, for each octave Band, to be applied to simulate walls' absortion
 
 		Common::CFiltersBank FilterBank;
 	};
