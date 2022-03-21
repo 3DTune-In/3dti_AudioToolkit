@@ -60,30 +60,11 @@ namespace ISM
 					ImageSourceData temp;
 					temp.location = images.at(i).getLocation();
 					temp.reflectionWalls = images.at(i).reflectionWalls;
-//					temp.visible = true;	//We hypothesise that it is visible and in case on founding a wall where it is not, this will become false
-//					temp.visibility = 1.0;	//We hypothesise that it is fully visible. Otherwise, this will become lower
 
 					//FIXME: this frequency independent reflection is deprecated
 					temp.reflection = 1.0;	//We start asuming pure reflective walls 
 
 					temp.reflectionBands = images.at(i).reflectionBands;
-
-					//Check visibility through all reflection walls and compute a visibility coeficient
-//					for (int j = 0; j < temp.reflectionWalls.size(); j++) 
-//					{
-//						Common::CVector3 reflectionPoint = temp.reflectionWalls.at(j).getIntersectionPointWithLine(images.at(i).getLocation(), listenerLocation);
-//						float distanceToBorder, visibility;
-						
-//						temp.reflectionWalls.at(j).checkPointInsideWall(reflectionPoint, distanceToBorder, visibility);
-						//FIXME: remove this old code under comments:
-//						temp.visibility *= visibility;
-//						temp.visible &= (visibility > 0);
-
-						//reflection as scalar value FIXME: this frequency independent reflection is deprecated
-//						temp.reflection *= sqrt(1 - temp.reflectionWalls.at(j).getAbsortion()); 
-                     
-//					}
-//					temp.visibility = pow(temp.visibility, (1 / (float)temp.reflectionWalls.size()));
 
 					temp.visibility = images.at(i).visibility;
 					temp.visible = images.at(i).visible;
@@ -220,6 +201,7 @@ namespace ISM
 			{
 				CMonoBuffer<float> tempBuffer(inBuffer.size(), 0.0);
 				images.at(i).FilterBank.Process(inBuffer, tempBuffer);
+
 				//TODO: apply visibility, which should be calculated when something moves, not every frame. To to this, visibility should be 
 				// an attribute of SourceImages, and updated in the update method. Then, getSourceImageData can get visibility from the 
 				// attribute and it is not necessary to calculate there again
