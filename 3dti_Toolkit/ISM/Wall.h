@@ -29,7 +29,7 @@
 #endif
 
 #ifndef NUM_BAND_ABSORTION
-#define NUM_BAND_ABSORTION 6
+#define NUM_BAND_ABSORTION 7
 #endif
 
 
