@@ -116,7 +116,7 @@ namespace ISM
 						tempSourceImage.FilterBank.RemoveFilters();
 
 						////////////////////// Set up an equalisation filterbank to simulate frequency dependent absortion
-						float frec_init = 125;                 //Frequency of the first band 125 Hz !!!!
+						float frec_init = 62.5;                //Frequency of the first band 62.5 Hz !!!!
 						float samplingFrec = 44100.0;          //SAMPLING_RATE,  !!!! FIXME
 
 						float bandFrequency = frec_init;       //First band
