@@ -92,16 +92,18 @@ namespace ISM
 	void ISM::proccess(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation)
 	{
 		originalSource.processAbsortion(inBuffer, imageBuffers, listenerLocation,reflectionOrder);
+
+		
 		std::vector<ImageSourceData> images = getImageSourceData(listenerLocation);
 		ASSERT(imageBuffers.size() == images.size(), RESULT_ERROR_BADSIZE, "Vector of buffers to be processed by ISM should be the same size as the number of image sources", "");
-
+		
 		for (int i = 0; i < imageBuffers.size(); i++)
 		{
 			if (images.at(i).visible)
 			{
 				for (int j = 0; j < inBuffer.size(); j++)
 				{
-					imageBuffers.at(i).at(j) = images.at(i).visibility*inBuffer.at(j);
+					imageBuffers.at(i).at(j) = images.at(i).visibility*imageBuffers.at(i).at(j);
 				}
 			}
 			else
@@ -112,6 +114,7 @@ namespace ISM
 				}
 			}
 		}
+		
 	}
 
 }//namespace ISM
