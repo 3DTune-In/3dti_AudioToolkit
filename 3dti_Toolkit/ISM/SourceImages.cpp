@@ -136,7 +136,14 @@ namespace ISM
 						{
 							shared_ptr<Common::CBiquadFilter> filter;
 							filter = tempSourceImage.FilterBank.AddFilter();
-							filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::BANDPASS);
+							//filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::BANDPASS);
+							if (k==0)
+							   filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::LOWPASS);
+							else if (k== NUM_BAND_ABSORTION-1)
+							   filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::HIGHPASS);
+							else 
+							   filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::BANDPASS);
+
 							//Set the reflection coefficient of each band according to absortion coeficients of reflectionWalls
 							for (int j = 0; j < reflectionWalls.size(); j++)
 							{
