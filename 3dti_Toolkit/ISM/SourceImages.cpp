@@ -38,31 +38,20 @@ namespace ISM
 	}
 
 
-	void SourceImages::getImageData(std::vector<ImageSourceData> &imageSourceDataList, Common::CVector3 listenerLocation, int reflectionOrder)
+	void SourceImages::getImageData(std::vector<ImageSourceData> &imageSourceDataList, Common::CVector3 listenerLocation)
 	{
-		if (reflectionOrder > 0)
+		for (int i = 0; i < images.size(); i++)
 		{
-			reflectionOrder--;
-			for (int i = 0; i < images.size(); i++)
+			ImageSourceData temp;
+			temp.location = images.at(i).getLocation();
+			temp.reflectionWalls = images.at(i).reflectionWalls;
+			temp.reflectionBands = images.at(i).reflectionBands;
+			temp.visibility = images.at(i).visibility;
+			temp.visible = images.at(i).visible;
+			imageSourceDataList.push_back(temp);  //Once created, the image source data is added to the list
 
-			{
-				if (images.at(i).reflectionWalls.back().isActive())////////////////FIXME: Is this necessary? no images were created if the wall is not active
-				{
-					ImageSourceData temp;
-					temp.location = images.at(i).getLocation();
-					temp.reflectionWalls = images.at(i).reflectionWalls;
-
-					temp.reflectionBands = images.at(i).reflectionBands;
-
-					temp.visibility = images.at(i).visibility;
-					temp.visible = images.at(i).visible;
-					imageSourceDataList.push_back(temp);  //Once created, the image source data is added to the list
-
-					images.at(i).getImageData(imageSourceDataList, listenerLocation, reflectionOrder); //recurse to the next level
-				}
-			}
+			images.at(i).getImageData(imageSourceDataList, listenerLocation); //recurse to the next level
 		}
-
 	}
 
 

@@ -85,7 +85,7 @@ namespace ISM
 	std::vector<ImageSourceData> ISM::getImageSourceData(Common::CVector3 listenerLocation)
 	{
 		std::vector<ImageSourceData> imageSourceList;
-		originalSource.getImageData(imageSourceList, listenerLocation, reflectionOrder);
+		originalSource.getImageData(imageSourceList, listenerLocation);
 		return imageSourceList;
 	}
 
