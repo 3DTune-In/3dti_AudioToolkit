@@ -70,7 +70,7 @@ namespace ISM
 		*   \param [out] imageSourceList: vector containing all image locations.
 		*   \param [in] reflectionOrder: needed to trim the recursive tree
 		*/
-		void getImageLocations(std::vector<Common::CVector3> &imageSourceList, int reflectionOrder);
+		void getImageLocations(std::vector<Common::CVector3> &imageSourceList);
 
 		/** \brief Returns data of all image sources
 		*	\details This method returns the location of all image sources and wether they are visible or not, not including the

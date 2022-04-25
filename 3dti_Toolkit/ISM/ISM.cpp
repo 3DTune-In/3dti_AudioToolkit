@@ -77,7 +77,7 @@ namespace ISM
 	std::vector<Common::CVector3> ISM::getImageSourceLocations()
 	{
 		std::vector<Common::CVector3> imageSourceList;
-		originalSource.getImageLocations(imageSourceList, reflectionOrder);
+		originalSource.getImageLocations(imageSourceList);
 		return imageSourceList;
 	}
 

@@ -25,25 +25,16 @@ namespace ISM
 		return images;
 	}
 
-	void SourceImages::getImageLocations(std::vector<Common::CVector3> &imageSourceList,
-		int reflectionOrder)
+	void SourceImages::getImageLocations(std::vector<Common::CVector3> &imageSourceList)
 	{
-		if (reflectionOrder > 0)
-		{
-			reflectionOrder--;
 			for (int i = 0; i < images.size(); i++)
 			{
 				if (images.at(i).reflectionWalls.back().isActive())
 				{
 					imageSourceList.push_back(images.at(i).getLocation());
-					if (reflectionOrder > 0)
-					{
-						images.at(i).getImageLocations(imageSourceList, reflectionOrder);
-					}
+					images.at(i).getImageLocations(imageSourceList);
 				}
 			}
-		}
-
 	}
 
 
