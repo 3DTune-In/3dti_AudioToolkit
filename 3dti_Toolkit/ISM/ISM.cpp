@@ -39,16 +39,16 @@ namespace ISM
 		return mainRoom;
 	}
 
-	void ISM::enableWall(int wallIndex)
+	void ISM::enableWall(int wallIndex, Common::CVector3 _lisenerLocation)
 	{
 		mainRoom.enableWall(wallIndex);
-		originalSource.createImages(mainRoom, Common::CVector3(0, 0, 0), reflectionOrder); //FIXME:the listener location is fake
+		originalSource.createImages(mainRoom, _lisenerLocation, reflectionOrder); //FIXME:the listener location is fake
 	}
 
-	void ISM::disableWall(int wallIndex)
+	void ISM::disableWall(int wallIndex, Common::CVector3 _lisenerLocation)
 	{
 		mainRoom.disableWall(wallIndex);
-		originalSource.createImages(mainRoom, Common::CVector3(0, 0, 0), reflectionOrder); //FIXME:the listener location is fake
+		originalSource.createImages(mainRoom, _lisenerLocation, reflectionOrder); //FIXME:the listener location is fake
 	}
 
 	void ISM::setReflectionOrder(int _reflectionOrder)
