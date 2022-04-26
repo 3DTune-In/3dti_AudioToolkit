@@ -110,7 +110,7 @@ namespace ISM
 		*	\param [in] listenerLocation: needed to know visibility of sources
 		*	\param [in] reflectionOrder: depth parameter used in the recursion
 		*/
-		void processAbsortion(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation, int reflectionOrder);
+		void processAbsortion(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation);
 
 
 	private:

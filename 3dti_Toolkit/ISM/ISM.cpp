@@ -91,7 +91,7 @@ namespace ISM
 
 	void ISM::proccess(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation)
 	{
-		originalSource.processAbsortion(inBuffer, imageBuffers, listenerLocation,reflectionOrder);
+		originalSource.processAbsortion(inBuffer, imageBuffers, listenerLocation);
 
 		
 		std::vector<ImageSourceData> images = getImageSourceData(listenerLocation);
