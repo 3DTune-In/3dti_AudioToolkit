@@ -189,4 +189,19 @@ namespace ISM
 		return inside;
 	}
 
+	Common::CVector3 Room::getCenter()
+	{
+		Common::CVector3 center = Common::CVector3::ZERO;
+
+		for (auto i = 0; i < walls.size(); i++)
+		{
+			center = center + walls.at(i).getCenter();
+		}
+		center.x /= walls.size();
+		center.y /= walls.size();
+		center.z /= walls.size();
+
+		return center;
+	}
+
 } //namespace ISM

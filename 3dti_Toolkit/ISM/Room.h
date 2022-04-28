@@ -105,6 +105,11 @@ namespace ISM
 		*/
 		bool checkPointInsideRoom(Common::CVector3 point, float &distanceNearestWall);
 
+		/** \brief Returns the center of the room.
+		*	\details The center is calculated as the average of the centers of the walls
+		*	\param [out] center: point (CVector3) which is the center of the room.
+		*/
+		Common::CVector3 getCenter();
 
 	private:
 		////////////
