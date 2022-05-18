@@ -23,16 +23,21 @@
 #include "SourceImages.h"
 #include <Common/Vector3.h>
 #include <Common/Buffer.h>
+#include <BinauralSpatializer/Core.h>
 
 namespace ISM
 {
-
+	
 	class ISM
 	{
 	public:
 		////////////
 		// Methods
 		////////////
+
+		//ISM();
+		
+		ISM(Binaural::CCore* _ownerCore);
 
 		/** \brief Initializes the object with a shoebox room
 		*	\details creates six walls conforming a shoebox room with 0,0,0 at the center. Wall order is: front, left, right,back, floor, ceiling.
@@ -130,8 +135,9 @@ namespace ISM
 		// Methods
 		////////////
 
-
-
+		Binaural::CCore* GetCore() const;		
+		shared_ptr<Binaural::CListener> GetListener() const;
+		float GetSampleRate();
 		/////////////
 		// Attributes
 		/////////////
@@ -140,6 +146,9 @@ namespace ISM
 		SourceImages originalSource;			//original sound source inside the main room with direct path to the listener
 		int reflectionOrder = 1;				//Number of reflections t be simulated
 
+		Binaural::CCore* ownerCore;				// owner Core	
+
+		friend class SourceImages;
 	};
 
 }//namespace ISM

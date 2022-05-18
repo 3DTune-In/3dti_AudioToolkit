@@ -2,6 +2,10 @@
 
 namespace ISM
 {
+	
+	ISM::ISM(Binaural::CCore* _ownerCore):ownerCore{ _ownerCore } {
+
+	}
 
 	void ISM::SetupShoeBoxRoom(float length, float width, float height)
 	{
@@ -75,7 +79,7 @@ namespace ISM
 
 
 	std::vector<Common::CVector3> ISM::getImageSourceLocations()
-	{
+	{		
 		std::vector<Common::CVector3> imageSourceList;
 		originalSource.getImageLocations(imageSourceList);
 		return imageSourceList;
@@ -115,6 +119,18 @@ namespace ISM
 			}
 		}
 		
+	}
+
+	Binaural::CCore* ISM::GetCore() const{
+		return ownerCore;
+	}
+
+	float ISM::GetSampleRate() {
+		return ownerCore->GetAudioState().sampleRate;
+	}
+
+	shared_ptr<Binaural::CListener> ISM::GetListener() const {
+		return ownerCore->GetListener();
 	}
 
 }//namespace ISM
