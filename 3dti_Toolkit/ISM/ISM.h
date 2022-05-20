@@ -147,7 +147,6 @@ namespace ISM
 		shared_ptr<SourceImages> originalSource;
 
 		int reflectionOrder = 1;				//Number of reflections t be simulated
-		int numberOfSilencedFrames=9;
 
 		Binaural::CCore* ownerCore;				// owner Core	
 
