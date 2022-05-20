@@ -28,6 +28,7 @@
 
 namespace ISM
 {
+	class CISM;
 
 	//Struct to store all the data of the image sources
 	struct ImageSourceData
@@ -47,7 +48,11 @@ namespace ISM
 		////////////
 		// Methods
 		////////////
+		//SourceImages();
+		
+		SourceImages(ISM::CISM* _ownerISM);
 
+		//void temp(CISM* a);
 		/** \brief changes the location of the original source
 		*	\details Sets a new location for the original source and updates all images accordingly.
 		*   \param [in] _location: new location for the original source.
@@ -63,7 +68,7 @@ namespace ISM
 		/** \brief Returns the first order reflections of the original source
 		*   \param [out] Images: vector with the first order reflection images.
 		*/
-		std::vector<SourceImages> getImages();
+		std::vector<weak_ptr <SourceImages>> getImages();
 
 		/** \brief Returns the locations of all images but the original source
 		*   \details this method recurively goes through the image tree to collect all the image locations
@@ -138,13 +143,16 @@ namespace ISM
 
 		std::vector<Wall> reflectionWalls;		//vector containing the walls where the sound has been reflected in inverse order (last reflection first)
 		Common::CVector3 sourceLocation;		//Original source location
-		std::vector<SourceImages> images;		//recursive list of images
-		
+		//std::vector<SourceImages> images;					//recursive list of images		
+		std::vector<shared_ptr<SourceImages>> images;		//recursive list of images
+
 		float visibility = 1.0f;				//1.0 if visible, 0.0 if not, something in the middle if the ray is close to the border of walls
 		bool visible = true;					//false when visibility = 0, true otherwise
 		std::vector<float> reflectionBands;     //coeficients, for each octave Band, to be applied to simulate walls' absortion
 
 		Common::CFiltersBank FilterBank;
+
+		ISM::CISM* ownerISM;					// TO CHECK if this possible using smart pointer
 	};
 
 }//namespace ISM
