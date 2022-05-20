@@ -130,7 +130,7 @@ namespace Common
 		}
 	}
 
-	void CUPCEnvironment::ProcessUPConvolution_withoutIFFT(const CMonoBuffer<float>& inBuffer_Time, const TImpulseResponse_Partitioned & IR, CMonoBuffer<float>& outBuffer)
+	void CUPCEnvironment::ProcessUPConvolution_withoutIFFT(const CMonoBuffer<float>& inBuffer_Time, const TImpulseResponse_Partitioned & IR, CMonoBuffer<float>& outBuffer, int numberOfSilencedFrames)
 	{
 		CMonoBuffer<float> sum;
 		sum.resize(IR_Frequency_Block_Size, 0.0f);
@@ -155,7 +155,7 @@ namespace Common
 															//Step 4, 5 - Multiplications and sums
 			auto it_product = it_storageInputFFT;
 
-			for (int i = 0; i < IR_NumOfSubfilters; i++) {
+			for (int i = numberOfSilencedFrames; i < IR_NumOfSubfilters; i++) {
 				Common::CFprocessor::ProcessComplexMultiplication(*it_product, IR[i], temp);
 				sum += temp;
 				if (it_product == storageInputFFT_buffer.begin()) {

@@ -103,7 +103,7 @@ namespace Binaural {
 		*	\sa SetBuffer, SingleSourceDSP
 		*   \eh Warnings may be reported to the error handler.
 		*/
-		void ProcessVirtualAmbisonicReverb(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight);
+		void ProcessVirtualAmbisonicReverb(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames = 0);
 		
 		/** \brief Process virtual ambisonics reverb for all sources with binaural output in a single stereo buffer
 		*	\details Internally takes as input the (updated) buffers of all registered audio sources 
@@ -111,7 +111,7 @@ namespace Binaural {
 		*	\sa SetBuffer, SingleSourceDSP
 		*   \eh Nothing is reported to the error handler.
 		*/
-		void ProcessVirtualAmbisonicReverb(CStereoBuffer<float> & outBuffer);
+		void ProcessVirtualAmbisonicReverb(CStereoBuffer<float> & outBuffer, int numberOfSilencedFrames = 0);
 
 		/** \brief Process reverb for a single b-format channel encoded with 1st order ambisonics
 		*	\details This might be useful to implement reverb in some wrappers, such as the Unity Wrapper
@@ -135,12 +135,22 @@ namespace Binaural {
 		*   \eh Nothing is reported to the error handler.
 		*/
 		TReverberationOrder GetReverberationOrder();
+
+		
+		/** \brief
+		*/
+		//void SetNumberOfSilencedFrames(int numberOfSilencedFrames);
+
+		/** \brief
+		*/
+		//int GetNumberOfSilencedFrames();
+		
     private:
 
 		//Processes virtual ambisonic reverb in each reverberation order configuration
-		void ProcessVirtualAmbisonicReverbAdimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight);
-		void ProcessVirtualAmbisonicReverbBidimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight);
-		void ProcessVirtualAmbisonicReverbThreedimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight);
+		void ProcessVirtualAmbisonicReverbAdimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames = 0);
+		void ProcessVirtualAmbisonicReverbBidimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames = 0);
+		void ProcessVirtualAmbisonicReverbThreedimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames = 0);
 
 		//Processes a reverb encoded channel in each reverberation order configuration. TODO: make unique function
 		void ProcessEncodedChannelReverbThreedimensional(TBFormatChannel channel, CMonoBuffer<float> encoderIn, CMonoBuffer<float> & output);
@@ -189,6 +199,9 @@ namespace Binaural {
 		int HADirectionality_RightChannel_version;			//HA Directionality right version
                 
         TReverberationOrder reverberationOrder = TReverberationOrder::BIDIMENSIONAL;
+
+		//int numberOfSilencedFrames = 0;
+		
 
         friend class CCore;									//Friend class definition
 		friend class CBRIR;

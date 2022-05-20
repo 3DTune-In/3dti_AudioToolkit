@@ -73,7 +73,7 @@ namespace Common {
 		*	\param [out] outBuffer FFT of the output signal of 2*B size. After the IIFT is done only the last B samples are significant
 		*   \throws May throw exceptions and errors to debugger
 		*/
-		void ProcessUPConvolution_withoutIFFT(const CMonoBuffer<float>& inBuffer_Time, const TImpulseResponse_Partitioned & IR, CMonoBuffer<float>& outBuffer);
+		void ProcessUPConvolution_withoutIFFT(const CMonoBuffer<float>& inBuffer_Time, const TImpulseResponse_Partitioned & IR, CMonoBuffer<float>& outBuffer, int numberOfSilencedFrames=0);
 				
 
 	private:
