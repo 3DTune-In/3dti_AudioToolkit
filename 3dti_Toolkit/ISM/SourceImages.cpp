@@ -1,4 +1,5 @@
 #include "SourceImages.h"
+#include "ISM.h"
 #include <cmath>
 #include <Common/BiquadFilter.h>
 
@@ -8,9 +9,16 @@
 
 namespace ISM
 {
+	//SourceImages::SourceImages() {}
+
+	SourceImages::SourceImages(ISM::CISM* _ownerISM) : ownerISM{_ownerISM} {
+			
+	}
 
 	void SourceImages::setLocation(Common::CVector3 _location, Common::CVector3 listenerLocation)
 	{
+		//Common::CTransform listenerTransform = ownerISM->GetListener()->GetListenerTransform();
+		//Common::CVector3 listenerLocation = listenerTransform.GetPosition();
 		sourceLocation = _location;
 		updateImages(listenerLocation);
 	}
@@ -20,19 +28,23 @@ namespace ISM
 		return sourceLocation;
 	}
 
-	std::vector<SourceImages> SourceImages::getImages()
+	std::vector<weak_ptr <SourceImages>> SourceImages::getImages()
 	{
-		return images;
+		vector<weak_ptr<SourceImages>> result;
+		for (auto i = 0; i < images.size(); ++i) {
+			result.push_back(weak_ptr<SourceImages>(images[i]));
+		}
+		return result;
 	}
 
 	void SourceImages::getImageLocations(std::vector<Common::CVector3> &imageSourceList)
 	{
 			for (int i = 0; i < images.size(); i++)
 			{
-				if (images.at(i).reflectionWalls.back().isActive())
+				if (images.at(i)->reflectionWalls.back().isActive())
 				{
-					imageSourceList.push_back(images.at(i).getLocation());
-					images.at(i).getImageLocations(imageSourceList);
+					imageSourceList.push_back(images.at(i)->getLocation());
+					images.at(i)->getImageLocations(imageSourceList);
 				}
 			}
 	}
@@ -43,14 +55,14 @@ namespace ISM
 		for (int i = 0; i < images.size(); i++)
 		{
 			ImageSourceData temp;
-			temp.location = images.at(i).getLocation();
-			temp.reflectionWalls = images.at(i).reflectionWalls;
-			temp.reflectionBands = images.at(i).reflectionBands;
-			temp.visibility = images.at(i).visibility;
-			temp.visible = images.at(i).visible;
+			temp.location = images.at(i)->getLocation();
+			temp.reflectionWalls = images.at(i)->reflectionWalls;
+			temp.reflectionBands = images.at(i)->reflectionBands;
+			temp.visibility = images.at(i)->visibility;
+			temp.visible = images.at(i)->visible;
 			imageSourceDataList.push_back(temp);  //Once created, the image source data is added to the list
 
-			images.at(i).getImageData(imageSourceDataList, listenerLocation); //recurse to the next level
+			images.at(i)->getImageData(imageSourceDataList, listenerLocation); //recurse to the next level
 		}
 	}
 
@@ -67,8 +79,8 @@ namespace ISM
 
 	void SourceImages::createImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder)
 	{
-		images.clear();
-		createImages(_room, listenerLocation, reflectionOrder, reflectionWalls);
+		images.clear();		
+		createImages(_room, listenerLocation, reflectionOrder, reflectionWalls);		
 		updateImages(listenerLocation);
 	}
 
@@ -82,19 +94,20 @@ namespace ISM
 			{
 				if (walls.at(i).isActive()) //if the wall is not active, its image is not created
 				{
-					SourceImages tempSourceImage;
+					//SourceImages tempSourceImage;
+					shared_ptr<SourceImages> tempSourceImage = make_shared< SourceImages>(ownerISM);
 					Common::CVector3 tempImageLocation = walls[i].getImagePoint(sourceLocation);
-
+					
 					// if the image is closer to the listener than the previous original, that reflection is not real and should not be included
 					// this is equivalent to determine wether source and listener are on the same side of the wall or not
 					if ((listenerLocation - sourceLocation).GetDistance() < (listenerLocation - tempImageLocation).GetDistance())
-					{
-						tempSourceImage.setLocation(tempImageLocation,listenerLocation);
+					{						
+						tempSourceImage->setLocation(tempImageLocation,listenerLocation);						
 						reflectionWalls.push_back(walls.at(i));
-						tempSourceImage.reflectionWalls = reflectionWalls;
+						tempSourceImage->reflectionWalls = reflectionWalls;
 
-						tempSourceImage.FilterBank.RemoveFilters();
-
+						tempSourceImage->FilterBank.RemoveFilters();
+						
 						////////////////////// Set up an equalisation filterbank to simulate frequency dependent absortion
 						float frec_init = 62.5;                //Frequency of the first band 62.5 Hz !!!!
 						float samplingFrec = 44100.0;          //SAMPLING_RATE,  !!!! FIXME
@@ -110,12 +123,12 @@ namespace ISM
 						float Q_BPF = std::sqrt(octaveStepPow) / (octaveStepPow - 1.0f);
 
 						std::vector<float> temp(NUM_BAND_ABSORTION, 1.0);	//creates band reflections and initialise them to 1.0
-						tempSourceImage.reflectionBands = temp;
-
+						tempSourceImage->reflectionBands = temp;
+						
 						for (int k = 0; k < NUM_BAND_ABSORTION; k++)
 						{
 							shared_ptr<Common::CBiquadFilter> filter;
-							filter = tempSourceImage.FilterBank.AddFilter();
+							filter = tempSourceImage->FilterBank.AddFilter();
 							//filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::BANDPASS);
 							if (k==0)
 							   filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::LOWPASS);
@@ -127,9 +140,9 @@ namespace ISM
 							//Set the reflection coefficient of each band according to absortion coeficients of reflectionWalls
 							for (int j = 0; j < reflectionWalls.size(); j++)
 							{
-								tempSourceImage.reflectionBands[k] *= sqrt(1 - reflectionWalls.at(j).getAbsortionB().at(k));
+								tempSourceImage->reflectionBands[k] *= sqrt(1 - reflectionWalls.at(j).getAbsortionB().at(k));
 							}
-							filter->SetGeneralGain(tempSourceImage.reflectionBands.at(k));	//FIXME: the gain per band is dulicated (inside the filters and  in reflectionBands attribute
+							filter->SetGeneralGain(tempSourceImage->reflectionBands.at(k));	//FIXME: the gain per band is dulicated (inside the filters and  in reflectionBands attribute
 
 							filterFrequency *= filterFrequencyStep;
 						}
@@ -144,9 +157,9 @@ namespace ISM
 								Wall tempWall = walls.at(i).getImageWall(walls.at(j));
 								tempRoom.insertWall(tempWall);
 							}
-							tempSourceImage.createImages(tempRoom, listenerLocation, reflectionOrder, reflectionWalls);
-						}
-						images.push_back(tempSourceImage);
+							tempSourceImage->createImages(tempRoom, listenerLocation, reflectionOrder, reflectionWalls);
+						}						
+						images.push_back(tempSourceImage);						
 						reflectionWalls.pop_back();
 					}
 				}
@@ -155,10 +168,10 @@ namespace ISM
 	}
 
 	void SourceImages::updateImages(Common::CVector3 listenerLocation)
-	{
+	{		
 		for (int i = 0; i < images.size(); i++)
 		{
-			images[i].setLocation(images.at(i).getReflectionWall().getImagePoint(sourceLocation),listenerLocation);
+			images[i]->setLocation(images.at(i)->getReflectionWall().getImagePoint(sourceLocation),listenerLocation);
 		}
 
 		//Check visibility through all reflection walls and compute a visibility coeficient
@@ -181,9 +194,9 @@ namespace ISM
 		for (int i = 0; i < images.size();i++)  //process buffers for each of the image sources, adding the result to the output vector of buffers
 		{
 			CMonoBuffer<float> tempBuffer(inBuffer.size(), 0.0);
-			images.at(i).FilterBank.Process(inBuffer, tempBuffer);
+			images.at(i)->FilterBank.Process(inBuffer, tempBuffer);
 			imageBuffers.push_back(tempBuffer);
-			images.at(i).processAbsortion(inBuffer, imageBuffers, listenerLocation);
+			images.at(i)->processAbsortion(inBuffer, imageBuffers, listenerLocation);
 		}
 	}
 

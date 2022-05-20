@@ -28,7 +28,7 @@
 namespace ISM
 {
 	
-	class ISM
+	class CISM 
 	{
 	public:
 		////////////
@@ -37,7 +37,7 @@ namespace ISM
 
 		//ISM();
 		
-		ISM(Binaural::CCore* _ownerCore);
+		CISM(Binaural::CCore* _ownerCore);
 
 		/** \brief Initializes the object with a shoebox room
 		*	\details creates six walls conforming a shoebox room with 0,0,0 at the center. Wall order is: front, left, right,back, floor, ceiling.
@@ -120,7 +120,7 @@ namespace ISM
 		*	original source (direct path).
 		*	\param [out] ImageSourceData: Vector containing the data of the image sources
 		*/
-		std::vector<ImageSourceData> getImageSourceData(Common::CVector3 listenerLocation);
+		std::vector<ISM::ImageSourceData> getImageSourceData(Common::CVector3 listenerLocation);
 
 		/** \brief Proccess audio buffers to apply wall absortion
 		*	\details Process all audio buffers (one per image source) colouring them according to wall absortion
@@ -143,10 +143,15 @@ namespace ISM
 		/////////////
 
 		Room mainRoom;							//Main room where the original source reclects. Its walls can be enables or disabled
-		SourceImages originalSource;			//original sound source inside the main room with direct path to the listener
+		//SourceImages originalSource;			//original sound source inside the main room with direct path to the listener
+		shared_ptr<SourceImages> originalSource;
+
 		int reflectionOrder = 1;				//Number of reflections t be simulated
 
 		Binaural::CCore* ownerCore;				// owner Core	
+
+		
+
 
 		friend class SourceImages;
 	};
