@@ -139,6 +139,7 @@ namespace ISM
 		Room mainRoom;							//Main room where the original source reclects. Its walls can be enables or disabled
 		SourceImages originalSource;			//original sound source inside the main room with direct path to the listener
 		int reflectionOrder = 1;				//Number of reflections t be simulated
+		int numberOfSilencedFrames=9;
 
 	};
 
