@@ -100,6 +100,7 @@ namespace Binaural {
 		*	\details Internally takes as input the (updated) buffers of all registered audio sources 
 		*	\param [out] outBufferLeft output buffer with the processed reverb for left ear
 		*	\param [out] outBufferRight output buffer with the processed reverb for right ear
+		*   \param [in] numberOfSilencedFrames number of initial silenced frames in the reverb stage
 		*	\sa SetBuffer, SingleSourceDSP
 		*   \eh Warnings may be reported to the error handler.
 		*/
@@ -107,7 +108,8 @@ namespace Binaural {
 		
 		/** \brief Process virtual ambisonics reverb for all sources with binaural output in a single stereo buffer
 		*	\details Internally takes as input the (updated) buffers of all registered audio sources 
-		*	\param [out] outBuffer stereo output buffer with the processed reverb				
+		*	\param [out] outBuffer stereo output buffer with the processed reverb
+		*   \param [in] numberOfSilencedFrames number of initial silenced frames in the reverb stage
 		*	\sa SetBuffer, SingleSourceDSP
 		*   \eh Nothing is reported to the error handler.
 		*/
