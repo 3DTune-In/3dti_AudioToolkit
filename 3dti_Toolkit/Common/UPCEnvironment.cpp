@@ -136,6 +136,9 @@ namespace Common
 		sum.resize(IR_Frequency_Block_Size, 0.0f);
 		CMonoBuffer<float> temp;
 
+		CMonoBuffer<float> cero;
+		cero.resize(IR_Frequency_Block_Size, 0.0f);
+
 		ASSERT(inBuffer_Time.size() == inputSize, RESULT_ERROR_BADSIZE, "Bad input size, don't match with the size setting up in the setup method", "");
 
 		if (inBuffer_Time.size() == inputSize && IR.size() != 0 ) 
@@ -155,8 +158,13 @@ namespace Common
 															//Step 4, 5 - Multiplications and sums
 			auto it_product = it_storageInputFFT;
 
-			for (int i = numberOfSilencedFrames; i < IR_NumOfSubfilters; i++) {
-				Common::CFprocessor::ProcessComplexMultiplication(*it_product, IR[i], temp);
+			for (int i = 0; i < IR_NumOfSubfilters; i++) {
+
+				if (i >= numberOfSilencedFrames)
+					Common::CFprocessor::ProcessComplexMultiplication(*it_product, IR[i], temp);
+				else
+					Common::CFprocessor::ProcessComplexMultiplication(*it_product, cero, temp);
+
 				sum += temp;
 				if (it_product == storageInputFFT_buffer.begin()) {
 					it_product = storageInputFFT_buffer.end() - 1;
@@ -164,6 +172,7 @@ namespace Common
 				else {
 					it_product--;
 				}
+			
 			}
 			//Move iterator waiting for the next input block
 			if (it_storageInputFFT == storageInputFFT_buffer.end() - 1) {
