@@ -149,7 +149,6 @@ namespace ISM
 		int reflectionOrder = 1;				//Number of reflections t be simulated
 
 		Binaural::CCore* ownerCore;				// owner Core	
-
 		
 
 

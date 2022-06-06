@@ -25,6 +25,9 @@
 #include <Common/FiltersBank.h>
 
 #define VISIBILITY_MARGIN	0.2
+#define MAX_DISTANCE_SOURCE 10.0
+#define DIST_MARGIN 4.0
+
 
 namespace ISM
 {
@@ -104,7 +107,7 @@ namespace ISM
 					 to be applied when process
 		*	\param [in] listerner Location
 		*/
-		void updateImages(Common::CVector3 listenerLocation);
+		void updateImages (Common::CVector3 listenerLocation);
 
 
 		/** \brief Adds wall absortion to the sound

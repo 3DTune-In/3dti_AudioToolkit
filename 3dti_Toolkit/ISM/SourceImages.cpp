@@ -86,6 +86,8 @@ namespace ISM
 
 	void SourceImages::createImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder, std::vector<Wall> reflectionWalls)
 	{
+		Common::CVector3 roomCenter = ownerISM->getRoom().getCenter();
+
 		if (reflectionOrder > 0) //if the overall reflection order is 0 no images at all should be created
 		{
 			reflectionOrder--;
@@ -97,10 +99,12 @@ namespace ISM
 					//SourceImages tempSourceImage;
 					shared_ptr<SourceImages> tempSourceImage = make_shared< SourceImages>(ownerISM);
 					Common::CVector3 tempImageLocation = walls[i].getImagePoint(sourceLocation);
-					
+
+					//Common::CVector3 roomCenter = _room.getCenter();
+
 					// if the image is closer to the listener than the previous original, that reflection is not real and should not be included
 					// this is equivalent to determine wether source and listener are on the same side of the wall or not
-					if ((listenerLocation - sourceLocation).GetDistance() < (listenerLocation - tempImageLocation).GetDistance())
+					if (((listenerLocation - sourceLocation).GetDistance() < (listenerLocation - tempImageLocation).GetDistance()))
 					{						
 						tempSourceImage->setLocation(tempImageLocation,listenerLocation);						
 						reflectionWalls.push_back(walls.at(i));
@@ -168,7 +172,8 @@ namespace ISM
 	}
 
 	void SourceImages::updateImages(Common::CVector3 listenerLocation)
-	{		
+	{	
+		
 		for (int i = 0; i < images.size(); i++)
 		{
 			images[i]->setLocation(images.at(i)->getReflectionWall().getImagePoint(sourceLocation),listenerLocation);
@@ -177,6 +182,31 @@ namespace ISM
 		//Check visibility through all reflection walls and compute a visibility coeficient
 		visibility = 1.0;	//We hypothesise that it is fully visible. Otherwise, this will become lower
 		visible = true;
+
+		Common::CVector3 roomCenter = ownerISM->getRoom().getCenter();
+	
+		float distanceImageToLisener, distAux1;
+		for (int i = 0; i < images.size(); i++)
+		{
+			Common::CVector3 tempImageLocation = images[i]->getLocation();
+			distanceImageToLisener = (listenerLocation - tempImageLocation).GetDistance();
+			distAux1 = distanceImageToLisener - (MAX_DISTANCE_SOURCE - DIST_MARGIN * 0.5)  ;
+			
+			if (distanceImageToLisener > (MAX_DISTANCE_SOURCE + DIST_MARGIN * 0.5))
+			{
+				images[i]->visible = false; 
+				images[i]->visibility = 0.0;
+			}
+			else if (distanceImageToLisener < (MAX_DISTANCE_SOURCE - DIST_MARGIN * 0.5))
+			{
+				images[i]->visibility = 1.0;
+			}
+			else
+			{
+				images[i]->visibility = 0.5 + 0.5 * cos((distanceImageToLisener - distAux1) / DIST_MARGIN);
+			}
+		}
+		
 		for (int j = 0; j < reflectionWalls.size(); j++)
 		{
 			Common::CVector3 reflectionPoint = reflectionWalls.at(j).getIntersectionPointWithLine(sourceLocation, listenerLocation);
@@ -193,8 +223,11 @@ namespace ISM
 	{
 		for (int i = 0; i < images.size();i++)  //process buffers for each of the image sources, adding the result to the output vector of buffers
 		{
+			
 			CMonoBuffer<float> tempBuffer(inBuffer.size(), 0.0);
-			images.at(i)->FilterBank.Process(inBuffer, tempBuffer);
+
+			if (images.at(i)->visibility > 0.00001)
+			   images.at(i)->FilterBank.Process(inBuffer, tempBuffer);
 			imageBuffers.push_back(tempBuffer);
 			images.at(i)->processAbsortion(inBuffer, imageBuffers, listenerLocation);
 		}
