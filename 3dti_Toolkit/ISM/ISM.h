@@ -96,6 +96,19 @@ namespace ISM
 		*/
 		int getReflectionOrder();
 
+		/** \brief Sets the maximum distance between the listener and each source image to be considered visible
+		*	\details Sources that exceed the maximum distance will be considered non-visible sources.
+		*	\param [in] MaxDistanceSourcesToListener
+		*/
+		void setMaxDistanceImageSources(float MaxDistanceSourcesToListener);
+
+		/** \brief Returns the maximum distance between the listener and each source image to be considered visible
+		*	\details Sources that exceed the maximum distance will be considered non-visible sources.
+		*	\param [out] MaxDistanceSourcesToListener
+		*/
+		float getMaxDistanceImageSources();
+		
+
 		/** \brief Sets the source location
 		*	\details This method sets the location of the original source (direct path).
 		*	\param [in] location: location of the direct path source
@@ -147,6 +160,8 @@ namespace ISM
 		shared_ptr<SourceImages> originalSource;
 
 		int reflectionOrder = 1;				//Number of reflections t be simulated
+
+		float MaxDistanceSourcesToListener = 10.0;
 
 		Binaural::CCore* ownerCore;				// owner Core	
 		

@@ -190,14 +190,15 @@ namespace ISM
 		{
 			Common::CVector3 tempImageLocation = images[i]->getLocation();
 			distanceImageToLisener = (listenerLocation - tempImageLocation).GetDistance();
-			distAux1 = distanceImageToLisener - (MAX_DISTANCE_SOURCE - DIST_MARGIN * 0.5)  ;
+			float MaxDistanceSourcesToListener = ownerISM->getMaxDistanceImageSources();
+			distAux1 = distanceImageToLisener - (MaxDistanceSourcesToListener - DIST_MARGIN * 0.5)  ;
 			
-			if (distanceImageToLisener > (MAX_DISTANCE_SOURCE + DIST_MARGIN * 0.5))
+			if (distanceImageToLisener > (MaxDistanceSourcesToListener + DIST_MARGIN * 0.5))
 			{
 				images[i]->visible = false; 
 				images[i]->visibility = 0.0;
 			}
-			else if (distanceImageToLisener < (MAX_DISTANCE_SOURCE - DIST_MARGIN * 0.5))
+			else if (distanceImageToLisener < (MaxDistanceSourcesToListener - DIST_MARGIN * 0.5))
 			{
 				images[i]->visibility = 1.0;
 			}

@@ -67,6 +67,16 @@ namespace ISM
 		return reflectionOrder;
 	}
 
+	void CISM::setMaxDistanceImageSources(float _MaxDistanceSourcesToListener)
+	{
+		MaxDistanceSourcesToListener = _MaxDistanceSourcesToListener;
+	}
+		
+	float CISM::getMaxDistanceImageSources()
+	{
+		return MaxDistanceSourcesToListener;
+	}
+
 	void CISM::setSourceLocation(Common::CVector3 location,Common::CVector3 listenerLocation)
 	{
 		originalSource->setLocation(location,listenerLocation);

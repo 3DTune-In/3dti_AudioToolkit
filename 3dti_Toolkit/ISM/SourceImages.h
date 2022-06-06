@@ -25,7 +25,6 @@
 #include <Common/FiltersBank.h>
 
 #define VISIBILITY_MARGIN	0.2
-#define MAX_DISTANCE_SOURCE 10.0
 #define DIST_MARGIN 4.0
 
 
