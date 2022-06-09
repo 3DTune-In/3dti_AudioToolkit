@@ -98,15 +98,22 @@ namespace ISM
 
 		/** \brief Sets the maximum distance between the listener and each source image to be considered visible
 		*	\details Sources that exceed the maximum distance will be considered non-visible sources.
-		*	\param [in] MaxDistanceSourcesToListener
+		*	\param [in] maxDistanceSourcesToListener
 		*/
-		void setMaxDistanceImageSources(float MaxDistanceSourcesToListener);
+		void setMaxDistanceImageSources(float maxDistanceSourcesToListener);
 
 		/** \brief Returns the maximum distance between the listener and each source image to be considered visible
 		*	\details Sources that exceed the maximum distance will be considered non-visible sources.
-		*	\param [out] MaxDistanceSourcesToListener
+		*	\param [out] maxDistanceSourcesToListener
 		*/
 		float getMaxDistanceImageSources();
+
+		/** \brief Returns number of silenced frames
+		*	\details calculates the number od silenced frames depending on the maximum distance between the images and the listener
+		*	\param [in] maxDistanceSourcesToListener
+		*	\param [out] numberOfSilencedFrames
+		*/
+		int calculateNumOfSilencedFrames (float maxDistanceSourcesToListener);
 		
 
 		/** \brief Sets the source location
@@ -161,7 +168,7 @@ namespace ISM
 
 		int reflectionOrder = 1;				//Number of reflections t be simulated
 
-		float MaxDistanceSourcesToListener = 10.0;
+		float maxDistanceSourcesToListener = 10.0;
 
 		Binaural::CCore* ownerCore;				// owner Core	
 		

@@ -69,12 +69,24 @@ namespace ISM
 
 	void CISM::setMaxDistanceImageSources(float _MaxDistanceSourcesToListener)
 	{
-		MaxDistanceSourcesToListener = _MaxDistanceSourcesToListener;
+		maxDistanceSourcesToListener = _MaxDistanceSourcesToListener;	
 	}
+
+	int CISM::calculateNumOfSilencedFrames(float maxDistanceSourcesToListener)
+	{
+		float buffersize = (float) ownerCore->GetAudioState().bufferSize;
+		float samplerate = (float) ownerCore->GetAudioState().sampleRate;
+		float soundSpeed = ownerCore->GetMagnitudes().GetSoundSpeed();
+
+		int numberOfSlilencedFrames = ceil (((maxDistanceSourcesToListener / soundSpeed)*samplerate) / buffersize);
+
+		return numberOfSlilencedFrames;
+	}
+	
 		
 	float CISM::getMaxDistanceImageSources()
 	{
-		return MaxDistanceSourcesToListener;
+		return maxDistanceSourcesToListener;
 	}
 
 	void CISM::setSourceLocation(Common::CVector3 location,Common::CVector3 listenerLocation)
