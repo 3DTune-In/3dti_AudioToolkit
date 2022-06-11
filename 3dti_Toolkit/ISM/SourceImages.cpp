@@ -88,7 +88,7 @@ namespace ISM
 	{
 		Common::CVector3 roomCenter = ownerISM->getRoom().getCenter();
 
-		if (reflectionOrder > 0) //if the overall reflection order is 0 no images at all should be created
+		if (reflectionOrder > 0) //if the reflection order is already 0 no more images should be created. We are at the leaves of the tree
 		{
 			reflectionOrder--;
 			std::vector<Wall> walls = _room.getWalls();
@@ -105,66 +105,78 @@ namespace ISM
 					// if the image is closer to the listener than the previous original, that reflection is not real and should not be included
 					// this is equivalent to determine wether source and listener are on the same side of the wall or not
 					if (((listenerLocation - sourceLocation).GetDistance() < (listenerLocation - tempImageLocation).GetDistance()))
-					{						
-						tempSourceImage->setLocation(tempImageLocation,listenerLocation);						
-						reflectionWalls.push_back(walls.at(i));
-						tempSourceImage->reflectionWalls = reflectionWalls;
-
-						tempSourceImage->FilterBank.RemoveFilters();
-						
-						////////////////////// Set up an equalisation filterbank to simulate frequency dependent absortion
-						float frec_init = 62.5;                //Frequency of the first band 62.5 Hz !!!!
-						float samplingFrec = 44100.0;          //SAMPLING_RATE,  !!!! FIXME
-
-						float bandFrequency = frec_init;       //First band
-							  //float filterFrequencyStep = std::pow(2, 1.0f / (bandsPerOctave*filtersPerBand));
-							  //float filterFrequency = bandFrequency / ((float)(trunc(filtersPerBand / 2))*filterFrequencyStep);
-						float filterFrequencyStep = 2.0;
-						float filterFrequency = bandFrequency;
-						// Compute Q for all filters
-							  //float octaveStep = 1.0f / ((float)filtersPerBand * bandsPerOctave);
-						float octaveStepPow = 2.0;
-						float Q_BPF = std::sqrt(octaveStepPow) / (octaveStepPow - 1.0f);
-
-						std::vector<float> temp(NUM_BAND_ABSORTION, 1.0);	//creates band reflections and initialise them to 1.0
-						tempSourceImage->reflectionBands = temp;
-						
-						for (int k = 0; k < NUM_BAND_ABSORTION; k++)
+					{
+						// If the image room where the candidate image source is far from the original room, so that any location in it is closer than
+						// the maximum distance to any location in the original room, then the recursive tree has to stop growing
+						float roomsDistance = 0.0;
+						//if there are no reflection walls, the minimum distance is 0 and it is not necessary to calculate it. This way, we avoud to get
+						//wall from the reflectionWalls vector, which is empty.
+						if(reflectionWalls.size()>0) 
 						{
-							shared_ptr<Common::CBiquadFilter> filter;
-							filter = tempSourceImage->FilterBank.AddFilter();
-							//filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::BANDPASS);
-							if (k==0)
-							   filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::LOWPASS);
-							else if (k== NUM_BAND_ABSORTION-1)
-							   filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::HIGHPASS);
-							else 
-							   filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::BANDPASS);
-
-							//Set the reflection coefficient of each band according to absortion coeficients of reflectionWalls
-							for (int j = 0; j < reflectionWalls.size(); j++)
-							{
-								tempSourceImage->reflectionBands[k] *= sqrt(1 - reflectionWalls.at(j).getAbsortionB().at(k));
-							}
-							filter->SetGeneralGain(tempSourceImage->reflectionBands.at(k));	//FIXME: the gain per band is dulicated (inside the filters and  in reflectionBands attribute
-
-							filterFrequency *= filterFrequencyStep;
+								roomsDistance = walls.at(i).getMinimumDistanceFromWall(reflectionWalls.front());
 						}
-						/////////////////////////
-
-						if (reflectionOrder > 0)  //Still higher order reflections: we need to create images of the image just created
+						if (roomsDistance <= ownerISM->getMaxDistanceImageSources())
 						{
-							// We need to calculate the image room before asking for all the new images
-							Room tempRoom;
-							for (int j = 0; j < walls.size(); j++)
+							tempSourceImage->setLocation(tempImageLocation, listenerLocation);
+							reflectionWalls.push_back(walls.at(i));
+							tempSourceImage->reflectionWalls = reflectionWalls;
+
+							tempSourceImage->FilterBank.RemoveFilters();
+
+							////////////////////// Set up an equalisation filterbank to simulate frequency dependent absortion
+							float frec_init = 62.5;                //Frequency of the first band 62.5 Hz !!!!
+							float samplingFrec = 44100.0;          //SAMPLING_RATE,  !!!! FIXME
+
+							float bandFrequency = frec_init;       //First band
+								  //float filterFrequencyStep = std::pow(2, 1.0f / (bandsPerOctave*filtersPerBand));
+								  //float filterFrequency = bandFrequency / ((float)(trunc(filtersPerBand / 2))*filterFrequencyStep);
+							float filterFrequencyStep = 2.0;
+							float filterFrequency = bandFrequency;
+							// Compute Q for all filters
+								  //float octaveStep = 1.0f / ((float)filtersPerBand * bandsPerOctave);
+							float octaveStepPow = 2.0;
+							float Q_BPF = std::sqrt(octaveStepPow) / (octaveStepPow - 1.0f);
+
+							std::vector<float> temp(NUM_BAND_ABSORTION, 1.0);	//creates band reflections and initialise them to 1.0
+							tempSourceImage->reflectionBands = temp;
+
+							for (int k = 0; k < NUM_BAND_ABSORTION; k++)
 							{
-								Wall tempWall = walls.at(i).getImageWall(walls.at(j));
-								tempRoom.insertWall(tempWall);
+								shared_ptr<Common::CBiquadFilter> filter;
+								filter = tempSourceImage->FilterBank.AddFilter();
+								//filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::BANDPASS);
+								if (k == 0)
+									filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::LOWPASS);
+								else if (k == NUM_BAND_ABSORTION - 1)
+									filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::HIGHPASS);
+								else
+									filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::BANDPASS);
+
+								//Set the reflection coefficient of each band according to absortion coeficients of reflectionWalls
+								for (int j = 0; j < reflectionWalls.size(); j++)
+								{
+									tempSourceImage->reflectionBands[k] *= sqrt(1 - reflectionWalls.at(j).getAbsortionB().at(k));
+								}
+								filter->SetGeneralGain(tempSourceImage->reflectionBands.at(k));	//FIXME: the gain per band is dulicated (inside the filters and  in reflectionBands attribute
+
+								filterFrequency *= filterFrequencyStep;
 							}
-							tempSourceImage->createImages(tempRoom, listenerLocation, reflectionOrder, reflectionWalls);
-						}						
-						images.push_back(tempSourceImage);						
-						reflectionWalls.pop_back();
+							/////////////////////////
+
+							if (reflectionOrder > 0)  //Still higher order reflections: we need to create images of the image just created
+							{
+								// We need to calculate the image room before asking for all the new images
+								Room tempRoom;
+								for (int j = 0; j < walls.size(); j++)
+								{
+									Wall tempWall = walls.at(i).getImageWall(walls.at(j));
+									tempRoom.insertWall(tempWall);
+								}
+								tempSourceImage->createImages(tempRoom, listenerLocation, reflectionOrder, reflectionWalls);
+							}
+							images.push_back(tempSourceImage);
+							reflectionWalls.pop_back();
+						}
 					}
 				}
 			}

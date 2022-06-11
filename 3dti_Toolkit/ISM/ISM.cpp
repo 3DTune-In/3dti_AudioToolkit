@@ -70,6 +70,7 @@ namespace ISM
 	void CISM::setMaxDistanceImageSources(float _MaxDistanceSourcesToListener)
 	{
 		maxDistanceSourcesToListener = _MaxDistanceSourcesToListener;	
+		originalSource->createImages(mainRoom, Common::CVector3(0, 0, 0), reflectionOrder); //(0,0,0) is used instead of listener location. We should consider to change listener location by the center of the room
 	}
 
 	int CISM::calculateNumOfSilencedFrames(float maxDistanceSourcesToListener)
