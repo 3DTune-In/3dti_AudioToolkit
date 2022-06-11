@@ -181,6 +181,24 @@ namespace ISM
 		return distance;
 	}
 
+	float Wall::getMinimumDistanceFromWall(ISM::Wall wall)
+	{
+		Common::CVector3 cornerDistance = polygon.at(0) - wall.polygon.at(0);
+		float minimumDistance=cornerDistance.GetDistance();
+		for (int i = 0; i < polygon.size(); i++)
+		{
+			for (int j = 0; j < wall.polygon.size(); j++)
+			{
+				cornerDistance = polygon.at(i) - wall.polygon.at(j);
+				if (minimumDistance > cornerDistance.GetDistance())
+				{
+					minimumDistance = cornerDistance.GetDistance();
+				}
+			}
+		}
+		return minimumDistance;
+	}
+
 	Common::CVector3 Wall::getImagePoint(Common::CVector3 point)
 	{
 		float distance;

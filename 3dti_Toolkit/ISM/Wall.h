@@ -105,6 +105,17 @@ namespace ISM
 		*/
 		float getDistanceFromPoint(Common::CVector3 point);
 
+		/** \brief Returns the minimum distance between two walls.
+		*	\details Computes the distance between each corner of the given wall and each corner of this wall and returns the minimum of these distances
+					 This method is used to determine whether an image room can contain an image source closer than a given distance to any possible location
+					 in the original room. If the minimum distance from the wall in the original room which starts the branch of images and the image wall 
+					 which produces a new image room is greater than d, it is not possible to find a location in the new image room closar than d to any 
+					 location in the original room
+		*	\param [in] wall: wall to compute the distance to this one.
+		*	\param [out] Distance: shorterst distance to teh wall's plane (m).
+		*/
+		float getMinimumDistanceFromWall(ISM::Wall wall);
+
 		/** \brief Returns the location of the image of a given point reflected in the wall's plane.
 		*	\param [in] Point: original point for which the image reflected in the wall will be calculated.
 		*	\param [out] Image: location of the image point.
