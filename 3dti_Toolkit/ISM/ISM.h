@@ -76,13 +76,13 @@ namespace ISM
 		*	\details Sets the i-th wall of the room as active and therefore reflective.
 		*	\param [in] index of the wall to be active.
 		*/
-		void enableWall(int wallIndex, Common::CVector3 lisenarLocation);
+		void enableWall(int wallIndex);
 
 		/** \brief Makes one of the room's walls transparent
 		*	\details Sets the i-th wall of the room as not active and therefore transparent.
 		*	\param [in] index of the wall to be active.
 		*/
-		void disableWall(int wallIndex, Common::CVector3 lisenarLocation);
+		void disableWall(int wallIndex);
 
 		/** \brief Sets the number of reflections to be simulated
 		*	\details The ISM method simulates reflections using images. This parameter sets the number of reflections simulated

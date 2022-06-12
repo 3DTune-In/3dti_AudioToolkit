@@ -17,10 +17,8 @@ namespace ISM
 
 	void SourceImages::setLocation(Common::CVector3 _location)
 	{
-		Common::CTransform listenerTransform = ownerISM->GetListener()->GetListenerTransform();
-		Common::CVector3 listenerLocation = listenerTransform.GetPosition();
 		sourceLocation = _location;
-		updateImages(listenerLocation);
+		updateImages();
 	}
 
 	Common::CVector3 SourceImages::getLocation()
@@ -77,14 +75,14 @@ namespace ISM
 		return reflectionWalls.back();
 	}
 
-	void SourceImages::createImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder)
+	void SourceImages::createImages(Room _room, int reflectionOrder)
 	{
 		images.clear();		
-		createImages(_room, listenerLocation, reflectionOrder, reflectionWalls);		
-		updateImages(listenerLocation);
+		createImages(_room, reflectionOrder, reflectionWalls);		
+		updateImages();
 	}
 
-	void SourceImages::createImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder, std::vector<Wall> reflectionWalls)
+	void SourceImages::createImages(Room _room, int reflectionOrder, std::vector<Wall> reflectionWalls)
 	{
 		Common::CVector3 roomCenter = ownerISM->getRoom().getCenter();
 
@@ -102,9 +100,10 @@ namespace ISM
 
 					//Common::CVector3 roomCenter = _room.getCenter();
 
-					// if the image is closer to the listener than the previous original, that reflection is not real and should not be included
-					// this is equivalent to determine wether source and listener are on the same side of the wall or not
-					if (((listenerLocation - sourceLocation).GetDistance() < (listenerLocation - tempImageLocation).GetDistance()))
+					// if the image is closer to the room center than the previous original, that reflection is not real and should not be included
+					// this is equivalent to determine wether source and room center are on the same side of the wall or not
+					Common::CVector3 roomCenter = ownerISM->getRoom().getCenter();
+					if (((roomCenter - sourceLocation).GetDistance() < (roomCenter - tempImageLocation).GetDistance()))
 					{
 						// If the image room where the candidate image source is far from the original room, so that any location in it is closer than
 						// the maximum distance to any location in the original room, then the recursive tree has to stop growing
@@ -172,7 +171,7 @@ namespace ISM
 									Wall tempWall = walls.at(i).getImageWall(walls.at(j));
 									tempRoom.insertWall(tempWall);
 								}
-								tempSourceImage->createImages(tempRoom, listenerLocation, reflectionOrder, reflectionWalls);
+								tempSourceImage->createImages(tempRoom, reflectionOrder, reflectionWalls);
 							}
 							images.push_back(tempSourceImage);
 							reflectionWalls.pop_back();
@@ -183,9 +182,11 @@ namespace ISM
 		}
 	}
 
-	void SourceImages::updateImages(Common::CVector3 listenerLocation)
+	void SourceImages::updateImages()
 	{	
-		
+		Common::CTransform listenerTransform = ownerISM->GetListener()->GetListenerTransform();
+		Common::CVector3 listenerLocation = listenerTransform.GetPosition();
+
 		for (int i = 0; i < images.size(); i++)
 		{
 			images[i]->setLocation(images.at(i)->getReflectionWall().getImagePoint(sourceLocation));

@@ -11,13 +11,13 @@ namespace ISM
 	void CISM::SetupShoeBoxRoom(float length, float width, float height)
 	{
 		mainRoom.setupShoeBox(length, width, height);
-		originalSource->createImages(mainRoom, Common::CVector3(0, 0, 0), reflectionOrder); //FIXME:the listener location is fake
+		originalSource->createImages(mainRoom, reflectionOrder); 
 	}
 
 	void CISM::setupArbitraryRoom(RoomGeometry roomGeometry)
 	{
 		mainRoom.setupRoomGeometry(roomGeometry);
-		originalSource->createImages(mainRoom, Common::CVector3(0, 0, 0), reflectionOrder); //FIXME:the listener location is fake
+		originalSource->createImages(mainRoom, reflectionOrder); 
 	}
 
 	void CISM::setAbsortion(std::vector<float> absortions)
@@ -26,7 +26,7 @@ namespace ISM
 		{
 			mainRoom.setWallAbsortion(i, absortions.at(i));
 		}
-		originalSource->createImages(mainRoom, Common::CVector3(0, 0, 0), reflectionOrder); //FIXME:the listener location is fake
+		originalSource->createImages(mainRoom, reflectionOrder); 
 	}
 
 	void CISM::setAbsortion(std::vector<std::vector<float>> absortionsBands)
@@ -35,7 +35,7 @@ namespace ISM
 		{
 			mainRoom.setWallAbsortion(i, absortionsBands.at(i));
 		}
-		originalSource->createImages(mainRoom, Common::CVector3(0, 0, 0), reflectionOrder); //FIXME:the listener location is fake
+		originalSource->createImages(mainRoom, reflectionOrder); 
 
 	}
 	
@@ -44,22 +44,22 @@ namespace ISM
 		return mainRoom;
 	}
 
-	void CISM::enableWall(int wallIndex, Common::CVector3 _lisenerLocation)
+	void CISM::enableWall(int wallIndex)
 	{
 		mainRoom.enableWall(wallIndex);
-		originalSource->createImages(mainRoom, _lisenerLocation, reflectionOrder); //FIXME:the listener location is fake
+		originalSource->createImages(mainRoom, reflectionOrder); 
 	}
 
-	void CISM::disableWall(int wallIndex, Common::CVector3 _lisenerLocation)
+	void CISM::disableWall(int wallIndex)
 	{
 		mainRoom.disableWall(wallIndex);
-		originalSource->createImages(mainRoom, _lisenerLocation, reflectionOrder); //FIXME:the listener location is fake
+		originalSource->createImages(mainRoom, reflectionOrder); 
 	}
 
 	void CISM::setReflectionOrder(int _reflectionOrder)
 	{
 		reflectionOrder = _reflectionOrder;
-		originalSource->createImages(mainRoom, Common::CVector3(0, 0, 0), reflectionOrder); //(0,0,0) is used instead of listener location. We should consider to change listener location by the center of the room
+		originalSource->createImages(mainRoom, reflectionOrder); 
 	}
 
 	int CISM::getReflectionOrder()
@@ -70,7 +70,7 @@ namespace ISM
 	void CISM::setMaxDistanceImageSources(float _MaxDistanceSourcesToListener)
 	{
 		maxDistanceSourcesToListener = _MaxDistanceSourcesToListener;	
-		originalSource->createImages(mainRoom, Common::CVector3(0, 0, 0), reflectionOrder); //(0,0,0) is used instead of listener location. We should consider to change listener location by the center of the room
+		originalSource->createImages(mainRoom, reflectionOrder); 
 	}
 
 	int CISM::calculateNumOfSilencedFrames(float maxDistanceSourcesToListener)

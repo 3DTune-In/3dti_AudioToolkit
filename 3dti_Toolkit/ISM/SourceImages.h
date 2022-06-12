@@ -95,17 +95,15 @@ namespace ISM
 		*	\details Creates a recursive tree of imagesources using all active walls up to the reflection order depth. This methos should be
 					 called every time the room geometry changes (walls are set as active or inactive) or the reflection order changes
 		*	\param [in] Room: the original room surounding the original source
-		*   \param [in] Listener location
 		*	\param [in] reflectionOrder: depth of the recursive tree
 		*/
-		void createImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder);
+		void createImages(Room _room, int reflectionOrder);
 
 		/** \brief updates imege source location, reflection and visibility
 		*	\details Updates the recursive image source tree with the source locations and computes refelction coefficients and visibility 
 					 to be applied when process
-		*	\param [in] listerner Location
 		*/
-		void updateImages (Common::CVector3 listenerLocation);
+		void updateImages ();
 
 
 		/** \brief Adds wall absortion to the sound
@@ -135,7 +133,7 @@ namespace ISM
 		*	\param [in]
 		*   \param [in]
 		*/
-		void createImages(Room _room, Common::CVector3 listenerLocation, int reflectionOrder, std::vector<Wall> reflectionWalls);
+		void createImages(Room _room, int reflectionOrder, std::vector<Wall> reflectionWalls);
 
 		////////////
 		// Attributes
