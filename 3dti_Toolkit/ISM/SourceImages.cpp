@@ -199,39 +199,32 @@ namespace ISM
 		Common::CVector3 roomCenter = ownerISM->getRoom().getCenter();
 	
 		float distanceImageToLisener, distAux1;
-		for (int i = 0; i < images.size(); i++)
-		{
-			Common::CVector3 tempImageLocation = images[i]->getLocation();
-			distanceImageToLisener = (listenerLocation - tempImageLocation).GetDistance();
-			float maxDistanceSourcesToListener = ownerISM->getMaxDistanceImageSources();
-			distAux1 = distanceImageToLisener - (maxDistanceSourcesToListener - DIST_MARGIN * 0.5)  ;
+		distanceImageToLisener = (listenerLocation - sourceLocation).GetDistance();
+		float maxDistanceSourcesToListener = ownerISM->getMaxDistanceImageSources();
 			
-			if (distanceImageToLisener > (maxDistanceSourcesToListener + DIST_MARGIN * 0.5))
-			{
-				images[i]->visible = false; 
-				images[i]->visibility = 0.0;
-			}
-			else if (distanceImageToLisener < (maxDistanceSourcesToListener - DIST_MARGIN * 0.5))
-			{
-				images[i]->visibility = 1.0;
-			}
-			else
-			{
-				images[i]->visibility = 0.5 + 0.5 * cos((distanceImageToLisener - distAux1) / DIST_MARGIN);
-			}
-		}
-		
-		for (int j = 0; j < reflectionWalls.size(); j++)
+		if (distanceImageToLisener > (maxDistanceSourcesToListener + DIST_MARGIN * 0.5))
 		{
-			Common::CVector3 reflectionPoint = reflectionWalls.at(j).getIntersectionPointWithLine(sourceLocation, listenerLocation);
-			float distanceToBorder, wallVisibility;
-
-			reflectionWalls.at(j).checkPointInsideWall(reflectionPoint, distanceToBorder, wallVisibility);
-			visibility *= wallVisibility;
-			visible &= (wallVisibility > 0);
+			visible = false; 
+			visibility = 0.0;
 		}
-		visibility = pow(visibility, (1 / (float)reflectionWalls.size()));
+		else 
+		{
+			for (int j = 0; j < reflectionWalls.size(); j++)
+			{
+				Common::CVector3 reflectionPoint = reflectionWalls.at(j).getIntersectionPointWithLine(sourceLocation, listenerLocation);
+				float distanceToBorder, wallVisibility;
+				reflectionWalls.at(j).checkPointInsideWall(reflectionPoint, distanceToBorder, wallVisibility);
+				visibility *= wallVisibility;
+				visible &= (wallVisibility > 0);
+			}
+			visibility = pow(visibility, (1 / (float)reflectionWalls.size())); 
+			if (distanceImageToLisener > (maxDistanceSourcesToListener - DIST_MARGIN * 0.5))
+			{
+				visibility *= 0.5 + 0.5 * cos(PI * (distanceImageToLisener - (maxDistanceSourcesToListener - DIST_MARGIN * 0.5)) / DIST_MARGIN);
+			}
+		}
 	}
+
 
 	void SourceImages::processAbsortion(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation)
 	{
