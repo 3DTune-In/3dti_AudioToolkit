@@ -50,7 +50,7 @@ namespace ISM
 	}
 
 
-	void SourceImages::getImageData(std::vector<ImageSourceData> &imageSourceDataList, Common::CVector3 listenerLocation)
+	void SourceImages::getImageData(std::vector<ImageSourceData> &imageSourceDataList)
 	{
 		for (int i = 0; i < images.size(); i++)
 		{
@@ -62,7 +62,7 @@ namespace ISM
 			temp.visible = images.at(i)->visible;
 			imageSourceDataList.push_back(temp);  //Once created, the image source data is added to the list
 
-			images.at(i)->getImageData(imageSourceDataList, listenerLocation); //recurse to the next level
+			images.at(i)->getImageData(imageSourceDataList); //recurse to the next level
 		}
 	}
 

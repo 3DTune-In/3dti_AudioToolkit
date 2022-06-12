@@ -85,7 +85,7 @@ namespace ISM
 		*	\param [out] ImageSourceData: Vector containing the data of the image sources
 		*   \param [in] reflectionOrder: needed to trim the recursive tree
 		*/
-		void getImageData(std::vector<ImageSourceData> &imageSourceDataList, Common::CVector3 listenerLocation);
+		void getImageData(std::vector<ImageSourceData> &imageSourceDataList);
 
 		/** \brief Returns the  wall where the reflecion produced this image
 		*   \param [out] Reflection wall.

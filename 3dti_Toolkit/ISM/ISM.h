@@ -140,7 +140,7 @@ namespace ISM
 		*	original source (direct path).
 		*	\param [out] ImageSourceData: Vector containing the data of the image sources
 		*/
-		std::vector<ISM::ImageSourceData> getImageSourceData(Common::CVector3 listenerLocation);
+		std::vector<ISM::ImageSourceData> getImageSourceData();
 
 		/** \brief Proccess audio buffers to apply wall absortion
 		*	\details Process all audio buffers (one per image source) colouring them according to wall absortion

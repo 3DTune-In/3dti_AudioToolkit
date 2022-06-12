@@ -110,10 +110,10 @@ namespace ISM
 	}
 
 
-	std::vector<ISM::ImageSourceData> CISM::getImageSourceData(Common::CVector3 listenerLocation)
+	std::vector<ISM::ImageSourceData> CISM::getImageSourceData()
 	{
 		std::vector<ImageSourceData> imageSourceList;
-		originalSource->getImageData(imageSourceList, listenerLocation);
+		originalSource->getImageData(imageSourceList);
 		return imageSourceList;
 	}
 
@@ -122,7 +122,7 @@ namespace ISM
 		originalSource->processAbsortion(inBuffer, imageBuffers, listenerLocation);
 		
 
-		std::vector<ImageSourceData> images = getImageSourceData(listenerLocation);
+		std::vector<ImageSourceData> images = getImageSourceData();
 		ASSERT(imageBuffers.size() == images.size(), RESULT_ERROR_BADSIZE, "Vector of buffers to be processed by ISM should be the same size as the number of image sources", "");
 		
 		for (int i = 0; i < imageBuffers.size(); i++)
