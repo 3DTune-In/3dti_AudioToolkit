@@ -15,10 +15,10 @@ namespace ISM
 			
 	}
 
-	void SourceImages::setLocation(Common::CVector3 _location, Common::CVector3 listenerLocation)
+	void SourceImages::setLocation(Common::CVector3 _location)
 	{
-		//Common::CTransform listenerTransform = ownerISM->GetListener()->GetListenerTransform();
-		//Common::CVector3 listenerLocation = listenerTransform.GetPosition();
+		Common::CTransform listenerTransform = ownerISM->GetListener()->GetListenerTransform();
+		Common::CVector3 listenerLocation = listenerTransform.GetPosition();
 		sourceLocation = _location;
 		updateImages(listenerLocation);
 	}
@@ -117,7 +117,7 @@ namespace ISM
 						}
 						if (roomsDistance <= ownerISM->getMaxDistanceImageSources())
 						{
-							tempSourceImage->setLocation(tempImageLocation, listenerLocation);
+							tempSourceImage->setLocation(tempImageLocation);
 							reflectionWalls.push_back(walls.at(i));
 							tempSourceImage->reflectionWalls = reflectionWalls;
 
@@ -188,7 +188,7 @@ namespace ISM
 		
 		for (int i = 0; i < images.size(); i++)
 		{
-			images[i]->setLocation(images.at(i)->getReflectionWall().getImagePoint(sourceLocation),listenerLocation);
+			images[i]->setLocation(images.at(i)->getReflectionWall().getImagePoint(sourceLocation));
 		}
 
 		//Check visibility through all reflection walls and compute a visibility coeficient

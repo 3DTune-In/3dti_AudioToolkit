@@ -90,9 +90,9 @@ namespace ISM
 		return maxDistanceSourcesToListener;
 	}
 
-	void CISM::setSourceLocation(Common::CVector3 location,Common::CVector3 listenerLocation)
+	void CISM::setSourceLocation(Common::CVector3 location)
 	{
-		originalSource->setLocation(location,listenerLocation);
+		originalSource->setLocation(location);
 
 	}
 
