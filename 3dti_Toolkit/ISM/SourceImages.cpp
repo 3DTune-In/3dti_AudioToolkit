@@ -124,8 +124,9 @@ namespace ISM
 
 							////////////////////// Set up an equalisation filterbank to simulate frequency dependent absortion
 							float frec_init = 62.5;                //Frequency of the first band 62.5 Hz !!!!
-							float samplingFrec = 44100.0;          //SAMPLING_RATE,  !!!! FIXME
-
+							//float samplingFrec = 44100.0;        //SAMPLING_RATE,  !!!! FIXME
+							//float samplingFrec = ownerISM->GetCore()->GetAudioState().sampleRate;
+							float samplingFrec = ownerISM->GetSampleRate();
 							float bandFrequency = frec_init;       //First band
 								  //float filterFrequencyStep = std::pow(2, 1.0f / (bandsPerOctave*filtersPerBand));
 								  //float filterFrequency = bandFrequency / ((float)(trunc(filtersPerBand / 2))*filterFrequencyStep);
