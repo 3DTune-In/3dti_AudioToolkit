@@ -3,7 +3,7 @@
 namespace ISM
 {
 	
-	CISM::CISM(Binaural::CCore* _ownerCore):ownerCore{ _ownerCore } {
+	CISM::CISM(Binaural::CCore* _ownerCore) :ownerCore{ _ownerCore }, reflectionOrder{ 1 },  maxDistanceSourcesToListener { 100 } {
 
 		originalSource = make_shared<SourceImages>(this);
 	}

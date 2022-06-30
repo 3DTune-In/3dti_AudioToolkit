@@ -165,9 +165,9 @@ namespace ISM
 		//SourceImages originalSource;			//original sound source inside the main room with direct path to the listener
 		shared_ptr<SourceImages> originalSource;
 
-		int reflectionOrder = 1;				//Number of reflections t be simulated
+		int reflectionOrder;				//Number of reflections t be simulated
 
-		float maxDistanceSourcesToListener = 10.0;
+		float maxDistanceSourcesToListener; 
 
 		Binaural::CCore* ownerCore;				// owner Core	
 		
