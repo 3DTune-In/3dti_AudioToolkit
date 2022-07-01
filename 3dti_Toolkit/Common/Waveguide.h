@@ -67,6 +67,10 @@ namespace Common {
 		*/
 		CMonoBuffer<float> GetMostRecentBuffer() const;
 				
+		/** \brief Reset waveguide to an initial state 
+		*/
+		void Reset();
+
 	private:
 		/// Structure for storing the source position of the samples to be inserted into the circular buffer.
 		struct TSourcePosition {

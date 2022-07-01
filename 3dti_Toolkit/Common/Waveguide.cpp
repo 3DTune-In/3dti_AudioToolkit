@@ -33,11 +33,11 @@ namespace Common {
 	/// Disable propagation delay for this waveguide
 	void CWaveguide::DisablePropagationDelay() { 
 		enablePropagationDelay = false; 
-		previousListenerPositionInitialized = false;
-		previousListenerPosition = CVector3(0, 0, 0);	// Init previous Listener position
-		circular_buffer.clear();						// reset the circular buffer	
-		sourcePositionsBuffer.clear();					// reset the source position buffer
-		//previosOutputBufferSamples = 0;						// reset
+		Reset();
+		//previousListenerPositionInitialized = false;
+		//previousListenerPosition = CVector3(0, 0, 0);	// Init previous Listener position
+		//circular_buffer.clear();						// reset the circular buffer	
+		//sourcePositionsBuffer.clear();					// reset the source position buffer		
 	}
 
 	/// Get the flag for propagation delay enabling for this waveguide
@@ -74,6 +74,21 @@ namespace Common {
 	CMonoBuffer<float> CWaveguide::GetMostRecentBuffer() const
 	{
 		return mostRecentBuffer;
+	}
+
+	/// <summary> Reset waveguide to an initial state </summary>
+	void CWaveguide::Reset() {	
+		bool previousPropagationDelayState = enablePropagationDelay;		
+		// Initialize all
+		enablePropagationDelay = false;
+		previousListenerPositionInitialized = false;
+		previousListenerPosition = CVector3(0, 0, 0);	// Init previous Listener position
+		circular_buffer.clear();						// reset the circular buffer	
+		SetCirculaBufferCapacity(0);
+		sourcePositionsBuffer.clear();					// reset the source position buffer
+		mostRecentBuffer.clear();
+		// Go back to previous state
+		enablePropagationDelay = previousPropagationDelayState;		
 	}
 
 	//////////////////////
