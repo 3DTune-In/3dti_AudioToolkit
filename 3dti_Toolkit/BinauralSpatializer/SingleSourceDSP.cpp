@@ -792,6 +792,7 @@ namespace Binaural {
 			leftChannelDelayBuffer.clear();
 			rightChannelDelayBuffer.clear();
 		#endif
+			channelToListener.Reset();
 	}
 	
 	
