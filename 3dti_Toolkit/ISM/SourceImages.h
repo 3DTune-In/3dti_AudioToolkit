@@ -25,7 +25,7 @@
 #include <Common/FiltersBank.h>
 
 #define VISIBILITY_MARGIN	0.2
-#define DIST_MARGIN 4.0
+#define DIST_MARGIN 2.0
 
 
 namespace ISM
