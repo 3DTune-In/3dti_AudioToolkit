@@ -58,7 +58,7 @@ namespace ISM
 		*	\details sets the absortion coeficient (absroved energy / incident energy) of each wall of the main room
 		*	\param [in] absortions: vector containing the absortion coeficient of each wall. Same order as in setup
 		*/
-		void setAbsortion(std::vector<float> _absortions);
+		//void setAbsortion(std::vector<float> _absortions);
 		
 		/** \brief Sets walls' absortion
 		*	\details sets the vectror with absortion coeficients (absroved energy / incident energy) of each wall of the main room

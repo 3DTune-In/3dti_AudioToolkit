@@ -20,6 +20,7 @@ namespace ISM
 		originalSource->createImages(mainRoom, reflectionOrder); 
 	}
 
+	/* 
 	void CISM::setAbsortion(std::vector<float> absortions)
 	{
 		for (int i = 0; i < mainRoom.getWalls().size(); i++)
@@ -28,6 +29,8 @@ namespace ISM
 		}
 		originalSource->createImages(mainRoom, reflectionOrder); 
 	}
+	*/
+	
 
 	void CISM::setAbsortion(std::vector<std::vector<float>> absortionsBands)
 	{

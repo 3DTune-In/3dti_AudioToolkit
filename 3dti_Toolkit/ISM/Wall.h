@@ -73,7 +73,7 @@ namespace ISM
 		/** \brief set the absortion coeficient of the wall
 		*	\param [in] Absortion: absortion coeficient of the wall (expressed as a number between 0 (no absortion) and 1 (total absortion).
 		*/
-		void setAbsortion(float _absortion);
+		//void setAbsortion(float _absortion);
 		/**
 		\overload
 		*/
@@ -82,7 +82,7 @@ namespace ISM
 		/** \brief Returns the absortion coeficient of the wall.
 		*	\param [out] Absortion: absortion oeficient of the wall.
 		*/
-		float getAbsortion();
+		//float getAbsortion();
 
 		/** \brief Returns the vector with absortion coeficients of the wall. 
 		*	\param [out] Absortion: absortion oeficient of the wall.
