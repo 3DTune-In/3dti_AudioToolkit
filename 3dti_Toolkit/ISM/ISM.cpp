@@ -19,19 +19,7 @@ namespace ISM
 		mainRoom.setupRoomGeometry(roomGeometry);
 		originalSource->createImages(mainRoom, reflectionOrder); 
 	}
-
-	/* 
-	void CISM::setAbsortion(std::vector<float> absortions)
-	{
-		for (int i = 0; i < mainRoom.getWalls().size(); i++)
-		{
-			mainRoom.setWallAbsortion(i, absortions.at(i));
-		}
-		originalSource->createImages(mainRoom, reflectionOrder); 
-	}
-	*/
-	
-
+		
 	void CISM::setAbsortion(std::vector<std::vector<float>> absortionsBands)
 	{
 		for (int i = 0; i < mainRoom.getWalls().size(); i++)

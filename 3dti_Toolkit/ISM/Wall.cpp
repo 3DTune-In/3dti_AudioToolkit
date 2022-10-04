@@ -57,26 +57,11 @@ namespace ISM
 		return polygon;
 	}
 
-	/*
-	void Wall::setAbsortion(float _absortion)
-	{
-		absortion = _absortion;
-	}
-	*/
-	
 	void Wall::setAbsortion (std::vector<float> _absortionBands)
 	{
 		absortionBands = _absortionBands;
 	}
-
-	/*
-	float Wall::getAbsortion()
-	{
-		return absortion;
-	}
-	*/
-	
-
+		
 	std::vector<float> Wall::getAbsortionB()
 	{
 		if (absortionBands.size() == 0) //if absortion is not set as frequency dependent, the overall absortion is returned per band
