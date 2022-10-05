@@ -110,13 +110,6 @@ In addition, there are different tools that make use of the Toolkit and allow it
 For complete documentation on the 3D Tune-In Toolkit, see the doc directory of this distribution.
 
 
-## Future plans
-
-*	UML driagram. A UML diagram of all classes will be produced for documentation purposes.
-*	HRTF, BRIR and ILD files at 24000 Hz. The 3D Tune-In Toolkit currently support any sampling frequency. However, HRTF, BRIR and ILD files are currently provided only at 44100 Hz, 48000 Hz and 96000 Hz.
-*	Multiple configuration of virtual ambisonic reverberation. Currently, the 3D Tune-In Toolkit implements a 2D virtual ambisonic approach based on three ambisonic channels (W, X and Y). It is planned to make it configurable, allowing the selection of different channel configurations: W (mono), W + Y (stereo), W + X + Y (2D) and W + X + Y + Z (Full 3D).
-*	Loudspeaker Spatialisation. Currently the Toolkit is focused on binaural spatialisation. In the near future, spatialisation based on 2nd order virtual Ambisonic for loudspeaker setups will be added.
-
 
 ## Credits
 
