@@ -22,7 +22,13 @@ namespace ISM
 
 	void CISM::setAbsortion(std::vector<float> absortionPerWall)
 	{
-		//ARCADIO: check if dimensions of input vctor and walls fit
+		// Check if dimensions of input vctor and walls fit
+		if (absortionPerWall.size() != mainRoom.getWalls().size())
+		{
+			SET_RESULT(RESULT_ERROR_BADSIZE, "Size of vector of absortions per wall and numbar of walls are different");
+			return;
+		}
+
 		for (int i = 0; i < mainRoom.getWalls().size(); i++)
 		{
 			mainRoom.setWallAbsortion(i, absortionPerWall.at(i));
@@ -33,7 +39,13 @@ namespace ISM
 
 	void CISM::setAbsortion(std::vector<std::vector<float>> absortionPerBandPerWall)
 	{
-		//ARCADIO: Check the number of bands and the number of walls
+		// Check the number of bands and the number of walls
+		if (absortionPerBandPerWall.size() != mainRoom.getWalls().size())
+		{
+			SET_RESULT(RESULT_ERROR_BADSIZE, "Size of vector of absortion profiles per wall and numbar of walls are different");
+			return;
+		}
+
 		for (int i = 0; i < mainRoom.getWalls().size(); i++)
 		{
 			mainRoom.setWallAbsortion(i, absortionPerBandPerWall.at(i));
