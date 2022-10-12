@@ -43,6 +43,11 @@ namespace ISM
 		// Methods
 		////////////
 
+		/** \brief Constructor
+		*	\details Defauld values: wall is active and purely reflective (absortion coefficients = 0.0)
+		*/
+		Wall();
+
 		/** \brief Insert a new corner (vertex) in the wall by coordinates
 		*	\details Walls are defined as a series of corners (vertices), whcih should be declared in anticlockwise order as seen from inside the
 					 room. The wall is asumed to be a convex polygon and the last edge is defined between the last and the first declared vertices.
@@ -208,9 +213,8 @@ namespace ISM
 		// Attributes
 		////////////
 		std::vector<Common::CVector3> polygon;	// corners of the wall
-		float absortion = 0;					// absortion coeficient (absorved energy / incident energy) 
-		std::vector<float> absortionBands;      // absortion coeficients for each octave Band
-		bool active = true;						//sets wether the wall is active or not (if false, the wall is transparent)
+		std::vector<float> absortionBands;      // absortion coeficients (absorved energy / incident energy) for each octave Band
+		bool active;						//sets wether the wall is active or not (if false, the wall is transparent)
 
 		float A, B, C, D;						// General Plane Eq.: Ax + By + Cz + D = 0
 

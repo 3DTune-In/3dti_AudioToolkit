@@ -14,6 +14,12 @@
 
 namespace ISM
 {
+	Wall::Wall()
+	{
+		std::vector<float> tempAbsotionBands(NUM_BAND_ABSORTION, 0.0);
+		absortionBands = tempAbsotionBands;								//Wall purely reflective by default
+		active = true;													//Wall active by default
+	}
 
 	int Wall::insertCorner(Common::CVector3 _corner)
 	{
@@ -59,7 +65,8 @@ namespace ISM
 
 	void Wall::setAbsortion(float _absortion)
 	{
-		absortion = _absortion;
+		std::vector<float> tempAbsortionBands(NUM_BAND_ABSORTION, _absortion);
+		absortionBands = tempAbsortionBands;
 	}
 	
 	void Wall::setAbsortion (std::vector<float> _absortionBands)
@@ -69,11 +76,6 @@ namespace ISM
 		
 	std::vector<float> Wall::getAbsortionB()
 	{
-		if (absortionBands.size() == 0) //if absortion is not set as frequency dependent, the overall absortion is returned per band
-		{
-			std::vector<float> fakeAbsortionBands(NUM_BAND_ABSORTION, absortion);
-			return fakeAbsortionBands;
-		}
 		return absortionBands;
 	}
 
@@ -219,7 +221,6 @@ namespace ISM
 			Common::CVector3 tempImageCorner = getImagePoint(corners.at(i));
 			tempWall.insertCorner(tempImageCorner);
 		}
-		tempWall.absortion = _wall.absortion;
 		tempWall.absortionBands = _wall.absortionBands;
 		if (!_wall.isActive()) tempWall.disable();
 		return tempWall;
