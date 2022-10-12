@@ -72,17 +72,21 @@ namespace ISM
 		*/
 		void disableWall(int wallIndex);
 
-		/** \brief sets the absortion coeficient of one wall
-		*	\details Sets the absortion coeficient (absorved eergy / incident energy) of the 
+		/** \brief sets the absortion coeficient (frequency independent) of one wall
+		*	\details Sets the absortion coeficient (absorved energy / incident energy) of the 
 		*            i-th wall of the room.
 		*	\param [in] index of the wall.
-		*	\param [in] absortion coeficient
+		*	\param [in] absortion coeficient (frequency independent)
 		*/
 		void setWallAbsortion(int wallIndex, float absortion);
-		/**
-		\overload
+
+		/** \brief sets the absortion coeficient (frequency dependent) of one wall
+		*	\details Overloads the previous one. Sets the absortion coeficient (absorved energy / incident energy) of 
+		*            each of the nine bands for the i-th wall of the room.
+		*	\param [in] index of the wall.
+		*	\param [in] absortion coeficients for each band (frequency dependent)
 		*/
-		void setWallAbsortion(int wallIndex, std::vector<float> absortionBands);
+		void setWallAbsortion(int wallIndex, std::vector<float> absortionPerBand);
 
 		/** \brief Returns a vector of walls containing all the walls of the room.
 		*	\param [out] Walls: vector of walls with all the walls of the room.

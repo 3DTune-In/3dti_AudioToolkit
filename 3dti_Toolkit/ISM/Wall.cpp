@@ -57,6 +57,11 @@ namespace ISM
 		return polygon;
 	}
 
+	void Wall::setAbsortion(float _absortion)
+	{
+		absortion = _absortion;
+	}
+	
 	void Wall::setAbsortion (std::vector<float> _absortionBands)
 	{
 		absortionBands = _absortionBands;

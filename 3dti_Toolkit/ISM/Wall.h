@@ -70,11 +70,15 @@ namespace ISM
 		*/
 		std::vector<Common::CVector3> getCorners();
 
-		/** \brief set the absortion coeficients of the wall
+		/** \brief set the absortion coeficient (frequency independent) of the wall
+		*   \param [in] Absortion: absortion coeficient of the wall (expressed as a number between 0 (no absortion) and 1 (total absortion).
+		*/
+		void setAbsortion(float _absortion);
+		
+		/** \brief set the absortion coeficients for each band of the wall
 		*	\param [in] Absortion: Vector with absortion coeficients of the wall (expressed as a number between 0 (no absortion) and 1 (total absortion).
 		*/
-		
-		void setAbsortion(std::vector<float> _absortionBands);
+		void setAbsortion(std::vector<float> _absortionPerBand);
 				
 		/** \brief Returns the vector with absortion coeficients of the wall. 
 		*	\param [out] Absortion: absortion of the wall. Vector with the absorption coefficients of each band.

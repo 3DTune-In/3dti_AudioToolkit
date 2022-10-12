@@ -55,10 +55,16 @@ namespace ISM
 		void setupArbitraryRoom(RoomGeometry roomGeometry);
 
 		/** \brief Sets walls' absortion
-		*	\details sets the vector with absortion coeficients (absorved energy / incident energy) of each wall of the main room
+		*   \details sets the absortion coeficient (absroved energy / incident energy) of each wall of the main room
+		*   \param [in] absortions: vector containing an absortion coeficient (frequency independent) of each wall. Same order as in setup
+		*/
+		void setAbsortion(std::vector<float> _absortionPerWall);
+
+		/** \brief Sets walls' absortion
+		*   \details sets the vectror with absortion coeficients (absroved energy / incident energy) of each wall of the main room		*	\details sets the vector with absortion coeficients (absorved energy / incident energy) of each wall of the main room
 		*	\param [in] absortions: vector containing the vectors with absortion coeficients of each wall. 
 		*/
-		void setAbsortion(std::vector<std::vector<float>> _absortionsBand);
+		void setAbsortion(std::vector<std::vector<float>> _absortionPerBandPerWall);
 
 		/** \brief returns the main room
 		*	\details returns a Room object containing the definition of the main room (without image walls)
