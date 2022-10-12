@@ -93,7 +93,6 @@ namespace ISM
 		*/
 		std::vector<Wall> getWalls();
 
-		//FIXME: this method is not used anymore. to be removed?
 		/** \brief Returns a vector of image rooms
 		*	\details creates an image (specular) room for each wall of this room and returns a vector contoining them.
 		*	\param [out] ImageRooms: vector containing all image rooms of this room.

@@ -32,6 +32,9 @@
 #define NUM_BAND_ABSORTION 9
 #endif
 
+#ifndef FIRST_ABSORTION_BAND
+#define FIRST_ABSORTION_BAND 62.5f
+#endif
 
 namespace ISM
 {

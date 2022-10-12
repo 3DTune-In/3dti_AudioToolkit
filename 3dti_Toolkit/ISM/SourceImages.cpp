@@ -9,8 +9,6 @@
 
 namespace ISM
 {
-	//SourceImages::SourceImages() {}
-
 	SourceImages::SourceImages(ISM::CISM* _ownerISM) : ownerISM{_ownerISM} {
 			
 	}
@@ -64,7 +62,7 @@ namespace ISM
 		}
 	}
 
-
+	//ARCADIO: is this needed? it seems it is not used
 	void SourceImages::setReflectionWalls(std::vector<Wall> _reflectionWalls)
 	{
 		reflectionWalls = _reflectionWalls;
@@ -94,28 +92,26 @@ namespace ISM
 			{
 				if (walls.at(i).isActive()) //if the wall is not active, its image is not created
 				{
-					//SourceImages tempSourceImage;
 					shared_ptr<SourceImages> tempSourceImage = make_shared< SourceImages>(ownerISM);
 					Common::CVector3 tempImageLocation = walls[i].getImagePoint(sourceLocation);
 
-					//Common::CVector3 roomCenter = _room.getCenter();
-
 					// if the image is closer to the room center than the previous original, that reflection is not real and should not be included
 					// this is equivalent to determine wether source and room center are on the same side of the wall or not
-					Common::CVector3 roomCenter = ownerISM->getRoom().getCenter();
 					if (((roomCenter - sourceLocation).GetDistance() < (roomCenter - tempImageLocation).GetDistance()))
 					{
-						// If the image room where the candidate image source is far from the original room, so that any location in it is closer than
+						// If the image room where the candidate image source is far from the original room, so that any location in it is further than
 						// the maximum distance to any location in the original room, then the recursive tree has to stop growing
+
+						//if there are no reflection walls, the minimum distance is 0 and it is not necessary to calculate it. This way, 
+						//we avoid to get wall from the reflectionWalls vector, which is empty.
 						float roomsDistance = 0.0;
-						//if there are no reflection walls, the minimum distance is 0 and it is not necessary to calculate it. This way, we avoud to get
-						//wall from the reflectionWalls vector, which is empty.
 						if(reflectionWalls.size()>0) 
 						{
 								roomsDistance = walls.at(i).getMinimumDistanceFromWall(reflectionWalls.front());
 						}
 						if (roomsDistance <= ownerISM->getMaxDistanceImageSources())
 						{
+							//The new candidate meets all requirements and will be a source image. It is therefor finally completed
 							tempSourceImage->setLocation(tempImageLocation);
 							reflectionWalls.push_back(walls.at(i));
 							tempSourceImage->reflectionWalls = reflectionWalls;
@@ -123,34 +119,24 @@ namespace ISM
 							tempSourceImage->FilterBank.RemoveFilters();
 
 							////////////////////// Set up an equalisation filterbank to simulate frequency dependent absortion
-							float frec_init = 62.5;                //Frequency of the first band 62.5 Hz !!!!
-							//float samplingFrec = 44100.0;        //SAMPLING_RATE,  !!!! FIXME
-							//float samplingFrec = ownerISM->GetCore()->GetAudioState().sampleRate;
 							float samplingFrec = ownerISM->GetSampleRate();
-							float bandFrequency = frec_init;       //First band
-								  //float filterFrequencyStep = std::pow(2, 1.0f / (bandsPerOctave*filtersPerBand));
-								  //float filterFrequency = bandFrequency / ((float)(trunc(filtersPerBand / 2))*filterFrequencyStep);
-							float filterFrequencyStep = 2.0;
-							float filterFrequency = bandFrequency;
-							// Compute Q for all filters
-								  //float octaveStep = 1.0f / ((float)filtersPerBand * bandsPerOctave);
+							float bandFrequency = FIRST_ABSORTION_BAND;						//frecuency of each band. We start with the first band
 							float octaveStepPow = 2.0;
-							float Q_BPF = std::sqrt(octaveStepPow) / (octaveStepPow - 1.0f);
+							float Q_BPF = std::sqrt(octaveStepPow) / (octaveStepPow - 1.0f); // We are using a constant Q filter bank. Q=sqrt(2)
 
-							std::vector<float> temp(NUM_BAND_ABSORTION, 1.0);	//creates band reflections and initialise them to 1.0
-							tempSourceImage->reflectionBands = temp;
+							std::vector<float> tempReflectionCoefficients(NUM_BAND_ABSORTION, 1.0);	//creates band reflection coeffs and initialise them to 1.0
+							tempSourceImage->reflectionBands = tempReflectionCoefficients ;
 
 							for (int k = 0; k < NUM_BAND_ABSORTION; k++)
 							{
 								shared_ptr<Common::CBiquadFilter> filter;
 								filter = tempSourceImage->FilterBank.AddFilter();
-								//filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::BANDPASS);
 								if (k == 0)
-									filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::LOWPASS);
+									filter->Setup(samplingFrec, bandFrequency, Q_BPF, Common::T_filterType::LOWPASS);
 								else if (k == NUM_BAND_ABSORTION - 1)
-									filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::HIGHPASS);
+									filter->Setup(samplingFrec, bandFrequency, Q_BPF, Common::T_filterType::HIGHPASS);
 								else
-									filter->Setup(samplingFrec, filterFrequency, Q_BPF, Common::T_filterType::BANDPASS);
+									filter->Setup(samplingFrec, bandFrequency, Q_BPF, Common::T_filterType::BANDPASS);
 
 								//Set the reflection coefficient of each band according to absortion coeficients of reflectionWalls
 								for (int j = 0; j < reflectionWalls.size(); j++)
@@ -159,7 +145,7 @@ namespace ISM
 								}
 								filter->SetGeneralGain(tempSourceImage->reflectionBands.at(k));	//FIXME: the gain per band is dulicated (inside the filters and  in reflectionBands attribute
 
-								filterFrequency *= filterFrequencyStep;
+								bandFrequency *= octaveStepPow;
 							}
 							/////////////////////////
 
