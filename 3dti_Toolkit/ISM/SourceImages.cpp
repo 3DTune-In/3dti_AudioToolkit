@@ -138,6 +138,10 @@ namespace ISM
 								else
 									filter->Setup(samplingFrec, bandFrequency, Q_BPF, Common::T_filterType::BANDPASS);
 
+								CMonoBuffer<float> tempBuffer(1, 0.0);		// A minimal process with a one sample buffer is carried out to make the coeficients stable
+								filter->Process(tempBuffer);				// and avoid crossfading at the begining.
+
+
 								//Set the reflection coefficient of each band according to absortion coeficients of reflectionWalls
 								for (int j = 0; j < reflectionWalls.size(); j++)
 								{
