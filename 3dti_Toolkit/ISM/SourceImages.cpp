@@ -131,12 +131,7 @@ namespace ISM
 							{
 								shared_ptr<Common::CBiquadFilter> filter;
 								filter = tempSourceImage->FilterBank.AddFilter();
-								if (k == 0)
-									filter->Setup(samplingFrec, bandFrequency, Q_BPF, Common::T_filterType::LOWPASS);
-								else if (k == NUM_BAND_ABSORTION - 1)
-									filter->Setup(samplingFrec, bandFrequency, Q_BPF, Common::T_filterType::HIGHPASS);
-								else
-									filter->Setup(samplingFrec, bandFrequency, Q_BPF, Common::T_filterType::BANDPASS);
+								filter->Setup(samplingFrec, bandFrequency, Q_BPF, Common::T_filterType::BANDPASS);
 
 								CMonoBuffer<float> tempBuffer(1, 0.0);		// A minimal process with a one sample buffer is carried out to make the coeficients stable
 								filter->Process(tempBuffer);				// and avoid crossfading at the begining.
