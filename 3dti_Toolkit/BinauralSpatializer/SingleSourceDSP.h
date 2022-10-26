@@ -188,10 +188,26 @@ namespace Binaural {
 		void DisableDistanceAttenuationAnechoic();
 		
 		/** \brief Get the flag for distance attenuation effect enabling for anehcoic path
-		*	\retval distanceAttenuationEnabled if true, distance attenuation effect is enabled for this source
+		*	\retval distanceAttenuationEnabled. If true, distance attenuation effect is enabled for this source
 		*   \eh Nothing is reported to the error handler.
 		*/
 		bool IsDistanceAttenuationEnabledAnechoic();
+
+		/** \brief Enable distance attenuation Smoothing for this source for anechoic path
+		*   \eh Nothing is reported to the error handler.
+		*/
+		void EnableDistanceAttenuationSmoothingAnechoic();
+
+		/** \brief Disable distance attenuation Smoothing for this source for anechoic path
+		*   \eh Nothing is reported to the error handler.
+		*/
+		void DisableDistanceAttenuationSmoothingAnechoic();
+
+		/** \brief Get the flag for distance attenuation Smoothing enabling for anehcoic path
+		*	\retval distanceAttenuationSmoothingEnabled. If true, distance attenuation effect is enabled for this source
+		*   \eh Nothing is reported to the error handler.
+		*/
+		bool IsDistanceAttenuationSmoothingEnabledAnechoic();
 
 		/** \brief Enable distance attenuation effect for this source for reverb path
 		*   \eh Nothing is reported to the error handler.
@@ -410,6 +426,7 @@ namespace Binaural {
 		bool enableInterpolation;		// Enables/Disables the interpolation on run time			
 		bool enableFarDistanceEffect;	// Enables/Disables the low pass filtering that is applied at far distances
 		bool enableDistanceAttenuationAnechoic;	// Enables/Disables the attenuation that depends on the distance to the listener for anechoic path
+		bool attenuationSmooth;			// indicates whether the changes in attenuation by distance sholud be smoothed or applyed sharp
 		bool enableDistanceAttenuationReverb;	// Enables/Disables the attenuation that depends on the distance to the listener for reverb path
 		bool enableNearFieldEffect;     // Enables/Disables the ILD (Interaural Level Difference) processing		
 		

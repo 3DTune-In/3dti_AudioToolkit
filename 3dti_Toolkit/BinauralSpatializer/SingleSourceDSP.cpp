@@ -39,8 +39,8 @@ namespace Binaural {
 
 	//Constructor called from CCore class
 	CSingleSourceDSP::CSingleSourceDSP(CCore* _ownerCore)
-		:ownerCore{ _ownerCore }, enableInterpolation{ true }, enableFarDistanceEffect{ true }, enableDistanceAttenuationAnechoic{ true }, enableNearFieldEffect{true}, 
-		spatializationMode{ TSpatializationMode::HighQuality}
+		:ownerCore{ _ownerCore }, enableInterpolation{ true }, enableFarDistanceEffect{ true }, enableDistanceAttenuationAnechoic{ true }, attenuationSmooth{ true }, 
+		enableNearFieldEffect{ true },	spatializationMode{ TSpatializationMode::HighQuality}
 	{
 		// TO THINK: our initial idea was not to use error handler in constructors. Should this this an exception to the rule?
 		//if (owner == NULL)
@@ -204,11 +204,18 @@ namespace Binaural {
 	///Get the flag for distance attenuation effect enabling for anechoic path
 	bool CSingleSourceDSP::IsDistanceAttenuationEnabledAnechoic() { return enableDistanceAttenuationAnechoic; };
 
-	///Enable distance attenuation effect for this source for anechoic path
+	///Enable distance attenuation smoothing for this source for anechoic path
+	void CSingleSourceDSP::EnableDistanceAttenuationSmoothingAnechoic() { attenuationSmooth = true; };
+	///Disable distance attenuation smoothing for this source for anechoic path
+	void CSingleSourceDSP::DisableDistanceAttenuationSmoothingAnechoic() { attenuationSmooth = false; };
+	///Get the flag for distance attenuation smoothing enabling for anechoic path
+	bool CSingleSourceDSP::IsDistanceAttenuationSmoothingEnabledAnechoic() { return attenuationSmooth; };
+
+	///Enable distance attenuation effect for this source for reverb path
 	void CSingleSourceDSP::EnableDistanceAttenuationReverb() { enableDistanceAttenuationReverb = true; };
-	///Disable distance attenuation effect for this source for anechoic path
+	///Disable distance attenuation effect for this source for reverb path
 	void CSingleSourceDSP::DisableDistanceAttenuationReverb() { enableDistanceAttenuationReverb = false; };
-	///Get the flag for distance attenuation effect enabling for anechoic path
+	///Get the flag for distance attenuation effect enabling for reverb path
 	bool CSingleSourceDSP::IsDistanceAttenuationEnabledReverb() { return enableDistanceAttenuationReverb; };
 
 	///Enable near field effect for this source
@@ -628,7 +635,7 @@ namespace Binaural {
 
 		if (IsDistanceAttenuationEnabledAnechoic())
 		{
-			distanceAttenuatorAnechoic.Process(buffer, distance, distAttConstant, bufferSize, sampleRate);			
+			distanceAttenuatorAnechoic.Process(buffer, distance, distAttConstant, bufferSize, sampleRate,attenuationSmooth);			
 		}				
 	}
 	
