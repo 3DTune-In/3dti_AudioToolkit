@@ -3,7 +3,7 @@ All notable changes to the 3DTuneIn Toolkit will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
-## [Unreleased]
+## [M20221028] Audio Toolkit v2.0 M20221028
 
 ### Binaural
 `Added` 
@@ -18,20 +18,108 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 	 * float GetEffectiveEarElevation(Common::T_ear ear) const;
      * const Common::CTransform & GetCurrentSourceTransform() const;
 	 * const Common::CTransform & GetEffectiveSourceTransform() const;
+- feat: Makes a waveguide reset when a SingleSourceDSP buffers are reseted.
+	 * void CWaveguide::Reset()
+`Changed`
+ -  Convolutional reverb can now skip a number of initial frames for future hybrid reverb (ISM+Convolution)
+	 * old: void CEnvironment::ProcessVirtualAmbisonicReverbAdimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight);
+	 *      void CEnvironment::ProcessVirtualAmbisonicReverbBidimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight);     
+	 *      void CEnvironment::ProcessVirtualAmbisonicReverbThreedimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight);	 
+	 *      void CEnvironment::ProcessVirtualAmbisonicReverb(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight);    
+	 *      void CEnvironment::ProcessVirtualAmbisonicReverb(CStereoBuffer<float> & outBuffer)      
+	 * new: void CEnvironment::ProcessVirtualAmbisonicReverbAdimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames)     
+	 *      void CEnvironment::ProcessVirtualAmbisonicReverbBidimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames)
+	 *      void CEnvironment::ProcessVirtualAmbisonicReverbThreedimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames)
+	 *      void CEnvironment::ProcessVirtualAmbisonicReverb(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames)
+	 *      void CEnvironment::ProcessVirtualAmbisonicReverb(CStereoBuffer<float> & outBuffer, int numberOfSilencedFrames)
+- Now smoothing in attenuation by distance can be disabled or enabled (enabled by default) 
 `Removed`
  - Public methods removed from CSingleSourceDSP:
      * void ProcessAnechoic(const CMonoBuffer<float> & inBuffer, CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer);
 	 * void ProcessAnechoic(const CMonoBuffer<float> & inBuffer, CStereoBuffer<float> & outBuffer);
 	 * float GetEarAzimuth( Common::T_ear ear ) const;
 	 * const Common::CTransform & GetSourceTransform() const;
+	 
+### ISM
+`Added`
+ - New classes added to simulate Image Source Method.
+	 * class ISM //interface to access all the features of the ISM simulator
+	     * CISM(Binaural::CCore* _ownerCore);
+	     * void SetupShoeBoxRoom(float length, float width, float height);
+	     * void setupArbitraryRoom(RoomGeometry roomGeometry);
+	     * void setAbsortion(std::vector<float> _absortionPerWall);
+	     * void setAbsortion(std::vector<std::vector<float>> _absortionPerBandPerWall);
+	     * Room getRoom();
+	     * void enableWall(int wallIndex);
+	     * void disableWall(int wallIndex);
+	     * void setReflectionOrder(int reflectionOrder);
+	     * int getReflectionOrder();
+		 * void setMaxDistanceImageSources(float maxDistanceSourcesToListener);
+	     * float getMaxDistanceImageSources();
+	     * int calculateNumOfSilencedFrames (float maxDistanceSourcesToListener);
+	     * void setSourceLocation(Common::CVector3 location);
+	     * Common::CVector3 getSourceLocation();
+		 * std::vector<Common::CVector3> getImageSourceLocations();
+		 * std::vector<ISM::ImageSourceData> getImageSourceData();
+		 * void proccess(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation);
+	 * class Room
+		 * void setupShoeBox(float length, float width, float height);
+		 * void setupRoomGeometry(RoomGeometry roomGeometry);
+		 * void insertWall(Wall newWall);
+		 * void enableWall(int wallIndex);
+		 * void disableWall(int wallIndex);
+		 * void setWallAbsortion(int wallIndex, float absortion);
+         * void setWallAbsortion(int wallIndex, std::vector<float> absortionPerBand);
+         * std::vector<Wall> getWalls();
+		 * std::vector<Room> getImageRooms();
+		 * bool checkPointInsideRoom(Common::CVector3 point, float &distanceNearestWall);
+		 * Common::CVector3 getCenter();
+	 * class SourceImages
+		 * SourceImages(ISM::CISM* _ownerISM);
+		 * void setLocation(Common::CVector3 _location);
+		 * Common::CVector3 getLocation();
+		 * std::vector<weak_ptr <SourceImages>> getImages();
+		 * void getImageLocations(std::vector<Common::CVector3> &imageSourceList);
+		 * void getImageData(std::vector<ImageSourceData> &imageSourceDataList);
+		 * Wall getReflectionWall();
+		 * void createImages(Room _room, int reflectionOrder);
+		 * void updateImages ();
+		 * void processAbsortion(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation);
+	 * class Wall
+	     * Wall();
+		 * int insertCorner(float x, float y, float z);
+		 * int insertCorner(Common::CVector3 _corner);
+		 * std::vector<Common::CVector3> getCorners();
+		 * void setAbsortion(float _absortion);
+		 * void setAbsortion(std::vector<float> _absortionPerBand);
+		 * std::vector<float> getAbsortionB();
+		 * Common::CVector3 getNormal();
+		 * Common::CVector3 getCenter();
+		 * float getDistanceFromPoint(Common::CVector3 point);
+		 * float getMinimumDistanceFromWall(ISM::Wall wall);
+		 * Common::CVector3 getImagePoint(Common::CVector3 point);
+		 * Wall getImageWall(Wall _wall);
+		 * Common::CVector3 getPointProjection(float x, float y, float z);
+		 * Common::CVector3 getPointProjection(Common::CVector3 point);
+		 * Common::CVector3 getIntersectionPointWithLine(Common::CVector3 point1, Common::CVector3 point2);
+		 * int checkPointInsideWall(Common::CVector3 point, float &distanceNearestEdge, float &sharpness);
+		 * float calculateDistanceNearestEdge(Common::CVector3 point);
+		 * float distancePointToLine(Common::CVector3 point, Common::CVector3 pointLine1, Common::CVector3 pointLine2);
+		 * void enable() { active = true; }
+		 * void disable() { active = false; }
+		 * bool isActive() { return active; }
 
-`Changed`
- -  
 
 ### Common
+`Fixed`
+ - Bug fixed in the computation of cross product in CVector3 CVector3::CrossProduct(CVector3 _rightHand).
 `Added`
  - New class in CWaveguide. It provides a waveguide simulation, to simulate the distance and doppler effect betwenn a source and the listener
-   
+`Changed`
+  -  Convolution can now skip a number of initial frames for future hybrid reverb (ISM+Convolution)
+	 * old: void CUPCEnvironment::ProcessUPConvolution_withoutIFFT(const CMonoBuffer<float>& inBuffer_Time, const TImpulseResponse_Partitioned & IR, CMonoBuffer<float>& outBuffer)
+	 * new: void CUPCEnvironment::ProcessUPConvolution_withoutIFFT(const CMonoBuffer<float>& inBuffer_Time, const TImpulseResponse_Partitioned & IR, CMonoBuffer<float>& outBuffer, int numberOfSilencedFrames)
+	 
  
 ## [M20190724] - AudioToolkit_v1.4 M20190724
 
