@@ -130,11 +130,14 @@ namespace Common
 		}
 	}
 
-	void CUPCEnvironment::ProcessUPConvolution_withoutIFFT(const CMonoBuffer<float>& inBuffer_Time, const TImpulseResponse_Partitioned & IR, CMonoBuffer<float>& outBuffer)
+	void CUPCEnvironment::ProcessUPConvolution_withoutIFFT(const CMonoBuffer<float>& inBuffer_Time, const TImpulseResponse_Partitioned & IR, CMonoBuffer<float>& outBuffer, int numberOfSilencedFrames)
 	{
 		CMonoBuffer<float> sum;
 		sum.resize(IR_Frequency_Block_Size, 0.0f);
 		CMonoBuffer<float> temp;
+
+		CMonoBuffer<float> cero;
+		cero.resize(IR_Frequency_Block_Size, 0.0f);
 
 		ASSERT(inBuffer_Time.size() == inputSize, RESULT_ERROR_BADSIZE, "Bad input size, don't match with the size setting up in the setup method", "");
 
@@ -156,7 +159,12 @@ namespace Common
 			auto it_product = it_storageInputFFT;
 
 			for (int i = 0; i < IR_NumOfSubfilters; i++) {
-				Common::CFprocessor::ProcessComplexMultiplication(*it_product, IR[i], temp);
+
+				if (i >= numberOfSilencedFrames)
+					Common::CFprocessor::ProcessComplexMultiplication(*it_product, IR[i], temp);
+				else
+					Common::CFprocessor::ProcessComplexMultiplication(*it_product, cero, temp);
+
 				sum += temp;
 				if (it_product == storageInputFFT_buffer.begin()) {
 					it_product = storageInputFFT_buffer.end() - 1;
@@ -164,6 +172,7 @@ namespace Common
 				else {
 					it_product--;
 				}
+			
 			}
 			//Move iterator waiting for the next input block
 			if (it_storageInputFFT == storageInputFFT_buffer.end() - 1) {

@@ -70,10 +70,11 @@ namespace Common
 		*	\param [in] attenuationConstant distance attenuation constant, in decibels
 		*	\param [in] bufferSize buffer size, as number of samples
 		*	\param [in] sampleRate sample rate, in Hz
+		*   \param [in] smooth Boolean indicating whether changes in attenuation by distance should be applied smoothly (true) or sharply (false). (true by default)
 		*	\param [in] extraAttennuation_dB fixed attenuation (non distance-dependent) to be added, in decibels (defaults to 0)
 		*   \eh Nothing is reported to the error handler.
 		*/
-		void Process(CMonoBuffer<float> & buffer, float distance,float attenuationConstant, int bufferSize, int sampleRate, float extraAttennuation_dB = 0.0f);
+		void Process(CMonoBuffer<float> & buffer, float distance,float attenuationConstant, int bufferSize, int sampleRate,bool smooth = true, float extraAttennuation_dB = 0.0f);
 		
 	private:
 

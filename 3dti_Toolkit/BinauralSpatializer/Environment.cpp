@@ -561,7 +561,7 @@ namespace Binaural {
 	}
 
 //////////////////////////////////////////////
-	void CEnvironment::ProcessVirtualAmbisonicReverbAdimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight)
+	void CEnvironment::ProcessVirtualAmbisonicReverbAdimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames)
 	{
 		CMonoBuffer<float> w;	// B-Format data		
 		CMonoBuffer<float> w_AbirW_left_FFT;
@@ -606,14 +606,14 @@ namespace Binaural {
 			}
 
 			//Check if the source is in the same position as the listener head. If yes, do not apply spatialization to this source
-			if (eachSource->distanceToListener < ownerCore->GetListener()->GetHeadRadius())
+			if (eachSource->GetCurrentDistanceSourceListener() < ownerCore->GetListener()->GetHeadRadius())
 			{
 				continue;
 			}
 
 			// Get azimuth, elevation and distance from listener to each source
 			// We precompute everything, to minimize per-sample computations. 
-			Common::CTransform sourceTransform = eachSource->GetSourceTransform();
+			Common::CTransform sourceTransform = eachSource->GetCurrentSourceTransform();
 			Common::CVector3 vectorToSource = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(sourceTransform);
 
 			float sourceDistance = vectorToSource.GetDistance();
@@ -685,8 +685,8 @@ namespace Binaural {
 #else		
 
 		///Apply UPC algorithm			
-		wLeft_UPConvolution.ProcessUPConvolution_withoutIFFT(w, GetABIR().GetImpulseResponse_Partitioned(TBFormatChannel::W, Common::T_ear::LEFT), w_AbirW_left_FFT);
-		wRight_UPConvolution.ProcessUPConvolution_withoutIFFT(w, GetABIR().GetImpulseResponse_Partitioned(TBFormatChannel::W, Common::T_ear::RIGHT), w_AbirW_right_FFT);
+		wLeft_UPConvolution.ProcessUPConvolution_withoutIFFT(w, GetABIR().GetImpulseResponse_Partitioned(TBFormatChannel::W, Common::T_ear::LEFT), w_AbirW_left_FFT, numberOfSilencedFrames);
+		wRight_UPConvolution.ProcessUPConvolution_withoutIFFT(w, GetABIR().GetImpulseResponse_Partitioned(TBFormatChannel::W, Common::T_ear::RIGHT), w_AbirW_right_FFT, numberOfSilencedFrames);
 
 #endif
 
@@ -762,7 +762,7 @@ namespace Binaural {
 		WATCH(WV_ENVIRONMENT_OUTPUT_RIGHT, outBufferRight, CMonoBuffer<float>);
 	}
 
-	void CEnvironment::ProcessVirtualAmbisonicReverbBidimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight)
+	void CEnvironment::ProcessVirtualAmbisonicReverbBidimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames)
 	{
 		CMonoBuffer<float> w, x, y;	// B-Format data		
 		CMonoBuffer<float> w_AbirW_left_FFT;
@@ -810,14 +810,14 @@ namespace Binaural {
 			}
 
 			//Check if the source is in the same position as the listener head. If yes, do not apply spatialization to this source
-			if (eachSource->distanceToListener < ownerCore->GetListener()->GetHeadRadius())
+			if (eachSource->GetCurrentDistanceSourceListener() < ownerCore->GetListener()->GetHeadRadius())
 			{
 				continue;
 			}
 
 			// Get azimuth, elevation and distance from listener to each source
 			// We precompute everything, to minimize per-sample computations. 
-			Common::CTransform sourceTransform = eachSource->GetSourceTransform();
+			Common::CTransform sourceTransform = eachSource->GetCurrentSourceTransform();
 			Common::CVector3 vectorToSource = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(sourceTransform);
 			float sourceElevation = vectorToSource.GetElevationRadians();
 			float sinElevationAbs = std::fabs(std::sin(sourceElevation));	// TEST: adding power to W channel to compensate for the lack of Z channel
@@ -986,7 +986,7 @@ namespace Binaural {
 		WATCH(WV_ENVIRONMENT_OUTPUT_RIGHT, outBufferRight, CMonoBuffer<float>);
 	}
 	
-	void CEnvironment::ProcessVirtualAmbisonicReverbThreedimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight)
+	void CEnvironment::ProcessVirtualAmbisonicReverbThreedimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames)
 	{
 		CMonoBuffer<float> w, x, y, z;	// B-Format data		
 		CMonoBuffer<float> w_AbirW_left_FFT;
@@ -1036,14 +1036,14 @@ namespace Binaural {
 			}
 
 			//Check if the source is in the same position as the listener head. If yes, do not apply spatialization to this source
-			if (eachSource->distanceToListener < ownerCore->GetListener()->GetHeadRadius())
+			if (eachSource->GetCurrentDistanceSourceListener() < ownerCore->GetListener()->GetHeadRadius())
 			{
 				continue;
 			}
 
 			// Get azimuth, elevation and distance from listener to each source
 			// We precompute everything, to minimize per-sample computations. 
-			Common::CTransform sourceTransform = eachSource->GetSourceTransform();
+			Common::CTransform sourceTransform = eachSource->GetCurrentSourceTransform();
 			Common::CVector3 vectorToSource = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(sourceTransform);
 
 			float sourceElevation = vectorToSource.GetElevationRadians();
@@ -1217,7 +1217,7 @@ namespace Binaural {
 	}
 
 	// Process virtual ambisonic reverb for specified buffers
-	void CEnvironment::ProcessVirtualAmbisonicReverb(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight)
+	void CEnvironment::ProcessVirtualAmbisonicReverb(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames)
 	{
 		if (!environmentABIR.IsInitialized())
 		{
@@ -1236,15 +1236,18 @@ namespace Binaural {
 		if (ownerCore->audioSources.size() == 0)
 			return;
 
+		// Get the number of silenced or trimmed frames to generate the reverb tail.
+		//numberOfSilencedFrames = GetNumberOfSilencedFrames();
+
 		switch (reverberationOrder) {
 		case TReverberationOrder::BIDIMENSIONAL:
-			ProcessVirtualAmbisonicReverbBidimensional(outBufferLeft, outBufferRight);
+			ProcessVirtualAmbisonicReverbBidimensional(outBufferLeft, outBufferRight, numberOfSilencedFrames);
 			break;
 		case TReverberationOrder::THREEDIMENSIONAL:
-			ProcessVirtualAmbisonicReverbThreedimensional(outBufferLeft, outBufferRight);
+			ProcessVirtualAmbisonicReverbThreedimensional(outBufferLeft, outBufferRight, numberOfSilencedFrames);
 			break;
 		case TReverberationOrder::ADIMENSIONAL:
-			ProcessVirtualAmbisonicReverbAdimensional(outBufferLeft, outBufferRight);
+			ProcessVirtualAmbisonicReverbAdimensional(outBufferLeft, outBufferRight, numberOfSilencedFrames);
 			break;
 		}
 	}
@@ -1256,11 +1259,11 @@ namespace Binaural {
 
 
 	// Process virtual ambisonic reverb for specified buffers
-	void CEnvironment::ProcessVirtualAmbisonicReverb(CStereoBuffer<float> & outBuffer) 
+	void CEnvironment::ProcessVirtualAmbisonicReverb(CStereoBuffer<float> & outBuffer, int numberOfSilencedFrames)
 	{
 		CMonoBuffer<float> outLeftBuffer;
 		CMonoBuffer<float> outRightBuffer;
-		ProcessVirtualAmbisonicReverb(outLeftBuffer, outRightBuffer);
+		ProcessVirtualAmbisonicReverb(outLeftBuffer, outRightBuffer, numberOfSilencedFrames);
 		outBuffer.Interlace(outLeftBuffer, outRightBuffer);
 	}
 //////////////////////////////////////////////
@@ -1405,11 +1408,27 @@ namespace Binaural {
 		reverberationOrder = order;
 	}
 
+	/*********************
+	void CEnvironment::SetNumberOfSilencedFrames(int _numberOfSilencedFrames)
+	{
+		if (_numberOfSilencedFrames > 15) _numberOfSilencedFrames = 15; //FIXME
+		if (_numberOfSilencedFrames < 0) _numberOfSilencedFrames =   0; //FIXME
+
+		numberOfSilencedFrames = _numberOfSilencedFrames;
+	}
+	
+	int CEnvironment::GetNumberOfSilencedFrames()
+	{
+		return (numberOfSilencedFrames);
+	}
+    ********************************/
+
 	//brief Calculate the BRIR again
 	void CEnvironment::CalculateBRIR() 
 	{
 		environmentBRIR->CalculateNewBRIRTable();
 	}
+
 	//brief Reset the BRIR and ARIR tables
 	void CEnvironment::ResetBRIR_ABIR() 
 	{		

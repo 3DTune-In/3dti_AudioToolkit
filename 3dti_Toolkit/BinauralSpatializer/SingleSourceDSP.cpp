@@ -39,8 +39,8 @@ namespace Binaural {
 
 	//Constructor called from CCore class
 	CSingleSourceDSP::CSingleSourceDSP(CCore* _ownerCore)
-		:ownerCore{ _ownerCore }, enableInterpolation{ true }, enableFarDistanceEffect{ true }, enableDistanceAttenuationAnechoic{ true }, enableNearFieldEffect{true}, 
-		spatializationMode{ TSpatializationMode::HighQuality}
+		:ownerCore{ _ownerCore }, enableInterpolation{ true }, enableFarDistanceEffect{ true }, enableDistanceAttenuationAnechoic{ true }, attenuationSmooth{ true }, 
+		enableNearFieldEffect{ true },	spatializationMode{ TSpatializationMode::HighQuality}
 	{
 		// TO THINK: our initial idea was not to use error handler in constructors. Should this this an exception to the rule?
 		//if (owner == NULL)
@@ -73,18 +73,24 @@ namespace Binaural {
 		readyForAnechoic = false;
 		readyForReverb = false;
 
-		leftAzimuth = 0;
-		leftElevation = 0;
+		currentLeftAzimuth			= 0;
+		currentLeftElevation		= 0;
+		currentRightAzimuth			= 0;
+		currentRightElevation		= 0;
+		currentCenterAzimuth		= 0;
+		currentCenterElevation		= 0;
+		currentDistanceToListener	= 0;
+		currentInterauralAzimuth	= 0;
+					
+		effectiveLeftAzimuth = 0;
+		effectiveLeftElevation = 0;
+		effectiveRightAzimuth = 0;
+		effectiveRightElevation = 0;
+		effectiveCenterAzimuth = 0;
+		effectiveCenterElevation = 0;
+		effectiveDistanceToListener = 0;
+		effectiveInterauralAzimuth = 0;
 
-		rightAzimuth = 0;
-		rightElevation = 0;
-
-		centerAzimuth = 0;
-		centerElevation = 0;
-
-		distanceToListener = 0;
-		interauralAzimuth = 0;
-		
 		nearFieldEffectFilters.left.AddFilter();		//Initialize the filter to ILD simulation 
 		nearFieldEffectFilters.left.AddFilter();		//Initialize the filter to ILD simulation
 		nearFieldEffectFilters.right.AddFilter();		//Initialize the filter to ILD simulation
@@ -101,32 +107,43 @@ namespace Binaural {
 	
 	/// Update internal buffer
 	void CSingleSourceDSP::SetBuffer(CMonoBuffer<float> & buffer)
-	{
-		internalBuffer = buffer;	
+	{						
+		Common::CTransform listenerTransform = ownerCore->GetListener()->GetListenerTransform();
+		channelToListener.PushBack(buffer, currentSourceTransform.GetPosition(), listenerTransform.GetPosition(), ownerCore->GetAudioState(), ownerCore->GetMagnitudes().GetSoundSpeed());
 		readyForAnechoic = true;
 		readyForReverb = true;
 	}
-	/// Get internal buffer
-	const CMonoBuffer<float> CSingleSourceDSP::GetBuffer() const
+
+	/// Get copy of internal buffer
+	CMonoBuffer<float> CSingleSourceDSP::GetBuffer() const
 	{
 		// TO DO: check readyForAnechoic and/or readyForAnechoic flags?
-		ASSERT(internalBuffer.size() > 0, RESULT_ERROR_NOTSET, "Getting empty buffer from single source DSP", "");
-		return internalBuffer;
+		ASSERT(channelToListener.GetMostRecentBuffer().size() > 0, RESULT_ERROR_NOTSET, "Getting empty buffer from single source DSP", "");
+		return channelToListener.GetMostRecentBuffer();
 	}
 	
-	// Move source (position and orientation)
+	// Set source tranform (position and orientation)
 	void CSingleSourceDSP::SetSourceTransform(Common::CTransform newTransform)
 	{	
-		sourceTransform = newTransform;
-
-		CalculateSourceCoordinates();
-
-		//sourceTransform = CalculateTransformPositionWithRestrictions(newTransform);
+		currentSourceTransform = newTransform;		// Save source Transform
+		CalculateCurrentSourceCoordinates();		// Calculated derived parameters
 	}
+
 	// Get source transform (position and orientation)
-	const Common::CTransform & CSingleSourceDSP::GetSourceTransform() const
+	const Common::CTransform & CSingleSourceDSP::GetCurrentSourceTransform() const
 	{
-		return sourceTransform;
+		return currentSourceTransform;
+	}
+	
+	//Get effective source transform(position and orientation).The position and orientation of the source currently in operation.
+	const Common::CTransform & CSingleSourceDSP::GetEffectiveSourceTransform() const
+	{
+		return effectiveSourceTransform;
+	}
+
+	//Get current distance between source and Listener
+	const float & CSingleSourceDSP::GetCurrentDistanceSourceListener() const {
+		return currentDistanceToListener;
 	}
 
 	// Returns the attenuation gain of the anechoic process due to distance
@@ -187,11 +204,18 @@ namespace Binaural {
 	///Get the flag for distance attenuation effect enabling for anechoic path
 	bool CSingleSourceDSP::IsDistanceAttenuationEnabledAnechoic() { return enableDistanceAttenuationAnechoic; };
 
-	///Enable distance attenuation effect for this source for anechoic path
+	///Enable distance attenuation smoothing for this source for anechoic path
+	void CSingleSourceDSP::EnableDistanceAttenuationSmoothingAnechoic() { attenuationSmooth = true; };
+	///Disable distance attenuation smoothing for this source for anechoic path
+	void CSingleSourceDSP::DisableDistanceAttenuationSmoothingAnechoic() { attenuationSmooth = false; };
+	///Get the flag for distance attenuation smoothing enabling for anechoic path
+	bool CSingleSourceDSP::IsDistanceAttenuationSmoothingEnabledAnechoic() { return attenuationSmooth; };
+
+	///Enable distance attenuation effect for this source for reverb path
 	void CSingleSourceDSP::EnableDistanceAttenuationReverb() { enableDistanceAttenuationReverb = true; };
-	///Disable distance attenuation effect for this source for anechoic path
+	///Disable distance attenuation effect for this source for reverb path
 	void CSingleSourceDSP::DisableDistanceAttenuationReverb() { enableDistanceAttenuationReverb = false; };
-	///Get the flag for distance attenuation effect enabling for anechoic path
+	///Get the flag for distance attenuation effect enabling for reverb path
 	bool CSingleSourceDSP::IsDistanceAttenuationEnabledReverb() { return enableDistanceAttenuationReverb; };
 
 	///Enable near field effect for this source
@@ -201,6 +225,13 @@ namespace Binaural {
 	///Get the flag for near field effect enabling
 	bool CSingleSourceDSP::IsNearFieldEffectEnabled() { return enableNearFieldEffect; };
 			
+	///Enable propagation delay for this source
+	void CSingleSourceDSP::EnablePropagationDelay() { channelToListener.EnablePropagationDelay(); };
+	///Disable propagation delay for this source
+	void CSingleSourceDSP::DisablePropagationDelay() { channelToListener.DisablePropagationDelay(); };
+	///Get the flag for propagation delay enabling for this source
+	bool CSingleSourceDSP::IsPropagationDelayEnabled() { return channelToListener.IsPropagationDelayEnabled(); };
+
 	/////////////////////////////
 	// RESET METHODS
 	/////////////////////////////
@@ -213,14 +244,44 @@ namespace Binaural {
 	};
 
 	/////////////////////////////
+	//
 	// PROCESS METHODS
+	//
+	// ProcessAnechoic(CStereoBuffer<float> &)
+	//    ||
+	//    \/
+	// ProcessAnechoic(CMonoBuffer<float> &, CMonoBuffer<float> &)
+	//    ||   >>> Propagation delay
+	//    ||
+	//    ||   ProcessAnechoic(const CMonoBuffer<float> &, CStereoBuffer<float> &)
+	//    ||      ||
+	//    ||      \/
+	//    ||   ProcessAnechoic(const CMonoBuffer<float> &, CMonoBuffer<float> &, CMonoBuffer<float> &)
+	//    ||      ||
+	//    \/      \/
+	// ProcessAnechoic(const CMonoBuffer<float> &, CMonoBuffer<float> &, CMonoBuffer<float> &, Common::CVector3 &, float &, float &, float &, float &, float &, float &, float &, float &)
+	//         >>> HRTF/SHM/No spatialization, Near Field, Far field, Attenuation
 	/////////////////////////////
 
 	// Process data from input buffer to generate anechoic spatialization (direct path). Overloaded: using internal buffer
 	void CSingleSourceDSP::ProcessAnechoic(CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer)
 	{
-		if (readyForAnechoic)
-			ProcessAnechoic(internalBuffer, outLeftBuffer, outRightBuffer);
+		if (readyForAnechoic) {			
+			CMonoBuffer<float> inBuffer;			
+			Common::CVector3 effectiveSourcePosition;															
+			Common::CTransform listenerTransform = ownerCore->GetListener()->GetListenerTransform();
+			
+			channelToListener.PopFront(inBuffer, listenerTransform.GetPosition(), effectiveSourcePosition, ownerCore->GetAudioState(), ownerCore->GetMagnitudes().GetSoundSpeed());			
+			
+			if (this->channelToListener.IsPropagationDelayEnabled()) {
+				
+				effectiveSourceTransform.SetPosition(effectiveSourcePosition);
+				CalculateEffectiveSourceCoordinates();
+				ProcessAnechoic(inBuffer, outLeftBuffer, outRightBuffer, effectiveVectorToListener, effectiveDistanceToListener, effectiveLeftElevation, effectiveLeftAzimuth, effectiveRightElevation, effectiveRightAzimuth, effectiveCenterElevation, effectiveCenterAzimuth, effectiveInterauralAzimuth);
+			} else {				
+				ProcessAnechoic(inBuffer, outLeftBuffer, outRightBuffer, currentVectorToListener, currentDistanceToListener, currentLeftElevation, currentLeftAzimuth, currentRightElevation, currentRightAzimuth, currentCenterElevation, currentCenterAzimuth, currentInterauralAzimuth);
+			}						
+		}
 		else
 		{
 			SET_RESULT(RESULT_WARNING, "Attempt to do anechoic process without updating source buffer; please call to SetBuffer before ProcessAnechoic.");
@@ -237,8 +298,12 @@ namespace Binaural {
 		outBuffer.Interlace(outLeftBuffer, outRightBuffer);
 	}
 
-	// Process data from input buffer to generate anechoic spatialization (direct path)
-	void CSingleSourceDSP::ProcessAnechoic(const CMonoBuffer<float> & _inBuffer/* FIXME: can be const ref */, CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer)
+	// DEPRECATED Process data from input buffer to generate anechoic spatialization (direct path)
+	void CSingleSourceDSP::ProcessAnechoic(const CMonoBuffer<float> & _inBuffer/* FIXME: can be const ref */, CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer) {
+		ProcessAnechoic(_inBuffer, outLeftBuffer, outRightBuffer, currentVectorToListener, currentDistanceToListener, currentLeftElevation, currentLeftAzimuth, currentRightElevation, currentRightAzimuth, currentCenterElevation, currentCenterAzimuth, currentInterauralAzimuth);
+	}
+
+	void CSingleSourceDSP::ProcessAnechoic(const CMonoBuffer<float> & _inBuffer, CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer, Common::CVector3 & vectorToListener, float & distanceToListener, float & leftElevation, float & leftAzimuth, float & rightElevation, float & rightAzimuth, float & centerElevation, float & centerAzimuth, float & interauralAzimuth)
 	{
 		ASSERT(_inBuffer.size() == ownerCore->GetAudioState().bufferSize, RESULT_ERROR_BADSIZE, "InBuffer size has to be equal to the input size indicated by the Core::SetAudioState method", "");
 		
@@ -319,22 +384,32 @@ namespace Binaural {
 		outBuffer.Interlace(outLeftBuffer, outRightBuffer);
 	}
 
-	// Calculates the values returned by GetEarAzimuth and GetEarElevation
-	void CSingleSourceDSP::CalculateSourceCoordinates()
+	/// Calculates the parameters derived from the source and listener position, starting from the current source position.
+	void CSingleSourceDSP::CalculateCurrentSourceCoordinates() {
+		CalculateSourceCoordinates(currentSourceTransform, currentVectorToListener, currentDistanceToListener, currentLeftElevation, currentLeftAzimuth, currentRightElevation, currentRightAzimuth, currentCenterElevation, currentCenterAzimuth, currentInterauralAzimuth);
+	}
+	
+	// Calculates the parameters derived from the source and listener position, starting from the effective source position.
+	void CSingleSourceDSP::CalculateEffectiveSourceCoordinates() {
+		CalculateSourceCoordinates(effectiveSourceTransform, effectiveVectorToListener, effectiveDistanceToListener, effectiveLeftElevation, effectiveLeftAzimuth, effectiveRightElevation, effectiveRightAzimuth, effectiveCenterElevation, effectiveCenterAzimuth, effectiveInterauralAzimuth);
+	}
+
+	/// Calculates the parameters derived from the source and listener position
+	void CSingleSourceDSP::CalculateSourceCoordinates(Common::CTransform _sourceTransform, Common::CVector3 & _vectorToListener, float & _distanceToListener, float & leftElevation, float & leftAzimuth, float & rightElevation, float & rightAzimuth, float & centerElevation, float & centerAzimuth, float & interauralAzimuth)
 	{
 
 		//Get azimuth and elevation between listener and source
-		vectorToListener = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(sourceTransform);
+		_vectorToListener = ownerCore->GetListener()->GetListenerTransform().GetVectorTo(_sourceTransform);
 
-		distanceToListener = vectorToListener.GetDistance();
+		_distanceToListener = _vectorToListener.GetDistance();
 
 		//Check listener and source are in the same position
-		if (distanceToListener <= EPSILON ) {
+		if (_distanceToListener <= EPSILON ) {
 			return;
 		}
 
-		Common::CVector3 leftVectorTo = ownerCore->GetListener()->GetListenerEarTransform(Common::T_ear::LEFT).GetVectorTo(sourceTransform);
-		Common::CVector3 rightVectorTo = ownerCore->GetListener()->GetListenerEarTransform(Common::T_ear::RIGHT).GetVectorTo(sourceTransform);
+		Common::CVector3 leftVectorTo = ownerCore->GetListener()->GetListenerEarTransform(Common::T_ear::LEFT).GetVectorTo(_sourceTransform);
+		Common::CVector3 rightVectorTo = ownerCore->GetListener()->GetListenerEarTransform(Common::T_ear::RIGHT).GetVectorTo(_sourceTransform);
 		Common::CVector3 leftVectorTo_sphereProjection =	GetSphereProjectionPosition(leftVectorTo, ownerCore->GetListener()->GetListenerEarLocalPosition(Common::T_ear::LEFT), ownerCore->GetListener()->GetHRTF()->GetHRTFDistanceOfMeasurement());
 		Common::CVector3 rightVectorTo_sphereProjection =	GetSphereProjectionPosition(rightVectorTo, ownerCore->GetListener()->GetListenerEarLocalPosition(Common::T_ear::RIGHT), ownerCore->GetListener()->GetHRTF()->GetHRTFDistanceOfMeasurement());
 
@@ -351,23 +426,37 @@ namespace Binaural {
 		}
 
 
-		centerElevation = vectorToListener.GetElevationDegrees();		//Get elevation from the head center
+		centerElevation = _vectorToListener.GetElevationDegrees();		//Get elevation from the head center
 		if (!Common::CMagnitudes::AreSame(ELEVATION_SINGULAR_POINT_UP, centerElevation, EPSILON) && !Common::CMagnitudes::AreSame(ELEVATION_SINGULAR_POINT_DOWN, centerElevation, EPSILON)) 
 		{
-			centerAzimuth = vectorToListener.GetAzimuthDegrees();		//Get azimuth from the head center
+			centerAzimuth = _vectorToListener.GetAzimuthDegrees();		//Get azimuth from the head center
 		}
 
-		interauralAzimuth = vectorToListener.GetInterauralAzimuthDegrees();	//Get Interaural Azimuth
+		interauralAzimuth = _vectorToListener.GetInterauralAzimuthDegrees();	//Get Interaural Azimuth
 
 	}
 
-	// Returns the azimuth of the specified ear.
-	float CSingleSourceDSP::GetEarAzimuth( Common::T_ear ear ) const
+	
+	//float CSingleSourceDSP::GetEarAzimuth(Common::T_ear ear) const
+	//{				
+	//	if (ear == Common::T_ear::LEFT)
+	//		return currentLeftAzimuth;
+	//	else if (ear == Common::T_ear::RIGHT)
+	//		return currentRightAzimuth;
+	//	else
+	//	{
+	//		SET_RESULT(RESULT_ERROR_INVALID_PARAM, "Call to CSingleSourceDSP::GetEarAzimuth with invalid param");
+	//		return 0.0f;
+	//	}
+	//}
+
+	// Returns the current azimuth of the specified ear.
+	float CSingleSourceDSP::GetCurrentEarAzimuth( Common::T_ear ear) const
 	{
 		if (ear == Common::T_ear::LEFT)
-			return leftAzimuth;
+			return currentLeftAzimuth;
 		else if ( ear == Common::T_ear::RIGHT )
-			return rightAzimuth;
+			return currentRightAzimuth;
         else
         {
             SET_RESULT(RESULT_ERROR_INVALID_PARAM, "Call to CSingleSourceDSP::GetEarAzimuth with invalid param" );
@@ -375,18 +464,47 @@ namespace Binaural {
         }
 	}
 
-	// Returns the elevation of the specified ear
-	float CSingleSourceDSP::GetEarElevation(Common::T_ear ear) const
+	// Returns the azimuth of the specified ear.
+	float CSingleSourceDSP::GetEffectiveEarAzimuth(Common::T_ear ear) const
 	{
 		if (ear == Common::T_ear::LEFT)
-			return leftElevation;
+			return effectiveLeftAzimuth;
 		else if (ear == Common::T_ear::RIGHT)
-			return rightElevation;
+			return effectiveRightAzimuth;
+		else
+		{
+			SET_RESULT(RESULT_ERROR_INVALID_PARAM, "Call to CSingleSourceDSP::GetEarAzimuth with invalid param");
+			return 0.0f;
+		}
+	}
+
+
+	// Returns the elevation of the specified ear
+	float CSingleSourceDSP::GetCurrentEarElevation(Common::T_ear ear) const
+	{
+		if (ear == Common::T_ear::LEFT)
+			return currentLeftElevation;
+		else if (ear == Common::T_ear::RIGHT)
+			return currentRightElevation;
         else
         {
 			SET_RESULT( RESULT_ERROR_INVALID_PARAM, "Call to CSingleSourceDSP::GetEarElevation with invalid param" );
             return 0.0f;
         }
+	}
+
+	// Returns the elevation of the specified ear
+	float CSingleSourceDSP::GetEffectiveEarElevation(Common::T_ear ear) const
+	{
+		if (ear == Common::T_ear::LEFT)
+			return effectiveLeftElevation;
+		else if (ear == Common::T_ear::RIGHT)
+			return effectiveRightElevation;
+		else
+		{
+			SET_RESULT(RESULT_ERROR_INVALID_PARAM, "Call to CSingleSourceDSP::GetEarElevation with invalid param");
+			return 0.0f;
+		}
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -517,7 +635,7 @@ namespace Binaural {
 
 		if (IsDistanceAttenuationEnabledAnechoic())
 		{
-			distanceAttenuatorAnechoic.Process(buffer, distance, distAttConstant, bufferSize, sampleRate);			
+			distanceAttenuatorAnechoic.Process(buffer, distance, distAttConstant, bufferSize, sampleRate,attenuationSmooth);			
 		}				
 	}
 	
@@ -681,6 +799,7 @@ namespace Binaural {
 			leftChannelDelayBuffer.clear();
 			rightChannelDelayBuffer.clear();
 		#endif
+			channelToListener.Reset();
 	}
 	
 	

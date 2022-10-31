@@ -51,7 +51,7 @@ namespace Common {
 
 	//////////////////////////////////////////////
 
-	void CDistanceAttenuator::Process(CMonoBuffer<float> & buffer, float distance, float attenuationConstant, int bufferSize, int sampleRate, float extraAttennuation_dB)
+	void CDistanceAttenuator::Process(CMonoBuffer<float> & buffer, float distance, float attenuationConstant, int bufferSize, int sampleRate, bool smooth, float extraAttennuation_dB)
 	{
 #ifdef USE_PROFILER_DistanceAttenuator
 		PROFILER3DTI.RelativeSampleStart(dsDAAttenuation);
@@ -62,8 +62,12 @@ namespace Common {
 
 		//Apply attenuation gradually using Exponential Moving Average method
 		float unnecessary_fixme;
-		if( buffer.size() != 0 ) buffer.ApplyGainExponentially(previousAttenuation_Channel, unnecessary_fixme, attenuation, bufferSize, sampleRate );
-
+		if (smooth) {
+			if (buffer.size() != 0) buffer.ApplyGainExponentially(previousAttenuation_Channel, unnecessary_fixme, attenuation, bufferSize, sampleRate);
+		}
+		else {
+			if (buffer.size() != 0) buffer.ApplyGainExponentially(attenuation, unnecessary_fixme, attenuation, bufferSize, sampleRate); //no smoothing, previousAttenuattion ignored
+		}
 #ifdef USE_PROFILER_DistanceAttenuator
 		PROFILER3DTI.RelativeSampleEnd(dsDAAttenuation);
 #endif
