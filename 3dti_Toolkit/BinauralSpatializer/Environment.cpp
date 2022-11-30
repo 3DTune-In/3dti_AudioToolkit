@@ -561,7 +561,7 @@ namespace Binaural {
 	}
 
 //////////////////////////////////////////////
-	void CEnvironment::ProcessVirtualAmbisonicReverbAdimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames)
+	void CEnvironment::ProcessVirtualAmbisonicReverbAdimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedSamples)
 	{
 		CMonoBuffer<float> w;	// B-Format data		
 		CMonoBuffer<float> w_AbirW_left_FFT;
@@ -685,8 +685,8 @@ namespace Binaural {
 #else		
 
 		///Apply UPC algorithm			
-		wLeft_UPConvolution.ProcessUPConvolution_withoutIFFT(w, GetABIR().GetImpulseResponse_Partitioned(TBFormatChannel::W, Common::T_ear::LEFT), w_AbirW_left_FFT, numberOfSilencedFrames);
-		wRight_UPConvolution.ProcessUPConvolution_withoutIFFT(w, GetABIR().GetImpulseResponse_Partitioned(TBFormatChannel::W, Common::T_ear::RIGHT), w_AbirW_right_FFT, numberOfSilencedFrames);
+		wLeft_UPConvolution.ProcessUPConvolution_withoutIFFT(w, GetABIR().GetImpulseResponse_Partitioned(TBFormatChannel::W, Common::T_ear::LEFT), w_AbirW_left_FFT, numberOfSilencedSamples);
+		wRight_UPConvolution.ProcessUPConvolution_withoutIFFT(w, GetABIR().GetImpulseResponse_Partitioned(TBFormatChannel::W, Common::T_ear::RIGHT), w_AbirW_right_FFT, numberOfSilencedSamples);
 
 #endif
 
@@ -762,7 +762,7 @@ namespace Binaural {
 		WATCH(WV_ENVIRONMENT_OUTPUT_RIGHT, outBufferRight, CMonoBuffer<float>);
 	}
 
-	void CEnvironment::ProcessVirtualAmbisonicReverbBidimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames)
+	void CEnvironment::ProcessVirtualAmbisonicReverbBidimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedSamples)
 	{
 		CMonoBuffer<float> w, x, y;	// B-Format data		
 		CMonoBuffer<float> w_AbirW_left_FFT;
@@ -986,7 +986,7 @@ namespace Binaural {
 		WATCH(WV_ENVIRONMENT_OUTPUT_RIGHT, outBufferRight, CMonoBuffer<float>);
 	}
 	
-	void CEnvironment::ProcessVirtualAmbisonicReverbThreedimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames)
+	void CEnvironment::ProcessVirtualAmbisonicReverbThreedimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedSamples)
 	{
 		CMonoBuffer<float> w, x, y, z;	// B-Format data		
 		CMonoBuffer<float> w_AbirW_left_FFT;
@@ -1217,7 +1217,7 @@ namespace Binaural {
 	}
 
 	// Process virtual ambisonic reverb for specified buffers
-	void CEnvironment::ProcessVirtualAmbisonicReverb(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames)
+	void CEnvironment::ProcessVirtualAmbisonicReverb(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedSamples)
 	{
 		if (!environmentABIR.IsInitialized())
 		{
@@ -1241,13 +1241,13 @@ namespace Binaural {
 
 		switch (reverberationOrder) {
 		case TReverberationOrder::BIDIMENSIONAL:
-			ProcessVirtualAmbisonicReverbBidimensional(outBufferLeft, outBufferRight, numberOfSilencedFrames);
+			ProcessVirtualAmbisonicReverbBidimensional(outBufferLeft, outBufferRight, numberOfSilencedSamples);
 			break;
 		case TReverberationOrder::THREEDIMENSIONAL:
-			ProcessVirtualAmbisonicReverbThreedimensional(outBufferLeft, outBufferRight, numberOfSilencedFrames);
+			ProcessVirtualAmbisonicReverbThreedimensional(outBufferLeft, outBufferRight, numberOfSilencedSamples);
 			break;
 		case TReverberationOrder::ADIMENSIONAL:
-			ProcessVirtualAmbisonicReverbAdimensional(outBufferLeft, outBufferRight, numberOfSilencedFrames);
+			ProcessVirtualAmbisonicReverbAdimensional(outBufferLeft, outBufferRight, numberOfSilencedSamples);
 			break;
 		}
 	}
@@ -1259,11 +1259,11 @@ namespace Binaural {
 
 
 	// Process virtual ambisonic reverb for specified buffers
-	void CEnvironment::ProcessVirtualAmbisonicReverb(CStereoBuffer<float> & outBuffer, int numberOfSilencedFrames)
+	void CEnvironment::ProcessVirtualAmbisonicReverb(CStereoBuffer<float> & outBuffer, int numberOfSilencedSamples)
 	{
 		CMonoBuffer<float> outLeftBuffer;
 		CMonoBuffer<float> outRightBuffer;
-		ProcessVirtualAmbisonicReverb(outLeftBuffer, outRightBuffer, numberOfSilencedFrames);
+		ProcessVirtualAmbisonicReverb(outLeftBuffer, outRightBuffer, numberOfSilencedSamples);
 		outBuffer.Interlace(outLeftBuffer, outRightBuffer);
 	}
 //////////////////////////////////////////////

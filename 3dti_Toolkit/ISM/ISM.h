@@ -113,8 +113,18 @@ namespace ISM
 		*	\param [in] maxDistanceSourcesToListener
 		*	\param [out] numberOfSilencedFrames
 		*/
-		int calculateNumOfSilencedFrames (float maxDistanceSourcesToListener);
+		int calculateNumOfSilencedFrames(float maxDistanceSourcesToListener);
 		
+		/** \brief Returns number of silenced samples
+		*	\details calculates the number od silenced samples depending on the maximum distance between the images and the listener
+		*	\param [in] maxDistanceSourcesToListener
+		*	\param [out] numberOfSilencedSamples
+		*/
+		int calculateNumOfSilencedSamples (float maxDistanceSourcesToListener);
+
+		void setTransitionMetresPerFrame(int transitionMetresPerFrame);
+		
+		int calculateTransitionMargin();
 
 		/** \brief Sets the source location
 		*	\details This method sets the location of the original source (direct path).
@@ -149,6 +159,7 @@ namespace ISM
 		*/
 		void proccess(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation);
 
+		
 	private:
 		////////////
 		// Methods
@@ -168,11 +179,10 @@ namespace ISM
 		int reflectionOrder;				//Number of reflections t be simulated
 
 		float maxDistanceSourcesToListener; 
+		int transitionMetresPerFrame;
 
 		Binaural::CCore* ownerCore;				// owner Core	
 		
-
-
 		friend class SourceImages;
 	};
 
