@@ -85,21 +85,49 @@ namespace ISM
 	void CISM::setMaxDistanceImageSources(float _MaxDistanceSourcesToListener)
 	{
 		maxDistanceSourcesToListener = _MaxDistanceSourcesToListener;	
-		originalSource->createImages(mainRoom, reflectionOrder); 
+		int transitionMetresPerFrame = CISM::calculateTransitionMargin();
+		setTransitionMetresPerFrame(transitionMetresPerFrame);
+		originalSource->createImages(mainRoom, reflectionOrder);
+	}
+
+	void CISM::setTransitionMetresPerFrame(int _transitionMetresPerFrame)
+	{
+		transitionMetresPerFrame = _transitionMetresPerFrame;
+	}
+
+	int CISM::calculateTransitionMargin()
+	{
+		float buffersize = (float)ownerCore->GetAudioState().bufferSize;
+		float samplerate = (float)ownerCore->GetAudioState().sampleRate;
+		float soundSpeed = ownerCore->GetMagnitudes().GetSoundSpeed();
+
+		int transitionMetresPerFrame = ceil(buffersize / samplerate * soundSpeed);
+		return transitionMetresPerFrame;
 	}
 
 	int CISM::calculateNumOfSilencedFrames(float maxDistanceSourcesToListener)
 	{
-		float buffersize = (float) ownerCore->GetAudioState().bufferSize;
-		float samplerate = (float) ownerCore->GetAudioState().sampleRate;
+		float buffersize = (float)ownerCore->GetAudioState().bufferSize;
+		float samplerate = (float)ownerCore->GetAudioState().sampleRate;
 		float soundSpeed = ownerCore->GetMagnitudes().GetSoundSpeed();
 
-		int numberOfSlilencedFrames = ceil (((maxDistanceSourcesToListener / soundSpeed)*samplerate) / buffersize);
-
+		int numberOfSlilencedFrames = floor(((maxDistanceSourcesToListener / soundSpeed) * samplerate) / buffersize);
+		
 		return numberOfSlilencedFrames;
 	}
-	
-		
+
+	int CISM::calculateNumOfSilencedSamples(float maxDistanceSourcesToListener)
+	{
+		float buffersize = (float)ownerCore->GetAudioState().bufferSize;
+		float samplerate = (float)ownerCore->GetAudioState().sampleRate;
+		float soundSpeed = ownerCore->GetMagnitudes().GetSoundSpeed();
+
+		int numberOfSlilencedSamples = floor ((maxDistanceSourcesToListener * samplerate / soundSpeed) );
+
+		return numberOfSlilencedSamples;
+	}
+
+
 	float CISM::getMaxDistanceImageSources()
 	{
 		return maxDistanceSourcesToListener;

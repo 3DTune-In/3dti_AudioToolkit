@@ -100,20 +100,20 @@ namespace Binaural {
 		*	\details Internally takes as input the (updated) buffers of all registered audio sources 
 		*	\param [out] outBufferLeft output buffer with the processed reverb for left ear
 		*	\param [out] outBufferRight output buffer with the processed reverb for right ear
-		*   \param [in] numberOfSilencedFrames number of initial silenced frames in the reverb stage
+		*   \param [in] numberOfSilencedSamples number of initial silenced frames in the reverb stage
 		*	\sa SetBuffer, SingleSourceDSP
 		*   \eh Warnings may be reported to the error handler.
 		*/
-		void ProcessVirtualAmbisonicReverb(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames = 0);
+		void ProcessVirtualAmbisonicReverb(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedSamples = 0);
 		
 		/** \brief Process virtual ambisonics reverb for all sources with binaural output in a single stereo buffer
 		*	\details Internally takes as input the (updated) buffers of all registered audio sources 
 		*	\param [out] outBuffer stereo output buffer with the processed reverb
-		*   \param [in] numberOfSilencedFrames number of initial silenced frames in the reverb stage
+		*   \param [in] numberOfSilencedSamples number of initial silenced frames in the reverb stage
 		*	\sa SetBuffer, SingleSourceDSP
 		*   \eh Nothing is reported to the error handler.
 		*/
-		void ProcessVirtualAmbisonicReverb(CStereoBuffer<float> & outBuffer, int numberOfSilencedFrames = 0);
+		void ProcessVirtualAmbisonicReverb(CStereoBuffer<float> & outBuffer, int numberOfSilencedSamples = 0);
 
 		/** \brief Process reverb for a single b-format channel encoded with 1st order ambisonics
 		*	\details This might be useful to implement reverb in some wrappers, such as the Unity Wrapper
@@ -150,9 +150,9 @@ namespace Binaural {
     private:
 
 		//Processes virtual ambisonic reverb in each reverberation order configuration
-		void ProcessVirtualAmbisonicReverbAdimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames = 0);
-		void ProcessVirtualAmbisonicReverbBidimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames = 0);
-		void ProcessVirtualAmbisonicReverbThreedimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames = 0);
+		void ProcessVirtualAmbisonicReverbAdimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedSamples = 0);
+		void ProcessVirtualAmbisonicReverbBidimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedSamples = 0);
+		void ProcessVirtualAmbisonicReverbThreedimensional(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedSamples = 0);
 
 		//Processes a reverb encoded channel in each reverberation order configuration. TODO: make unique function
 		void ProcessEncodedChannelReverbThreedimensional(TBFormatChannel channel, CMonoBuffer<float> encoderIn, CMonoBuffer<float> & output);
@@ -203,6 +203,7 @@ namespace Binaural {
         TReverberationOrder reverberationOrder = TReverberationOrder::BIDIMENSIONAL;
 
 		//int numberOfSilencedFrames = 0;
+		//int numberOfSilencedSamples = 0;
 		
 
         friend class CCore;									//Friend class definition

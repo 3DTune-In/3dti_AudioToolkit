@@ -25,7 +25,7 @@
 #include <Common/FiltersBank.h>
 
 #define VISIBILITY_MARGIN	0.2
-#define DIST_MARGIN 2.0
+#define FRAMES_OF_MARGIN 1    //Number of Frames for Transition
 
 
 namespace ISM
@@ -115,7 +115,6 @@ namespace ISM
 		*	\param [in] reflectionOrder: depth parameter used in the recursion
 		*/
 		void processAbsortion(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation);
-
 
 	private:
 

@@ -173,6 +173,9 @@ namespace ISM
 		Common::CTransform listenerTransform = ownerISM->GetListener()->GetListenerTransform();
 		Common::CVector3 listenerLocation = listenerTransform.GetPosition();
 
+		int distanceMargin = ownerISM->transitionMetresPerFrame;
+		distanceMargin *= 1; // FRAMES_OF_MARGIN;
+				
 		for (int i = 0; i < images.size(); i++)
 		{
 			images[i]->setLocation(images.at(i)->getReflectionWall().getImagePoint(sourceLocation));
@@ -188,7 +191,7 @@ namespace ISM
 		distanceImageToLisener = (listenerLocation - sourceLocation).GetDistance();
 		float maxDistanceSourcesToListener = ownerISM->getMaxDistanceImageSources();
 			
-		if (distanceImageToLisener > (maxDistanceSourcesToListener + DIST_MARGIN * 0.5))
+		if (distanceImageToLisener > (maxDistanceSourcesToListener + distanceMargin * 0.5))
 		{
 			visible = false; 
 			visibility = 0.0;
@@ -204,9 +207,9 @@ namespace ISM
 				visible &= (wallVisibility > 0);
 			}
 			visibility = pow(visibility, (1 / (float)reflectionWalls.size())); 
-			if (distanceImageToLisener > (maxDistanceSourcesToListener - DIST_MARGIN * 0.5))
+			if (distanceImageToLisener > (maxDistanceSourcesToListener - distanceMargin * 0.5))
 			{
-				visibility *= 0.5 + 0.5 * cos(PI * (distanceImageToLisener - (maxDistanceSourcesToListener - DIST_MARGIN * 0.5)) / DIST_MARGIN);
+				visibility *= 0.5 + 0.5 * cos(PI * (distanceImageToLisener - (maxDistanceSourcesToListener - distanceMargin * 0.5)) / distanceMargin);
 			}
 		}
 	}

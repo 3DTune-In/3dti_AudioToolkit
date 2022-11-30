@@ -71,10 +71,10 @@ namespace Common {
 		*	\param [in] inBuffer_Time input signal buffer of B size
 		*	\param [in] IR buffer structure that contains the Impulse Response partitioned in _HRIR_Block_Number blocks. Each block with a size of HRIR_Frequency_Block_Size size  = 2*B
 		*	\param [out] outBuffer FFT of the output signal of 2*B size. After the IIFT is done only the last B samples are significant
-		*   \param [in] numberOfSilencedFrames number of initial silenced frames in the reverb stage
+		*   \param [in] numberOfSilencedSamples number of initial silenced frames in the reverb stage
 		*   \throws May throw exceptions and errors to debugger
 		*/
-		void ProcessUPConvolution_withoutIFFT(const CMonoBuffer<float>& inBuffer_Time, const TImpulseResponse_Partitioned & IR, CMonoBuffer<float>& outBuffer, int numberOfSilencedFrames=0);
+		void ProcessUPConvolution_withoutIFFT(const CMonoBuffer<float>& inBuffer_Time, const TImpulseResponse_Partitioned & IR, CMonoBuffer<float>& outBuffer, int numberOfSilencedSamples =0);
 				
 
 	private:
