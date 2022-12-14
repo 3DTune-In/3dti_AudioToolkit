@@ -222,6 +222,7 @@ namespace Binaural {
 		{
 			windowThreshold = _windowThreshold;
 			windowSlope = _windowSlope;
+			CalculateNewBRIRTable();
 		}
 		else
 		{
