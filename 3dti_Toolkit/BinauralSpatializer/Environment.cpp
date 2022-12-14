@@ -1266,6 +1266,15 @@ namespace Binaural {
 		ProcessVirtualAmbisonicReverb(outLeftBuffer, outRightBuffer, numberOfSilencedSamples);
 		outBuffer.Interlace(outLeftBuffer, outRightBuffer);
 	}
+
+	void CEnvironment::SetFadeInWindow(float _windowThreshold, float _windowSlope)
+	{
+		environmentBRIR->SetFadeInWindow(_windowThreshold, _windowSlope);
+	}
+
+
+
+
 //////////////////////////////////////////////
 
 	void CEnvironment::ProcessEncodedChannelReverbThreedimensional(TBFormatChannel channel, CMonoBuffer<float> encoderIn, CMonoBuffer<float> & output)

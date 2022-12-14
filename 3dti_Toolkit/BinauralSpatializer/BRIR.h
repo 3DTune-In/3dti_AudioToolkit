@@ -95,13 +95,13 @@ namespace Binaural
 		*	\param [in] _ownerEnvironment pointer to environment object
 		*   \eh Nothing is reported to the error handler.
 		*/
-		CBRIR(CEnvironment* _ownerEnvironment) :ownerEnvironment{ _ownerEnvironment }, BRIR_ready{false} {}
+		CBRIR(CEnvironment* _ownerEnvironment) :ownerEnvironment{ _ownerEnvironment }, BRIR_ready{ false }, windowThreshold{ 0.0 }, windowSlope{ 0.0 } {}
 
 		/**	\brief Default constructor 
 		*	\details Sets the BRIR data as not ready and the environment object as a null pointer
 		*   \eh Nothing is reported to the error handler.
 		*/
-		CBRIR() :ownerEnvironment{ nullptr }, BRIR_ready{ false } {}
+		CBRIR() :ownerEnvironment{ nullptr }, BRIR_ready{ false }, windowThreshold{ 0.0 }, windowSlope{ 0.0 } {}
 
 		/**	\brief Start a new BRIR configuration.
 		*	\param [in] _BRIRLength integer that indicates the BRIR length
@@ -197,6 +197,15 @@ namespace Binaural
 		
 		bool IsIREmpty(const TImpulseResponse_Partitioned& in);
 
+		/** \brief Set the parameters of the Fade-In window
+		*	\details Sets the parameters needed for the fade-in window. The impulse responses can be windowed to keep an initial 
+		*            silence in order to facilitate hybrid methods. The window will go from 0 at the begining up to 1 at the end
+		*            following a half Hann window shape.
+		*	\param [in] windowThreshold place in time (s) where the window reaches 0.5
+		*	\param [in] windowSlope time (s) for the window to go from 0 to 1
+		*/
+		void SetFadeInWindow(float _windowThreshold, float _windowSlope);
+
 	private:
 
 		////////////
@@ -204,14 +213,18 @@ namespace Binaural
 		///////////		
 		TImpulseResponse_Partitioned	CalculateBRIRFFT_partitioned(const TImpulseResponse & newData_time);
 		TImpulseResponse				CalculateBRIRFFT(const TImpulseResponse & newData_time);
-		TBRIRTable					CalculateBRIRFFT_Table();
-		TBRIRTablePartitioned		CalculateBRIRFFT_Table_partitioned();
+		TBRIRTable						CalculateBRIRFFT_Table();
+		TBRIRTablePartitioned			CalculateBRIRFFT_Table_partitioned();
 		
 		// Recalculate the BRIR FFT table partitioned or not with a new bufferSize
 		void CalculateNewBRIRTable();
 
 		// Reset BRIR table
 		void Reset();
+
+		// Window individual BRIR with the fade-in window
+		TImpulseResponse WindowIR(const TImpulseResponse & newData_time);
+
 
 		///////////////
 		// ATTRIBUTES
@@ -229,6 +242,10 @@ namespace Binaural
 		int BRIRsubfilterLength_time;		// BRIR subfilter in time domain buffer size 
 		int BRIRsubfilterLength_frequency;	// BRIR subfilter in frequency domain buffer size 
 		int BRIRNumOfSubfilters;			// Number of subfilters of the partitioned BRIR
+
+		// Fade-in window parameters. The impulse response will be windowed with a fade in defined by these parameters
+		float windowThreshold;				// time (s) between zero and the moment when the fade-in window reaches 0.5
+		float windowSlope;					// time (s) of the fade-in between 0 and 1
 
 		//empty variables
 		TImpulseResponse_Partitioned emptyBRIR_partitioned;
