@@ -139,13 +139,15 @@ namespace Binaural {
 		TReverberationOrder GetReverberationOrder();
 
 		
-		/** \brief
+		/** \brief Set the parameters of the Fade-In window
+		*	\details Sets the parameters needed for the fade-in window. The impulse responses can be windowed to keep an initial
+		*            silence in order to facilitate hybrid methods. The window will go from 0 at the begining up to 1 at the end
+		*            following a half Hann window shape.
+		*	\param [in] windowThreshold place in time (s) where the window reaches 0.5
+		*	\param [in] windowSlope time (s) for the window to go from 0 to 1
 		*/
-		//void SetNumberOfSilencedFrames(int numberOfSilencedFrames);
+		void SetFadeInWindow(float _windowThreshold, float _windowSlope);
 
-		/** \brief
-		*/
-		//int GetNumberOfSilencedFrames();
 		
     private:
 

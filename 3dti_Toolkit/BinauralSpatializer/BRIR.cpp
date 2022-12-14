@@ -150,6 +150,7 @@ namespace Binaural {
 		BRIRLength_frequency = 0;
 		bufferSize = 0;
 	}
+
 	bool CBRIR::IsIREmpty(const TImpulseResponse_Partitioned& in) {
 		
 		return in == emptyBRIR_partitioned;
@@ -215,6 +216,20 @@ namespace Binaural {
 		return BRIR_ready;
 	}
 
+	void CBRIR::SetFadeInWindow(float _windowThreshold, float _windowSlope)
+	{
+		if (_windowThreshold >= _windowSlope / 2)
+		{
+			windowThreshold = _windowThreshold;
+			windowSlope = _windowSlope;
+		}
+		else
+		{
+			//TODO: ERROR
+		}
+	}
+
+
 	// PRIVATE METHODS
 	
 
@@ -250,6 +265,8 @@ namespace Binaural {
 
 	TImpulseResponse_Partitioned CBRIR::CalculateBRIRFFT_partitioned(const TImpulseResponse & newData_time)
 	{
+		TImpulseResponse windowedIR = WindowIR(newData_time);
+
 		int blockSize = bufferSize;
 		int numberOfBlocks = GetBRIRNumberOfSubfilters();
 
@@ -257,7 +274,7 @@ namespace Binaural {
 		new_DataFFT_Partitioned.reserve(numberOfBlocks);
 		//Index to go throught the AIR values in time domain
 		int index;
-		for (int i = 0; i < newData_time.size(); i = i + blockSize)
+		for (int i = 0; i < windowedIR.size(); i = i + blockSize)
 		{
 			CMonoBuffer<float> data_FFT_doubleSize;
 			//Resize with double size and zeros to make the zero-padded demanded by the algorithm
@@ -265,8 +282,8 @@ namespace Binaural {
 			//Fill each AIR block
 			for (int j = 0; j < blockSize; j++) {
 				index = i + j;
-				if (index < newData_time.size()) {
-					data_FFT_doubleSize[j] = newData_time[index];
+				if (index < windowedIR.size()) {
+					data_FFT_doubleSize[j] = windowedIR[index];
 				}
 			}
 			//FFT
@@ -293,6 +310,33 @@ namespace Binaural {
 		CMonoBuffer<float> data_FFT;
 		Common::CFprocessor::CalculateFFT(data_FFT_doubleSize, data_FFT);
 		return data_FFT_doubleSize;
+	}
+
+	TImpulseResponse CBRIR::WindowIR(const TImpulseResponse & newData_time)
+	{
+		TImpulseResponse windowedIR;
+
+		windowedIR.resize(newData_time.size());
+		int samplingFrequency = ownerEnvironment->GetCoreAudioState().sampleRate;
+		int numberOfZeros = floor((windowThreshold - windowSlope / 2) * samplingFrequency);
+		int numberOfSamplesFadeIn = ceil(windowSlope * samplingFrequency);
+		int numberOfOnes = windowedIR.size() - numberOfZeros - numberOfSamplesFadeIn;
+
+		for (int i = 0; i < numberOfZeros; i++)
+		{
+			windowedIR.at(i) = 0.0;
+		}
+		for (int i = numberOfZeros; i < numberOfZeros + numberOfSamplesFadeIn; i++)
+		{
+			windowedIR.at(i) = newData_time.at(i) * 0.5*(1-cos(M_PI*(i-numberOfZeros) / numberOfSamplesFadeIn));
+		}
+		for (int i = numberOfZeros+numberOfSamplesFadeIn; i < windowedIR.size(); i++)
+		{
+			windowedIR.at(i) = newData_time.at(i);
+		}
+
+		
+		return windowedIR;
 	}
 
 }//end namespace Binaural
