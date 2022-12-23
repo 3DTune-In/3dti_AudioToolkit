@@ -218,16 +218,27 @@ namespace Binaural {
 
 	void CBRIR::SetFadeInWindow(float _windowThreshold, float _windowSlope)
 	{
-		if (_windowThreshold >= _windowSlope / 2)
+		if (_windowThreshold >= (_windowSlope / 2))
 		{
-			windowThreshold = _windowThreshold;
-			windowSlope = _windowSlope;
-			CalculateNewBRIRTable();
+			int samplingFrequency = ownerEnvironment->GetCoreAudioState().sampleRate;
+			float maxTime = (float) BRIRLength/ (float) samplingFrequency;
+
+			if (_windowThreshold + _windowSlope / 2 < maxTime)
+			{
+				windowThreshold = _windowThreshold;
+				windowSlope = _windowSlope;
+				CalculateNewBRIRTable();
+			}
+			else
+			{
+				//TODO: ERROR
+			}
 		}
 		else
 		{
 			//TODO: ERROR
 		}
+
 	}
 
 
@@ -320,23 +331,27 @@ namespace Binaural {
 		windowedIR.resize(newData_time.size());
 		int samplingFrequency = ownerEnvironment->GetCoreAudioState().sampleRate;
 		int numberOfZeros = floor((windowThreshold - windowSlope / 2) * samplingFrequency);
+#if 0
+		if (numberOfZeros >= newData_time.size())
+		{
+			numberOfZeros = newData_time.size();
+		}
+#endif		
 		int numberOfSamplesFadeIn = ceil(windowSlope * samplingFrequency);
 		int numberOfOnes = windowedIR.size() - numberOfZeros - numberOfSamplesFadeIn;
-
 		for (int i = 0; i < numberOfZeros; i++)
 		{
 			windowedIR.at(i) = 0.0;
 		}
 		for (int i = numberOfZeros; i < numberOfZeros + numberOfSamplesFadeIn; i++)
 		{
-			windowedIR.at(i) = newData_time.at(i) * 0.5*(1-cos(M_PI*(i-numberOfZeros) / numberOfSamplesFadeIn));
+			windowedIR.at(i) = newData_time.at(i) * 0.5 * (1 - cos(M_PI * (i - numberOfZeros) / numberOfSamplesFadeIn));
 		}
-		for (int i = numberOfZeros+numberOfSamplesFadeIn; i < windowedIR.size(); i++)
+		for (int i = numberOfZeros + numberOfSamplesFadeIn; i < windowedIR.size(); i++)
 		{
 			windowedIR.at(i) = newData_time.at(i);
 		}
 
-		
 		return windowedIR;
 	}
 

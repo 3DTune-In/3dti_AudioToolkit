@@ -82,29 +82,26 @@ namespace ISM
 		return reflectionOrder;
 	}
 
-	void CISM::setMaxDistanceImageSources(float _MaxDistanceSourcesToListener)
+	void CISM::setMaxDistanceImageSources(float _MaxDistanceSourcesToListener, float _windowSlopeDistance)
 	{
-		maxDistanceSourcesToListener = _MaxDistanceSourcesToListener;	
-		int transitionMetresPerFrame = CISM::calculateTransitionMargin();
-		setTransitionMetresPerFrame(transitionMetresPerFrame);
-		originalSource->createImages(mainRoom, reflectionOrder);
+		if (_windowSlopeDistance/2 < _MaxDistanceSourcesToListener) 
+		{
+			maxDistanceSourcesToListener = _MaxDistanceSourcesToListener;
+			setTransitionMeters(_windowSlopeDistance);
+			originalSource->createImages(mainRoom, reflectionOrder);
+		}
+		else
+		{
+			//TODO: ERROR
+		}
+		
 	}
 
-	void CISM::setTransitionMetresPerFrame(int _transitionMetresPerFrame)
+	void CISM::setTransitionMeters(float  _windowSlopeDistance)
 	{
-		transitionMetresPerFrame = _transitionMetresPerFrame;
+		transitionMeters = _windowSlopeDistance;
 	}
-
-	int CISM::calculateTransitionMargin()
-	{
-		float buffersize = (float)ownerCore->GetAudioState().bufferSize;
-		float samplerate = (float)ownerCore->GetAudioState().sampleRate;
-		float soundSpeed = ownerCore->GetMagnitudes().GetSoundSpeed();
-
-		int transitionMetresPerFrame = ceil(buffersize / samplerate * soundSpeed);
-		return transitionMetresPerFrame;
-	}
-
+		
 	int CISM::calculateNumOfSilencedFrames(float maxDistanceSourcesToListener)
 	{
 		float buffersize = (float)ownerCore->GetAudioState().bufferSize;
