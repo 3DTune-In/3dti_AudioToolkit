@@ -173,8 +173,8 @@ namespace ISM
 		Common::CTransform listenerTransform = ownerISM->GetListener()->GetListenerTransform();
 		Common::CVector3 listenerLocation = listenerTransform.GetPosition();
 
-		int distanceMargin = ownerISM->transitionMetresPerFrame;
-		distanceMargin *= 1; // FRAMES_OF_MARGIN;
+		float distanceMargin = ownerISM->transitionMeters;
+		distanceMargin *= 1; // METERS_OF_MARGIN;
 				
 		for (int i = 0; i < images.size(); i++)
 		{
