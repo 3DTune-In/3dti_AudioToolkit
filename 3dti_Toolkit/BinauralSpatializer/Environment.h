@@ -145,8 +145,10 @@ namespace Binaural {
 		*            following a half Hann window shape.
 		*	\param [in] windowThreshold place in time (s) where the window reaches 0.5
 		*	\param [in] windowSlope time (s) for the window to go from 0 to 1
+		*   \param [in] reverbGain (lineal) reverb tail gain
+		* 
 		*/
-		void SetFadeInWindow(float _windowThreshold, float _windowSlope);
+		void SetFadeInWindow(float _windowThreshold, float _windowSlope, float reverbGain);
 
 		
     private:

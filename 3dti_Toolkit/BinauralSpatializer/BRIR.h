@@ -95,13 +95,13 @@ namespace Binaural
 		*	\param [in] _ownerEnvironment pointer to environment object
 		*   \eh Nothing is reported to the error handler.
 		*/
-		CBRIR(CEnvironment* _ownerEnvironment) :ownerEnvironment{ _ownerEnvironment }, BRIR_ready{ false }, windowThreshold{ 0.0 }, windowSlope{ 0.0 } {}
+		CBRIR(CEnvironment* _ownerEnvironment) :ownerEnvironment{ _ownerEnvironment }, BRIR_ready{ false }, windowThreshold{ 0.0 }, windowSlope{ 0.0 }, reverbGain{ 1.0 } {}
 
 		/**	\brief Default constructor 
 		*	\details Sets the BRIR data as not ready and the environment object as a null pointer
 		*   \eh Nothing is reported to the error handler.
 		*/
-		CBRIR() :ownerEnvironment{ nullptr }, BRIR_ready{ false }, windowThreshold{ 0.0 }, windowSlope{ 0.0 } {}
+		CBRIR() :ownerEnvironment{ nullptr }, BRIR_ready{ false }, windowThreshold{ 0.0 }, windowSlope{ 0.0 }, reverbGain{ 1.0 } {}
 
 		/**	\brief Start a new BRIR configuration.
 		*	\param [in] _BRIRLength integer that indicates the BRIR length
@@ -203,8 +203,9 @@ namespace Binaural
 		*            following a half Hann window shape.
 		*	\param [in] windowThreshold place in time (s) where the window reaches 0.5
 		*	\param [in] windowSlope time (s) for the window to go from 0 to 1
+		*   \param [in] reverbGain (lineal) reverb tail gain
 		*/
-		void SetFadeInWindow(float _windowThreshold, float _windowSlope);
+		void SetFadeInWindow(float _windowThreshold, float _windowSlope, float _reverbGain);
 
 	private:
 
@@ -246,6 +247,7 @@ namespace Binaural
 		// Fade-in window parameters. The impulse response will be windowed with a fade in defined by these parameters
 		float windowThreshold;				// time (s) between zero and the moment when the fade-in window reaches 0.5
 		float windowSlope;					// time (s) of the fade-in between 0 and 1
+		float reverbGain;                   // Gain (dB) of reverb tail
 
 		//empty variables
 		TImpulseResponse_Partitioned emptyBRIR_partitioned;
