@@ -1267,9 +1267,9 @@ namespace Binaural {
 		outBuffer.Interlace(outLeftBuffer, outRightBuffer);
 	}
 
-	void CEnvironment::SetFadeInWindow(float _windowThreshold, float _windowSlope)
+	void CEnvironment::SetFadeInWindow(float _windowThreshold, float _windowSlope, float _reverbGain)
 	{
-		environmentBRIR->SetFadeInWindow(_windowThreshold, _windowSlope);
+		environmentBRIR->SetFadeInWindow(_windowThreshold, _windowSlope, _reverbGain);
 	}
 
 

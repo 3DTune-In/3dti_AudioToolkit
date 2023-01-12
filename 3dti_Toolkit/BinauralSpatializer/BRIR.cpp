@@ -216,7 +216,7 @@ namespace Binaural {
 		return BRIR_ready;
 	}
 
-	void CBRIR::SetFadeInWindow(float _windowThreshold, float _windowSlope)
+	void CBRIR::SetFadeInWindow(float _windowThreshold, float _windowSlope, float _reverbGain)
 	{
 		if (_windowThreshold >= (_windowSlope / 2))
 		{
@@ -227,6 +227,7 @@ namespace Binaural {
 			{
 				windowThreshold = _windowThreshold;
 				windowSlope = _windowSlope;
+				reverbGain = _reverbGain;
 				CalculateNewBRIRTable();
 			}
 			else
@@ -345,11 +346,11 @@ namespace Binaural {
 		}
 		for (int i = numberOfZeros; i < numberOfZeros + numberOfSamplesFadeIn; i++)
 		{
-			windowedIR.at(i) = newData_time.at(i) * 0.5 * (1 - cos(M_PI * (i - numberOfZeros) / numberOfSamplesFadeIn));
+			windowedIR.at(i) = newData_time.at(i) * 0.5 * (1 - cos(M_PI * (i - numberOfZeros) / numberOfSamplesFadeIn))  * reverbGain;
 		}
 		for (int i = numberOfZeros + numberOfSamplesFadeIn; i < windowedIR.size(); i++)
 		{
-			windowedIR.at(i) = newData_time.at(i);
+			windowedIR.at(i) = newData_time.at(i)  * reverbGain;
 		}
 
 		return windowedIR;
