@@ -22,10 +22,10 @@
 
 #include <ostream>
 #include "BRIRFactory.h"
-#include <BinauralSpatializer/BRIR.h>
-#include <Common/ErrorHandler.h>
-#include <SOFA.h>
-#include <SOFAExceptions.h>
+#include "BinauralSpatializer/BRIR.h"
+#include "Common/ErrorHandler.h"
+#include "SOFA.h"
+#include "SOFAExceptions.h"
 #include <math.h>
 
 #define NORTH_AZIMUTH 0
@@ -153,6 +153,7 @@ namespace BRIR
 		{
 			SET_RESULT(RESULT_ERROR_UNKNOWN, "Unknown error when reading BRIR");
 		}
+        return -1;
 	}
 
 	//////////////////////////////////////////////////////////////////////

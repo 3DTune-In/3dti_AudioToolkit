@@ -83,7 +83,7 @@ namespace HAHLSimulation {
 		}
 		if (ear == Common::T_ear::LEFT)
 			dynamicEqualizer.left.SetGains_dB(gains_dB);
-		if (ear == Common::T_ear::RIGHT);
+		if (ear == Common::T_ear::RIGHT)
 			dynamicEqualizer.right.SetGains_dB(gains_dB);
 	}
 

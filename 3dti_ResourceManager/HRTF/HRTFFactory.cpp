@@ -22,10 +22,10 @@
 
 #include <ostream>
 #include "HRTFFactory.h"
-#include <BinauralSpatializer/HRTF.h>
-#include <Common/ErrorHandler.h>
-#include <SOFA.h>
-#include <SOFAExceptions.h>
+#include "BinauralSpatializer/HRTF.h"
+#include "Common/ErrorHandler.h"
+#include "SOFA.h"
+#include "SOFAExceptions.h"
 
 static inline const std::size_t array3DIndex(const unsigned long i,
                                              const unsigned long j,
