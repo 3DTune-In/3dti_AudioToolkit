@@ -378,6 +378,7 @@ namespace Binaural
 					{
 						newHRIR = it->second.rightHRIR_Partitioned;
 					}
+					return newHRIR;
 				}
 				else
 				{
