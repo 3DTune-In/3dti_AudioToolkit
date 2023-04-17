@@ -83,6 +83,8 @@ namespace ISM
 	void SourceImages::createImages(Room _room, int reflectionOrder, std::vector<Wall> reflectionWalls)
 	{
 		Common::CVector3 roomCenter = ownerISM->getRoom().getCenter();
+		Common::CTransform listenerTransform = ownerISM->GetListener()->GetListenerTransform();
+		Common::CVector3 listenerLocation = listenerTransform.GetPosition();
 
 		if (reflectionOrder > 0) //if the reflection order is already 0 no more images should be created. We are at the leaves of the tree
 		{
@@ -102,14 +104,16 @@ namespace ISM
 						// If the image room where the candidate image source is far from the original room, so that any location in it is further than
 						// the maximum distance to any location in the original room, then the recursive tree has to stop growing
 
-						//if there are no reflection walls, the minimum distance is 0 and it is not necessary to calculate it. This way, 
+						//if there are no reflection walls, the minimum distance is 0 and it is not necessary to calculate it. This way, -
 						//we avoid to get wall from the reflectionWalls vector, which is empty.
 						float roomsDistance = 0.0;
 						if(reflectionWalls.size()>0) 
 						{
-								roomsDistance = walls.at(i).getMinimumDistanceFromWall(reflectionWalls.front());
+								//roomsDistance = walls.at(i).getMinimumDistanceFromWall(reflectionWalls.front());
+							    roomsDistance = (listenerLocation - tempImageLocation).GetDistance();
 						}
-						if (roomsDistance <= ownerISM->getMaxDistanceImageSources())
+						//if (roomsDistance <= ownerISM->getMaxDistanceImageSources())
+						if (roomsDistance <= ownerISM->getMaxDistanceImageSources() + ownerISM->transitionMeters * 0.5)
 						{
 							//The new candidate meets all requirements and will be a source image. It is therefor finally completed
 							tempSourceImage->setLocation(tempImageLocation);
