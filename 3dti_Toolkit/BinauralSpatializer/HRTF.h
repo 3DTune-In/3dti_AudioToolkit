@@ -314,6 +314,7 @@ namespace Binaural
 		bool bInterpolatedResampleTable;			// If true: calculate the HRTF resample matrix with interpolation
 		int resamplingStep; 						// HRTF Resample table step (azimuth and elevation)
 		bool enableCustomizedITD;					// Indicate the use of a customized delay
+		int GapTreshold;							// Max distance between elevations that will be consider Big Gap
 
 
 
@@ -336,6 +337,11 @@ namespace Binaural
 		//	Fill out the HRTF for every azimuth and two specific elevations: 90 and 270 degrees
 		void CalculateHRIR_InPoles();
 
+		// Fill the Big Gaps of the DataBase to improve speed in the interpolation
+		// param GapTreshold -- Distance between elevations that we consider a Big Gap to fill
+		// param ResamplingStep -- Resampling Step to use, in this case, the same of the used for interpolation
+		void FillGaps_HRIR(int GapTreshold, int ResamplingStep);
+
 		//	Calculate the HRIR in the pole of one of the hemispheres
 		//param hemisphereParts	vector of the HRTF orientations of the hemisphere
 		THRIRStruct CalculateHRIR_InOneHemispherePole(vector<orientation> hemisphereParts);
@@ -357,6 +363,10 @@ namespace Binaural
 		//param newElevation	elevation of the orientation of interest (the one whose HRIR will be calculated)
 		THRIRStruct CalculateHRIR_offlineMethod(int newAzimuth, int newElevation);
 
+
+
+		THRIRStruct CalculateHRIR_offlineMethod_v2(int newAzimuth, int newElevation, list<T_PairDistanceOrientation> sortedList, int pole);
+
 		//		Calculate the barycentric coordinates of three vertex [(x1,y1), (x2,y2), (x3,y3)] and the orientation of interest (x,y)
 		const TBarycentricCoordinatesStruct GetBarycentricCoordinates(float newAzimuth, float newElevation, float x1, float y1, float x2, float y2, float x3, float y3) const;
 
@@ -373,6 +383,14 @@ namespace Binaural
 		//param	newElevation	elevation of the orientation of interest in degrees
 		//return the distances sorted list
 		std::list<T_PairDistanceOrientation> GetSortedDistancesList(int newAzimuth, int newElevation);
+
+
+		//	Calculate the distance between the given orientation (newAzimuth, newElevation, listToSort) and all other values of the given input. And store these values in a sorted list
+		//param	newAzimuth		azimuth of the orientation of interest in degrees
+		//param	newElevation	elevation of the orientation of interest in degrees
+		//param	listToSort		list of orientations that will be sorted
+		//return the distances sorted list
+		std::list<T_PairDistanceOrientation> GetSortedDistancesList_v2(int newAzimuth, int newElevation, list<orientation> listToSort);
 
 		//	Get HRIR from resample table using a barycentric interpolation of the three nearest orientation.
 		const oneEarHRIR_struct GetHRIR_InterpolationMethod(Common::T_ear ear, int azimuth, int elevation) const;
