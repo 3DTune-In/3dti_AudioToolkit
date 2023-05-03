@@ -88,7 +88,7 @@ namespace Binaural
 	void CHRTF::EndSetup()
 	{
 		if (setupInProgress) {
-			if (!t_HRTF_DataBase.empty())
+			if (!t_HRTF_DataBase.empty()) 
 			{
 				//Delete the common delay of every HRIR functions of the DataBase Table
 				RemoveCommonDelay_HRTFDataBaseTable();
@@ -755,21 +755,23 @@ namespace Binaural
 		int size_DB = t_HRTF_DataBase.size();
 		std::vector<orientation> orientations, north_hemisphere, south_hemisphere;		
 
+		// Create a vector with all the orientations of the Database
 		orientations.reserve(t_HRTF_DataBase.size());
-
 		for (auto& itr : t_HRTF_DataBase)
 		{
 			orientations.push_back(itr.first);
 		}
 
+		//  Sort orientations of the DataBase using a custom function object
 		struct {
 			bool operator()(orientation a, orientation b) const
 			{
 				return a.elevation < b.elevation;
 			}
-		} sorteeeed;
-		std::sort(orientations.begin(), orientations.end(), sorteeeed);
+		} sorted;
+		std::sort(orientations.begin(), orientations.end(), sorted);
 
+		//	Separating orientations of both hemispheres
 		for (int ii = 0; ii < size_DB; ii++)
 		{
 			if (orientations[ii].elevation > 180)
@@ -875,26 +877,8 @@ namespace Binaural
 				}
 			}
 		}
+		pole = 0;
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	void CHRTF::CalculateResampled_HRTFTable(int resamplingStep)
 	{
@@ -933,9 +917,17 @@ namespace Binaural
 
 				else
 				{
-
+					std::list<orientation> orientations;
+					//orientations.reserve(t_HRTF_DataBase.size());
+					for (auto& kv : t_HRTF_DataBase)
+					{
+						orientations.push_back(kv.first);
+					}
+					// Get a list sorted by distances to the orientation of interest
+					std::list<T_PairDistanceOrientation> sortedList = GetSortedDistancesList_v2(newAzimuth, newElevation, orientations);
 					//Get the interpolated HRIR 
-					interpolatedHRIR = CalculateHRIR_offlineMethod(newAzimuth, newElevation);
+					//interpolatedHRIR = CalculateHRIR_offlineMethod(newAzimuth, newElevation);
+					interpolatedHRIR = CalculateHRIR_offlineMethod_v2(newAzimuth, newElevation, sortedList, 0);
 
 		#ifdef USE_FREQUENCY_COVOLUTION_WITHOUT_PARTITIONS_ANECHOIC
 					//Fill out interpolated frequency table. IR in frequency domain
@@ -991,8 +983,17 @@ namespace Binaural
 				}
 				else
 				{
+					std::list<orientation> orientations;
+					//orientations.reserve(t_HRTF_DataBase.size());
+					for (auto& kv : t_HRTF_DataBase)
+					{
+						orientations.push_back(kv.first);
+					}
+					// Get a list sorted by distances to the orientation of interest
+					std::list<T_PairDistanceOrientation> sortedList = GetSortedDistancesList_v2(newAzimuth, newElevation, orientations);
 					//Get the interpolated HRIR 
-					interpolatedHRIR = CalculateHRIR_offlineMethod(newAzimuth, newElevation);
+					//interpolatedHRIR = CalculateHRIR_offlineMethod(newAzimuth, newElevation);
+					interpolatedHRIR = CalculateHRIR_offlineMethod_v2(newAzimuth, newElevation,sortedList , 0);
 		#ifdef USE_FREQUENCY_COVOLUTION_WITHOUT_PARTITIONS_ANECHOIC
 					//Fill out interpolated frequency table. IR in frequency domain
 					THRIRStruct newHRIR;
@@ -1016,7 +1017,7 @@ namespace Binaural
 				}
 			}
 		}
-		//SET_RESULT(RESULT_OK, "CalculateResampled_HRTFTable has finished succesfully");
+		SET_RESULT(RESULT_OK, "CalculateResampled_HRTFTable has finished succesfully");
 		// 
 		//double arrayfirst[3000];
 		//std::ofstream fs;
@@ -1089,7 +1090,6 @@ namespace Binaural
 		THRIRStruct newHRIR;	
 		// Get a list sorted by distances to the orientation of interest
 		std::list<T_PairDistanceOrientation> sortedList = GetSortedDistancesList(newAzimuth, newElevation);
-
 		if (sortedList.size() != 0) {
 			// Obtain  the valid Barycentric coordinates:
 			TBarycentricCoordinatesStruct barycentricCoordinates;
