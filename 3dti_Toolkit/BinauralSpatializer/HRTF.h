@@ -49,6 +49,8 @@
 #define DEFAULT_HRTF_MEASURED_DISTANCE 1.95f
 #endif
 
+#define DEFAULT_GAP_THRESHOLD 20
+
 #define MAX_DISTANCE_BETWEEN_ELEVATIONS 5
 #define NUMBER_OF_PARTS 4 
 #define AZIMUTH_STEP  15
@@ -314,7 +316,7 @@ namespace Binaural
 		bool bInterpolatedResampleTable;			// If true: calculate the HRTF resample matrix with interpolation
 		int resamplingStep; 						// HRTF Resample table step (azimuth and elevation)
 		bool enableCustomizedITD;					// Indicate the use of a customized delay
-		int GapTreshold;							// Max distance between elevations that will be consider Big Gap
+		int gapTreshold;							// Max distance between elevations that will be consider Big Gap
 
 
 
@@ -337,14 +339,18 @@ namespace Binaural
 		//	Fill out the HRTF for every azimuth and two specific elevations: 90 and 270 degrees
 		void CalculateHRIR_InPoles();
 
+
+		//	Calculate the HRIR in the pole of one of the hemispheres
+		//param hemisphereParts	vector of the HRTF orientations of the hemisphere
+		THRIRStruct CalculateHRIR_InOneHemispherePole(vector<orientation> hemisphereParts);
+
 		// Fill the Big Gaps of the DataBase to improve speed in the interpolation
 		// param GapTreshold -- Distance between elevations that we consider a Big Gap to fill
 		// param ResamplingStep -- Resampling Step to use, in this case, the same of the used for interpolation
 		void FillGaps_HRIR(int GapTreshold, int ResamplingStep);
 
-		//	Calculate the HRIR in the pole of one of the hemispheres
-		//param hemisphereParts	vector of the HRTF orientations of the hemisphere
-		THRIRStruct CalculateHRIR_InOneHemispherePole(vector<orientation> hemisphereParts);
+
+		void CalculateHRIR_Gaps(int pole, vector<orientation> hemisphere, int elevationLastRing, int ResamplingStep);
 
 		//	Calculate the resample matrix using the Barycentric interpolation Method (copy the HRIR function of the nearest orientation)
 		//param resamplingStep	HRTF resample matrix step for both azimuth and elevation

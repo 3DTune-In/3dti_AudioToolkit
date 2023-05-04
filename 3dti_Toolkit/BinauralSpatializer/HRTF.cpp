@@ -44,7 +44,7 @@ namespace Binaural
 			float partitions = (float)HRIRLength / (float)bufferSize;
 			HRIR_partitioned_NumberOfSubfilters = static_cast<int>(std::ceil(partitions));
 
-			GapTreshold = 20; // Define default I supposed
+			gapTreshold = DEFAULT_GAP_THRESHOLD;
 
 			//Clear every table			
 			t_HRTF_DataBase.clear();
@@ -97,7 +97,7 @@ namespace Binaural
 				CalculateHRIR_InPoles();	//Specific method for LISTEN DataBase
 
 				// Fill the Big Gaps of the DataBase to improve speed in the interpolation
-				FillGaps_HRIR(GapTreshold, resamplingStep);
+				FillGaps_HRIR(gapTreshold, resamplingStep);
 
 				CalculateResampled_HRTFTable(resamplingStep);
 
@@ -740,19 +740,12 @@ namespace Binaural
 	}
 
 
-	void CHRTF::FillGaps_HRIR(int GapTreshold, int resamplingStep)
+	void CHRTF::FillGaps_HRIR(int _gapTreshold, int _resamplingStep)
 	{
 		// Initialize some variables
 		int max_dist_elev = 0;
-		bool GapNorth = false, GapSouth = false;
-		int Azimuth_Step = 15;
-		int Elev_Step = resamplingStep;
+		int elev_Step = _resamplingStep;
 		int pole, elev_south, elev_north, distance;
-		list<T_PairDistanceOrientation> sortedList;
-		list<orientation> onlythatelev;
-		THRIRStruct HRIR_interpolated;
-
-		int size_DB = t_HRTF_DataBase.size();
 		std::vector<orientation> orientations, north_hemisphere, south_hemisphere;		
 
 		// Create a vector with all the orientations of the Database
@@ -762,26 +755,14 @@ namespace Binaural
 			orientations.push_back(itr.first);
 		}
 
-		//  Sort orientations of the DataBase using a custom function object
-		struct {
-			bool operator()(orientation a, orientation b) const
-			{
-				return a.elevation < b.elevation;
-			}
-		} sorted;
-		std::sort(orientations.begin(), orientations.end(), sorted);
+		//  Sort orientations of the DataBase with a lambda function in sort.
+		std::sort(orientations.begin(), orientations.end(), [](orientation a, orientation b) {return a.elevation < b.elevation;});
 
 		//	Separating orientations of both hemispheres
-		for (int ii = 0; ii < size_DB; ii++)
-		{
-			if (orientations[ii].elevation > 180)
-			{
-				north_hemisphere = { orientations.begin(), orientations.begin() + ii };
-				south_hemisphere = { orientations.begin() + ii, orientations.end() };
-				break;
-			}
+		std::copy_if(orientations.begin(), orientations.end(), back_inserter(south_hemisphere), [](orientation n) {return n.elevation > 180; }); //SOUTH
+		std::copy_if(orientations.begin(), orientations.end(), back_inserter(north_hemisphere), [](orientation n) {return n.elevation < 180; }); //NORTH
 
-		}
+
 
 		// SOUTH HEMISPHERE
 		for (int jj = 1; jj < south_hemisphere.size(); jj++)
@@ -795,11 +776,14 @@ namespace Binaural
 			}
 		}
 
-		if (max_dist_elev > GapTreshold)
+		if (max_dist_elev > _gapTreshold)
 		{
-			GapSouth = true;
+			pole = 270;
+			CalculateHRIR_Gaps(pole, south_hemisphere, elev_south, elev_Step);
+
 		}
 
+		// Reset var to use it in north hemisphere
 		max_dist_elev = 0;
 
 		// NORTH HEMISPHERE
@@ -814,70 +798,45 @@ namespace Binaural
 			}
 		}
 
-		if (max_dist_elev > GapTreshold)
-		{
-			GapNorth = true;
-		}
-
-		if (GapSouth)
-		{
-	
-			pole = 270;
-
-			// Get a list with only the points of the nearest known ring
-			for (auto& itr : south_hemisphere)
-			{
-				if (itr.elevation == elev_south)
-				{
-					onlythatelev.push_back(itr);
-				}
-			}
-
-
-			for (int Elevat = pole + Elev_Step; Elevat < elev_south; Elevat =  Elevat + Elev_Step)
-			{
-				for (int Azim = 0; Azim <= 360; Azim =  Azim + Azimuth_Step)
-				{					
-
-					sortedList = GetSortedDistancesList_v2(Azim, Elevat, onlythatelev);
-
-					HRIR_interpolated = CalculateHRIR_offlineMethod_v2(Azim, Elevat, sortedList, pole);
-
-					t_HRTF_DataBase.emplace(orientation(Azim, Elevat), HRIR_interpolated);
-
-				}
-			}
-		}
-
-		if (GapNorth)
+		if (max_dist_elev > _gapTreshold)
 		{
 			pole = 90;
+			CalculateHRIR_Gaps(pole, north_hemisphere, elev_north, elev_Step);
+		}
+	}
 
-			// Get a list with only the points of the nearest known ring
-			for (auto& itr : north_hemisphere)
+
+	void CHRTF::CalculateHRIR_Gaps(int _pole, vector<orientation> _hemisphere, int _elevationLastRing, int _ElevStep)
+	{
+		list<orientation> onlythatelev;
+		list<T_PairDistanceOrientation> sortedList;
+		int azimuth_Step = AZIMUTH_STEP;
+		THRIRStruct HRIR_interpolated;
+
+		// Get a list with only the points of the nearest known ring
+		for (auto& itr : _hemisphere)
+		{
+			if (itr.elevation == _elevationLastRing)
 			{
-				if (itr.elevation == elev_north)
-				{
-					onlythatelev.push_back(itr);
-				}
-			}
-
-
-			for (int Elevat = pole + Elev_Step; Elevat < elev_north; Elevat =  Elevat + Elev_Step)
-			{
-				for (int Azim = 0; Azim <= 360; Azim = Azim + Azimuth_Step)
-				{
-
-					sortedList = GetSortedDistancesList_v2(Azim, elev_north, onlythatelev);
-
-					HRIR_interpolated = CalculateHRIR_offlineMethod_v2(Azim, Elevat, sortedList, pole);
-
-					t_HRTF_DataBase.emplace(orientation(Azim, Elevat), HRIR_interpolated);
-
-				}
+				onlythatelev.push_back(itr);
 			}
 		}
-		pole = 0;
+
+
+		for (int elevat = _pole + _ElevStep; elevat < _elevationLastRing; elevat = elevat + _ElevStep)
+		{
+			for (int azim = 0; azim <= 360; azim = azim + azimuth_Step)
+			{
+
+				sortedList = GetSortedDistancesList_v2(azim, elevat, onlythatelev);
+
+				HRIR_interpolated = CalculateHRIR_offlineMethod_v2(azim, elevat, sortedList, _pole);
+
+				t_HRTF_DataBase.emplace(orientation(azim, elevat), HRIR_interpolated);
+
+			}
+		}
+
 	}
 
 	void CHRTF::CalculateResampled_HRTFTable(int resamplingStep)
@@ -927,7 +886,7 @@ namespace Binaural
 					std::list<T_PairDistanceOrientation> sortedList = GetSortedDistancesList_v2(newAzimuth, newElevation, orientations);
 					//Get the interpolated HRIR 
 					//interpolatedHRIR = CalculateHRIR_offlineMethod(newAzimuth, newElevation);
-					interpolatedHRIR = CalculateHRIR_offlineMethod_v2(newAzimuth, newElevation, sortedList, 0);
+					interpolatedHRIR = CalculateHRIR_offlineMethod_v2(newAzimuth, newElevation, sortedList, 0); // pole = 0
 
 		#ifdef USE_FREQUENCY_COVOLUTION_WITHOUT_PARTITIONS_ANECHOIC
 					//Fill out interpolated frequency table. IR in frequency domain
