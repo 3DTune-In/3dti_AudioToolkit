@@ -766,16 +766,8 @@ namespace Binaural
 		reverse(north_hemisphere.begin(), north_hemisphere.end());
 
 		// SOUTH HEMISPHERE
-		for (int jj = 1; jj < south_hemisphere.size(); jj++)
-		{
-			// distance between 2 orientations, always positive
-			if (south_hemisphere[jj].elevation != south_hemisphere[0].elevation)
-			{
-				max_dist_elev = south_hemisphere[jj].elevation - south_hemisphere[0].elevation; // Pole 270, distance positive
-				elev_south = south_hemisphere[jj].elevation;
-				break;
-			}
-		}
+
+		CalculateDistanceBetweenPoleandLastRing(south_hemisphere, max_dist_elev, elev_south);
 
 		if (max_dist_elev > _gapTreshold)
 		{
@@ -787,16 +779,8 @@ namespace Binaural
 		max_dist_elev = 0;
 
 		// NORTH HEMISPHERE
-		for (int jj = 1; jj < north_hemisphere.size(); jj++)
-		{
-			// distance between 2 orientations, always positive
-			if (north_hemisphere[jj].elevation != north_hemisphere[0].elevation)
-			{
-				max_dist_elev = north_hemisphere[0].elevation - north_hemisphere[jj].elevation;
-				elev_north = north_hemisphere[jj].elevation;
-				break;
-			}
-		}
+
+		CalculateDistanceBetweenPoleandLastRing(north_hemisphere, max_dist_elev, elev_north);
 
 		if (max_dist_elev > _gapTreshold)
 		{
@@ -805,6 +789,19 @@ namespace Binaural
 		}
 	}
 
+	void CHRTF::CalculateDistanceBetweenPoleandLastRing(vector<orientation> _hemisphere, int& _max_dist_elev, int& elevationLastRing)
+	{
+		for (int jj = 1; jj < _hemisphere.size(); jj++)
+		{
+			// distance between 2 orientations, always positive
+			if (_hemisphere[jj].elevation != _hemisphere[0].elevation)
+			{
+				_max_dist_elev = abs(_hemisphere[jj].elevation - _hemisphere[0].elevation); // Distance positive for all poles
+				elevationLastRing = _hemisphere[jj].elevation;
+				break;
+			}
+		}
+	}
 
 	void CHRTF::Calculate_and_EmplaceHRIR(int _pole, vector<orientation> _hemisphere, int _elevationLastRing, int _elevStep)
 	{

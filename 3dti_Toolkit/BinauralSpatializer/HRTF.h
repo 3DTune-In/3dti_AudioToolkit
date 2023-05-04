@@ -349,6 +349,8 @@ namespace Binaural
 		// param ResamplingStep -- Resampling Step to use, in this case, the same of the used for interpolation
 		void FillSphericalCap_HRTF(int gapTrheshold, int resamplingStep);
 
+		void CalculateDistanceBetweenPoleandLastRing(vector<orientation> hemisphere, int& max_dist_elev, int& elevationLastRing);
+
 		// Calculate and emplace the interpolated HRIR to fill the gaps between poles and the nearest ring
 		// param pole -- Elevation of the pole we are working with (90, 270 or fix 0 fot other use)
 		// param hemisphere -- Vector with all the orientations in one hemisphere
