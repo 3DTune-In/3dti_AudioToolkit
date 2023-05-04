@@ -97,7 +97,7 @@ namespace Binaural
 				CalculateHRIR_InPoles();	//Specific method for LISTEN DataBase
 
 				// Fill the Big Gaps of the DataBase to improve speed in the interpolation
-				FillGaps_HRIR(gapTreshold, resamplingStep);
+				FillSphericalCap_HRTF(gapTreshold, resamplingStep);
 
 				CalculateResampled_HRTFTable(resamplingStep);
 
@@ -740,7 +740,7 @@ namespace Binaural
 	}
 
 
-	void CHRTF::FillGaps_HRIR(int _gapTreshold, int _resamplingStep)
+	void CHRTF::FillSphericalCap_HRTF(int _gapTreshold, int _resamplingStep)
 	{
 		// Initialize some variables
 		int max_dist_elev = 0;
@@ -763,24 +763,24 @@ namespace Binaural
 		std::copy_if(orientations.begin(), orientations.end(), back_inserter(north_hemisphere), [](orientation n) {return n.elevation < 180; }); //NORTH
 
 
+		reverse(north_hemisphere.begin(), north_hemisphere.end());
 
 		// SOUTH HEMISPHERE
 		for (int jj = 1; jj < south_hemisphere.size(); jj++)
 		{
 			// distance between 2 orientations, always positive
-			distance = south_hemisphere[jj].elevation - south_hemisphere[jj-1].elevation;
-			if (distance > max_dist_elev)
+			if (south_hemisphere[jj].elevation != south_hemisphere[0].elevation)
 			{
-				max_dist_elev = distance;
+				max_dist_elev = south_hemisphere[jj].elevation - south_hemisphere[0].elevation; // Pole 270, distance positive
 				elev_south = south_hemisphere[jj].elevation;
+				break;
 			}
 		}
 
 		if (max_dist_elev > _gapTreshold)
 		{
 			pole = 270;
-			CalculateHRIR_Gaps(pole, south_hemisphere, elev_south, elev_Step);
-
+			Calculate_and_EmplaceHRIR(pole, south_hemisphere, elev_south, elev_Step);
 		}
 
 		// Reset var to use it in north hemisphere
@@ -790,23 +790,23 @@ namespace Binaural
 		for (int jj = 1; jj < north_hemisphere.size(); jj++)
 		{
 			// distance between 2 orientations, always positive
-			distance = north_hemisphere[jj].elevation - north_hemisphere[jj-1].elevation;
-			if (distance > max_dist_elev)
+			if (north_hemisphere[jj].elevation != north_hemisphere[0].elevation)
 			{
-				max_dist_elev = distance;
+				max_dist_elev = north_hemisphere[0].elevation - north_hemisphere[jj].elevation;
 				elev_north = north_hemisphere[jj].elevation;
+				break;
 			}
 		}
 
 		if (max_dist_elev > _gapTreshold)
 		{
 			pole = 90;
-			CalculateHRIR_Gaps(pole, north_hemisphere, elev_north, elev_Step);
+			Calculate_and_EmplaceHRIR(pole, north_hemisphere, elev_north, elev_Step);
 		}
 	}
 
 
-	void CHRTF::CalculateHRIR_Gaps(int _pole, vector<orientation> _hemisphere, int _elevationLastRing, int _ElevStep)
+	void CHRTF::Calculate_and_EmplaceHRIR(int _pole, vector<orientation> _hemisphere, int _elevationLastRing, int _elevStep)
 	{
 		list<orientation> onlythatelev;
 		list<T_PairDistanceOrientation> sortedList;
@@ -822,8 +822,7 @@ namespace Binaural
 			}
 		}
 
-
-		for (int elevat = _pole + _ElevStep; elevat < _elevationLastRing; elevat = elevat + _ElevStep)
+		for (int elevat = _pole + _elevStep; elevat < _elevationLastRing; elevat = elevat + _elevStep)
 		{
 			for (int azim = 0; azim <= 360; azim = azim + azimuth_Step)
 			{

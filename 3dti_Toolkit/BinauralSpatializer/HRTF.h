@@ -347,10 +347,14 @@ namespace Binaural
 		// Fill the Big Gaps of the DataBase to improve speed in the interpolation
 		// param GapTreshold -- Distance between elevations that we consider a Big Gap to fill
 		// param ResamplingStep -- Resampling Step to use, in this case, the same of the used for interpolation
-		void FillGaps_HRIR(int GapTreshold, int ResamplingStep);
+		void FillSphericalCap_HRTF(int gapTrheshold, int resamplingStep);
 
-
-		void CalculateHRIR_Gaps(int pole, vector<orientation> hemisphere, int elevationLastRing, int ResamplingStep);
+		// Calculate and emplace the interpolated HRIR to fill the gaps between poles and the nearest ring
+		// param pole -- Elevation of the pole we are working with (90, 270 or fix 0 fot other use)
+		// param hemisphere -- Vector with all the orientations in one hemisphere
+		// param elevationLastRing -- Elevation of the nearest ring to the pole
+		// param resamplingStep -- Resampling Step to use, in this case, for Elevation Step in the filling
+		void Calculate_and_EmplaceHRIR(int pole, vector<orientation> hemisphere, int elevationLastRing, int resamplingStep);
 
 		//	Calculate the resample matrix using the Barycentric interpolation Method (copy the HRIR function of the nearest orientation)
 		//param resamplingStep	HRTF resample matrix step for both azimuth and elevation
