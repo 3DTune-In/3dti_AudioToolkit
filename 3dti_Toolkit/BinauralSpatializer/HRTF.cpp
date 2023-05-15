@@ -44,7 +44,17 @@ namespace Binaural
 			float partitions = (float)HRIRLength / (float)bufferSize;
 			HRIR_partitioned_NumberOfSubfilters = static_cast<int>(std::ceil(partitions));
 
-			gapTreshold = DEFAULT_GAP_THRESHOLD;
+			gapThreshold = DEFAULT_GAP_THRESHOLD;
+
+			sphereBorder = SPHERE_BORDER;
+
+
+			aziMin = DEFAULT_MIN_AZIMUTH;
+			aziMax = DEFAULT_MAX_AZIMUTH;
+			eleMin = DEFAULT_MIN_ELEVATION;
+			eleMax = DEFAULT_MAX_ELEVATION;
+			eleNorth = GetPoleElevation(TPole::north);
+			eleSouth = GetPoleElevation(TPole::south);
 
 			//Clear every table			
 			t_HRTF_DataBase.clear();
@@ -68,10 +78,7 @@ namespace Binaural
 	void CHRTF::AddHRIR (float azimuth, float elevation, THRIRStruct && newHRIR)
 	{
 		if (setupInProgress) {
-			int iAzimuth = static_cast<int> (round(azimuth));
-			int iElevation = static_cast<int> (round(elevation));
-
-			auto returnValue = t_HRTF_DataBase.emplace(orientation(iAzimuth, iElevation), std::forward<THRIRStruct>(newHRIR));
+			auto returnValue = t_HRTF_DataBase.emplace(orientation(azimuth, elevation), std::forward<THRIRStruct>(newHRIR));
 			//Error handler
 			if (returnValue.second) { /*SET_RESULT(RESULT_OK, "HRIR emplaced into t_HRTF_DataBase succesfully"); */ }
 			else { SET_RESULT(RESULT_WARNING, "Error emplacing HRIR in t_HRTF_DataBase map"); }
@@ -97,7 +104,7 @@ namespace Binaural
 				CalculateHRIR_InPoles();	//Specific method for LISTEN DataBase
 
 				// Fill the Big Gaps of the DataBase to improve speed in the interpolation
-				FillSphericalCap_HRTF(gapTreshold, resamplingStep);
+				FillSphericalCap_HRTF(gapThreshold, resamplingStep);
 
 				CalculateResampled_HRTFTable(resamplingStep);
 
@@ -233,10 +240,10 @@ namespace Binaural
 				int iazimuth =		static_cast<int>(round(_azimuth));
 				int ielevation =	static_cast<int>(round(_elevation));
 				// HRTF table does not contain data for azimuth = 360, which has the same values as azimuth = 0, for every elevation
-				if (iazimuth == 360)	{ iazimuth = 0; }
-				if (ielevation == 360)	{ ielevation = 0; }
+				if (iazimuth == aziMax) { iazimuth = aziMin; }
+				if (ielevation == eleMax) { ielevation = eleMin; }
 				// When elevation is 90 or 270 degrees, the HRIR value is the same one for every azimuth
-				if ((ielevation == 90) || (ielevation == 270)) { iazimuth = 0; }
+				if ((ielevation == eleNorth) || (ielevation == eleSouth)) { iazimuth = aziMin; }
 
 				auto it = t_HRTF_Resampled_frequency.find(orientation(iazimuth, ielevation));
 				if (it != t_HRTF_Resampled_frequency.end()) 
@@ -271,10 +278,10 @@ namespace Binaural
 				int nearestAzimuth =	static_cast<int>(round(_azimuth / resamplingStep) * resamplingStep);
 				int nearestElevation =	static_cast<int>(round(_elevation / resamplingStep) * resamplingStep);
 				// HRTF table does not contain data for azimuth = 360, which has the same values as azimuth = 0, for every elevation
-				if (nearestAzimuth == 360)		{ nearestAzimuth = 0; }
-				if (nearestElevation == 360)	{ nearestElevation = 0; }
+				if (nearestAzimuth == aziMax) { nearestAzimuth = aziMin; }
+				if (nearestElevation == eleMax) { nearestElevation = eleMin; }
 				// When elevation is 90 or 270 degrees, the HRIR value is the same one for every azimuth
-				if ((nearestElevation == 90) || (nearestElevation == 270)) { nearestAzimuth = 0; }
+				if ((nearestElevation == eleNorth) || (nearestElevation == eleSouth)) { nearestAzimuth = aziMin; }
 
 				auto it = t_HRTF_Resampled_frequency.find(orientation(nearestAzimuth, nearestElevation));
 				if (it != t_HRTF_Resampled_frequency.end())
@@ -331,7 +338,7 @@ namespace Binaural
 				//If we are in the sphere poles, do not perform the interpolation (the HRIR value for this orientations have been calculated with a different method in the resampled methods, because our barycentric interpolation method doesn't work in the poles)
 				int iazimuth = static_cast<int>(round(_azimuth));
 				int ielevation = static_cast<int>(round(_elevation));
-				if ((ielevation == 90) || (ielevation == 270))
+				if ((ielevation == eleNorth) || (ielevation == eleSouth))
 				{
 					//In the sphere poles the azimuth is always 0 degrees
 					iazimuth = 0.0f;
@@ -367,10 +374,10 @@ namespace Binaural
 				int nearestAzimuth = static_cast<int>(round(_azimuth / resamplingStep) * resamplingStep);
 				int nearestElevation = static_cast<int>(round(_elevation / resamplingStep) * resamplingStep);
 				// HRTF table does not contain data for azimuth = 360, which has the same values as azimuth = 0, for every elevation
-				if (nearestAzimuth == 360) { nearestAzimuth = 0; }
-				if (nearestElevation == 360) { nearestElevation = 0; }
+				if (nearestAzimuth == aziMax) { nearestAzimuth = aziMin; }
+				if (nearestElevation == eleMax) { nearestElevation = eleMin; }
 				// When elevation is 90 or 270 degrees, the HRIR value is the same one for every azimuth
-				if ((nearestElevation == 90) || (nearestElevation == 270)) { nearestAzimuth = 0; }
+				if ((nearestElevation == eleNorth) || (nearestElevation == eleSouth)) { nearestAzimuth = aziMin; }
 
 				auto it = t_HRTF_Resampled_partitioned.find(orientation(nearestAzimuth, nearestElevation));
 				if (it != t_HRTF_Resampled_partitioned.end())
@@ -425,7 +432,7 @@ namespace Binaural
 					//If we are in the sphere poles, do not perform the interpolation (the HRIR value for this orientations have been calculated with a different method in the resampled methods, because our barycentric interpolation method doesn't work in the poles)
 					int iazimuth = static_cast<int>(round(_azimuthCenter));
 					int ielevation = static_cast<int>(round(_elevationCenter));
-					if ((ielevation == 90) || (ielevation == 270))
+					if ((ielevation == eleNorth) || (ielevation == eleSouth))
 					{
 						//In the sphere poles the azimuth is always 0 degrees
 						iazimuth = 0.0f;
@@ -462,10 +469,10 @@ namespace Binaural
 					int nearestAzimuth = static_cast<int>(round(_azimuthCenter / resamplingStep) * resamplingStep);
 					int nearestElevation = static_cast<int>(round(_elevationCenter / resamplingStep) * resamplingStep);
 					// HRTF table does not contain data for azimuth = 360, which has the same values as azimuth = 0, for every elevation
-					if (nearestAzimuth == 360) { nearestAzimuth = 0; }
-					if (nearestElevation == 360) { nearestElevation = 0; }
+					if (nearestAzimuth == aziMax) { nearestAzimuth = aziMin; }
+					if (nearestElevation == eleMax) { nearestElevation = eleMin; }
 					// When elevation is 90 or 270 degrees, the HRIR value is the same one for every azimuth
-					if ((nearestElevation == 90) || (nearestElevation == 270)) { nearestAzimuth = 0; }
+					if ((nearestElevation == eleNorth) || (nearestElevation == eleSouth)) { nearestAzimuth = aziMin; }
 
 					auto it = t_HRTF_Resampled_partitioned.find(orientation(nearestAzimuth, nearestElevation));
 					if (it != t_HRTF_Resampled_partitioned.end())
@@ -518,11 +525,14 @@ namespace Binaural
 
 		//Clasify every HRIR of the HRTF into the two hemispheres by their orientations
 		std::vector<orientation> keys_southernHemisphere, keys_northenHemisphere;
+		int iAzimuthPoles = aziMin;
+		int iElevationNorthPole = eleNorth;
+		int iElevationSouthPole = eleSouth;
 		
 		//	NORTHERN HEMOSPHERE POLES (90 degrees elevation ) ____________________________________________________________________________
 		
 		//If HRIR with orientation (0,90) exist in t_HRTF_DataBase
-		auto it90 = t_HRTF_DataBase.find(orientation(0, 90));
+		auto it90 = t_HRTF_DataBase.find(orientation(iAzimuthPoles, iElevationNorthPole));
 		if (it90 != t_HRTF_DataBase.end())
 		{
 			precalculatedHRIR_90 = it90->second;
@@ -532,7 +542,7 @@ namespace Binaural
 			keys_northenHemisphere.reserve(t_HRTF_DataBase.size());
 			for (auto& it : t_HRTF_DataBase)
 			{
-				if (it.first.elevation < 90) { keys_northenHemisphere.push_back(it.first); }
+				if (it.first.elevation < iElevationNorthPole) { keys_northenHemisphere.push_back(it.first); }
 			}
 			// sort using a custom function object
 			struct {
@@ -555,9 +565,9 @@ namespace Binaural
 		//	SOURTHERN HEMOSPHERE POLES (270 degrees elevation) ____________________________________________________________________________
 		
 		//If HRIR with orientation (0,270) exist in t_HRTF_DataBase
-		if (t_HRTF_DataBase.find(orientation(0, 270)) != t_HRTF_DataBase.end())
+		if (t_HRTF_DataBase.find(orientation(iAzimuthPoles, iElevationSouthPole)) != t_HRTF_DataBase.end())
 		{
-			auto it270 = t_HRTF_DataBase.find(orientation(0, 270));
+			auto it270 = t_HRTF_DataBase.find(orientation(iAzimuthPoles, iElevationSouthPole));
 			precalculatedHRIR_270 = it270->second;
 		}
 		else
@@ -565,7 +575,7 @@ namespace Binaural
 			keys_southernHemisphere.reserve(t_HRTF_DataBase.size());
 			for (auto& it : t_HRTF_DataBase)
 			{
-				if (it.first.elevation > 270) { keys_southernHemisphere.push_back(it.first); }
+				if (it.first.elevation > iElevationSouthPole) { keys_southernHemisphere.push_back(it.first); }
 			}
 			//Get a vector of iterators ordered from highest to lowest elevation.		
 			struct {
@@ -587,16 +597,16 @@ namespace Binaural
 		
 		// Fill out the table ____________________________________________________________________________
 		
-		for (int i = 0; i < 360; i = i + AZIMUTH_STEP)
+		for (int i = aziMin; i < aziMax; i = i +   AZIMUTH_STEP)
 		{
 			//Elevation 270 degrees
-			t_HRTF_DataBase.emplace(orientation(i, 270), precalculatedHRIR_270);
+			t_HRTF_DataBase.emplace(orientation(i, iElevationSouthPole), precalculatedHRIR_270);
 			//Elevation 90 degrees
-			t_HRTF_DataBase.emplace(orientation(i, 90), precalculatedHRIR_90);
+			t_HRTF_DataBase.emplace(orientation(i, iElevationNorthPole), precalculatedHRIR_90);
 			//Azimuth 360 degrees
-			auto it0 = t_HRTF_DataBase.find(orientation(0, i));
+			auto it0 = t_HRTF_DataBase.find(orientation(aziMin, i));
 			if (it0 != t_HRTF_DataBase.end()) {
-				t_HRTF_DataBase.emplace(orientation(360, i), it0->second);
+				t_HRTF_DataBase.emplace(orientation(aziMax, i), it0->second);
 			}
 		}
 
@@ -608,7 +618,7 @@ namespace Binaural
 		THRIRStruct calculatedHRIR;
 		std::vector < vector <orientation>> hemisphereParts;
 		hemisphereParts.resize(NUMBER_OF_PARTS);
-		int border = std::ceil(360.0f / NUMBER_OF_PARTS);
+		int border = std::ceil(sphereBorder / NUMBER_OF_PARTS);
 
 		auto currentElevation = keys_hemisphere.begin()->elevation;
 		for (auto& it : keys_hemisphere)
@@ -771,8 +781,8 @@ namespace Binaural
 
 		if (max_dist_elev > _gapTreshold)
 		{
-			pole = 270;
-			Calculate_and_EmplaceHRIR(pole, south_hemisphere, elev_south, elev_Step);
+			//pole = 270;
+			Calculate_and_EmplaceHRIR(eleSouth, south_hemisphere, elev_south, elev_Step);
 		}
 
 		// Reset var to use it in north hemisphere
@@ -784,12 +794,12 @@ namespace Binaural
 
 		if (max_dist_elev > _gapTreshold)
 		{
-			pole = 90;
-			Calculate_and_EmplaceHRIR(pole, north_hemisphere, elev_north, elev_Step);
+			//pole = 90;
+			Calculate_and_EmplaceHRIR(eleNorth, north_hemisphere, elev_north, elev_Step);
 		}
 	}
 
-	void CHRTF::CalculateDistanceBetweenPoleandLastRing(vector<orientation> _hemisphere, int& _max_dist_elev, int& elevationLastRing)
+	void CHRTF::CalculateDistanceBetweenPoleandLastRing(std::vector<orientation> _hemisphere, int& _max_dist_elev, int& elevationLastRing)
 	{
 		for (int jj = 1; jj < _hemisphere.size(); jj++)
 		{
@@ -803,11 +813,11 @@ namespace Binaural
 		}
 	}
 
-	void CHRTF::Calculate_and_EmplaceHRIR(int _pole, vector<orientation> _hemisphere, int _elevationLastRing, int _elevStep)
+	void CHRTF::Calculate_and_EmplaceHRIR(int _pole, std::vector<orientation> _hemisphere, int _elevationLastRing, int _fillStep)
 	{
-		list<orientation> onlythatelev;
-		list<T_PairDistanceOrientation> sortedList;
-		int azimuth_Step = AZIMUTH_STEP;
+		std::list<orientation> onlythatelev;
+		std::list<T_PairDistanceOrientation> sortedList;
+		int azimuth_Step = _fillStep;
 		THRIRStruct HRIR_interpolated;
 
 		// Get a list with only the points of the nearest known ring
@@ -819,18 +829,41 @@ namespace Binaural
 			}
 		}
 
-		for (int elevat = _pole + _elevStep; elevat < _elevationLastRing; elevat = elevat + _elevStep)
+		// SOUTH HEMISPHERE
+
+		if (_pole == ELEVATION_SOUTH_POLE)
 		{
-			for (int azim = 0; azim <= 360; azim = azim + azimuth_Step)
+			for (int elevat = _pole + _fillStep; elevat < _elevationLastRing; elevat = elevat + _fillStep)
 			{
+				for (int azim = aziMin; azim <= aziMax; azim = azim + azimuth_Step)
+				{
 
-				sortedList = GetSortedDistancesList_v2(azim, elevat, onlythatelev);
+					sortedList = GetSortedDistancesList_v2(azim, elevat, onlythatelev);
 
-				HRIR_interpolated = CalculateHRIR_offlineMethod_v2(azim, elevat, sortedList, _pole);
+					HRIR_interpolated = CalculateHRIR_offlineMethod_v2(azim, elevat, sortedList, _pole);
 
-				t_HRTF_DataBase.emplace(orientation(azim, elevat), HRIR_interpolated);
+					t_HRTF_DataBase.emplace(orientation(azim, elevat), HRIR_interpolated);
 
+				}
 			}
+		}	// NORTH HEMISPHERE
+		else if (_pole == ELEVATION_NORTH_POLE)
+		{
+
+			for (int elevat = _elevationLastRing + _fillStep; elevat < _pole; elevat = elevat + _fillStep)
+			{
+				for (int azim = aziMin; azim <= aziMax; azim = azim + azimuth_Step)
+				{
+
+					sortedList = GetSortedDistancesList_v2(azim, elevat, onlythatelev);
+
+					HRIR_interpolated = CalculateHRIR_offlineMethod_v2(azim, elevat, sortedList, _pole);
+
+					t_HRTF_DataBase.emplace(orientation(azim, elevat), HRIR_interpolated);
+
+				}
+			}
+
 		}
 
 	}
@@ -840,9 +873,9 @@ namespace Binaural
 		THRIRStruct interpolatedHRIR;
 
 		//Resample Interpolation Algorithm
-		for (int newAzimuth = 0; newAzimuth < 360; newAzimuth = newAzimuth + resamplingStep)
+		for (int newAzimuth = aziMin; newAzimuth < aziMax; newAzimuth = newAzimuth + resamplingStep)
 		{
-			for (int newElevation = 0; newElevation <= 90; newElevation = newElevation + resamplingStep)
+			for (int newElevation = eleMin; newElevation <= eleNorth; newElevation = newElevation + resamplingStep)
 			{
 				auto it = t_HRTF_DataBase.find(orientation(newAzimuth, newElevation));
 				if (it != t_HRTF_DataBase.end())
@@ -889,7 +922,7 @@ namespace Binaural
 					THRIRStruct newHRIR;
 					Common::CFprocessor::GetFFT(interpolatedHRIR.leftHRIR, newHRIR.leftHRIR, bufferSize);
 					Common::CFprocessor::GetFFT(interpolatedHRIR.rightHRIR, newHRIR.rightHRIR, bufferSize);
-					newHRIR.leftDelay = interpolatedHRIR.leftDelay;
+					newHRIR.leftDelay = interpolatedHRIR.leftDelay; 
 					newHRIR.rightDelay = interpolatedHRIR.rightDelay;
 
 					auto returnValue2 = t_HRTF_Resampled_frequency.emplace(orientation(newAzimuth, newElevation), std::forward<THRIRStruct>(newHRIR));
@@ -909,7 +942,7 @@ namespace Binaural
 				}
 			}
 
-			for (int newElevation = 270; newElevation < 360; newElevation = newElevation + resamplingStep)
+			for (int newElevation = eleSouth; newElevation < eleMax; newElevation = newElevation + resamplingStep)
 			{
 				auto it2 = t_HRTF_DataBase.find(orientation(newAzimuth, newElevation));
 				if (it2 != t_HRTF_DataBase.end())
@@ -973,30 +1006,6 @@ namespace Binaural
 			}
 		}
 		SET_RESULT(RESULT_OK, "CalculateResampled_HRTFTable has finished succesfully");
-		// 
-		//double arrayfirst[3000];
-		//std::ofstream fs;
-		//std::ofstream fsor;
-		//fs.open("Delay_resamp_c++.txt");
-		//fsor.open("Or_Resamp_c++.txt");
-
-		//for (int j = 0; j < HRIRLength; j++)
-		//{
-		//	//arrayfirst[j] = t_HRTF_Resampled_partitioned->second.leftHRIR[j];
-		//	for (auto& it : t_HRTF_Resampled_partitioned)
-		//	{
-		//		fs << (it.second.leftDelay) << ";";
-		//		fs << it.second.rightDelay << std::endl;
-
-		//		fsor << it.first.azimuth << ";";
-		//		fsor << it.first.elevation << std::endl;
-		//	}
-
-		//	
-
-		//}
-		//fs.close();
-		//fsor.close();
 
 	}
 
@@ -1119,7 +1128,7 @@ namespace Binaural
 	}
 
 
-	THRIRStruct CHRTF::CalculateHRIR_offlineMethod_v2(int newAzimuth, int newElevation, list<T_PairDistanceOrientation> sortedList, int pole)
+	THRIRStruct CHRTF::CalculateHRIR_offlineMethod_v2(int newAzimuth, int newElevation, std::list<T_PairDistanceOrientation> sortedList, int pole)
 	{
 		THRIRStruct newHRIR;
 		//// Get a list sorted by distances to the orientation of interest
@@ -1135,6 +1144,7 @@ namespace Binaural
 				mygroup[copy] = it->second;
 				it++;
 			}
+			std::cout << newAzimuth << " ; " << newElevation << endl;
 			//Algorithm to get a triangle around the orientation of interest
 			for (int groupSize = 3; groupSize < sortedList.size(); groupSize++)
 			{
@@ -1144,7 +1154,7 @@ namespace Binaural
 					{
 						for (int k = j + 1; k < groupSize; k++)
 						{
-							if (pole == 270 || pole == 90)
+							if (pole == eleSouth || pole == eleNorth)
 							{
 								mygroup[i].azimuth = newAzimuth;
 								mygroup[i].elevation = pole;
@@ -1212,10 +1222,10 @@ namespace Binaural
 		azimuth = originalAzimuth + 180 - azimuthOrientationOfInterest;
 	
 		// Check limits (always return 0 instead of 360)
-		if (azimuth >= 360)
+		if (azimuth >= aziMax)
 			azimuth = std::fmod(azimuth, (float)360);
 
-		if (azimuth < 0)
+		if (azimuth < aziMin)
 			azimuth = azimuth + 360;
 	
 		return azimuth;
@@ -1223,7 +1233,7 @@ namespace Binaural
 
 	float CHRTF::TransformElevation(float elevationOrientationOfInterest, float originalElevation)
 	{
-		if (originalElevation >= 270) {
+		if (originalElevation >= eleSouth) {
 			originalElevation = originalElevation - 360;
 		}
 		return originalElevation;
@@ -1257,7 +1267,7 @@ namespace Binaural
 		return sortedList;
 	}
 
-	std::list<T_PairDistanceOrientation> CHRTF::GetSortedDistancesList_v2(int newAzimuth, int newElevation, list<orientation> listToSort)
+	std::list<T_PairDistanceOrientation> CHRTF::GetSortedDistancesList_v2(int newAzimuth, int newElevation, std::list<orientation> listToSort)
 	{
 		T_PairDistanceOrientation temp;
 		float distance;
@@ -1452,12 +1462,12 @@ namespace Binaural
 		if (barycentricCoordinates.alpha >= 0.0f && barycentricCoordinates.beta >= 0.0f && barycentricCoordinates.gamma >= 0.0f) 
 		{
 			// HRTF table does not contain data for azimuth = 360, which has the same values as azimuth = 0, for every elevation
-			if (orientation_pto1.azimuth == 360) { orientation_pto1.azimuth = 0; }
-			if (orientation_pto2.azimuth == 360) { orientation_pto2.azimuth = 0; }
-			if (orientation_pto3.azimuth == 360) { orientation_pto3.azimuth = 0; }
-			if (orientation_pto1.elevation == 360) { orientation_pto1.elevation = 0; }
-			if (orientation_pto2.elevation == 360) { orientation_pto2.elevation = 0; }
-			if (orientation_pto3.elevation == 360) { orientation_pto3.elevation = 0; }		
+			if (orientation_pto1.azimuth == aziMax) { orientation_pto1.azimuth = aziMin; }
+			if (orientation_pto2.azimuth == aziMax) { orientation_pto2.azimuth = aziMin; }
+			if (orientation_pto3.azimuth == aziMax) { orientation_pto3.azimuth = aziMin; }
+			if (orientation_pto1.elevation == eleMax) { orientation_pto1.elevation = eleMin; }
+			if (orientation_pto2.elevation == eleMax) { orientation_pto2.elevation = eleMin; }
+			if (orientation_pto3.elevation == eleMax) { orientation_pto3.elevation = eleMin; }
 			// Find the HRIR for the specific orientations
 			auto it1 = t_HRTF_Resampled_frequency.find(orientation(orientation_pto1.azimuth, orientation_pto1.elevation));
 			auto it2 = t_HRTF_Resampled_frequency.find(orientation(orientation_pto2.azimuth, orientation_pto2.elevation));
@@ -1508,12 +1518,12 @@ namespace Binaural
 		if (barycentricCoordinates.alpha >= 0.0f && barycentricCoordinates.beta >= 0.0f && barycentricCoordinates.gamma >= 0.0f)
 		{
 			// HRTF table does not contain data for azimuth = 360, which has the same values as azimuth = 0, for every elevation
-			if (orientation_pto1.azimuth == 360) { orientation_pto1.azimuth = 0; }
-			if (orientation_pto2.azimuth == 360) { orientation_pto2.azimuth = 0; }
-			if (orientation_pto3.azimuth == 360) { orientation_pto3.azimuth = 0; }
-			if (orientation_pto1.elevation == 360) { orientation_pto1.elevation = 0; }
-			if (orientation_pto2.elevation == 360) { orientation_pto2.elevation = 0; }
-			if (orientation_pto3.elevation == 360) { orientation_pto3.elevation = 0; }
+			if (orientation_pto1.azimuth == aziMax) { orientation_pto1.azimuth = aziMin; }
+			if (orientation_pto2.azimuth == aziMax) { orientation_pto2.azimuth = aziMin; }
+			if (orientation_pto3.azimuth == aziMax) { orientation_pto3.azimuth = aziMin; }
+			if (orientation_pto1.elevation == eleMax) { orientation_pto1.elevation = eleMin; }
+			if (orientation_pto2.elevation == eleMax) { orientation_pto2.elevation = eleMin; }
+			if (orientation_pto3.elevation == eleMax) { orientation_pto3.elevation = eleMin; }
 
 			// Find the HRIR for the given orientations
 			auto it1 = t_HRTF_Resampled_partitioned.find(orientation(orientation_pto1.azimuth, orientation_pto1.elevation));
@@ -1626,12 +1636,12 @@ namespace Binaural
 		if (barycentricCoordinates.alpha >= 0.0f && barycentricCoordinates.beta >= 0.0f && barycentricCoordinates.gamma >= 0.0f)
 		{
 			// HRTF table does not contain data for azimuth = 360, which has the same values as azimuth = 0, for every elevation
-			if (orientation_pto1.azimuth == 360) { orientation_pto1.azimuth = 0; }
-			if (orientation_pto2.azimuth == 360) { orientation_pto2.azimuth = 0; }
-			if (orientation_pto3.azimuth == 360) { orientation_pto3.azimuth = 0; }
-			if (orientation_pto1.elevation == 360) { orientation_pto1.elevation = 0; }
-			if (orientation_pto2.elevation == 360) { orientation_pto2.elevation = 0; }
-			if (orientation_pto3.elevation == 360) { orientation_pto3.elevation = 0; }
+			if (orientation_pto1.azimuth == aziMax) { orientation_pto1.azimuth = aziMin; }
+			if (orientation_pto2.azimuth == aziMax) { orientation_pto2.azimuth = aziMin; }
+			if (orientation_pto3.azimuth == aziMax) { orientation_pto3.azimuth = aziMin; }
+			if (orientation_pto1.elevation == eleMax) { orientation_pto1.elevation = eleMin; }
+			if (orientation_pto2.elevation == eleMax) { orientation_pto2.elevation = eleMin; }
+			if (orientation_pto3.elevation == eleMax) { orientation_pto3.elevation = eleMin; }
 
 			// Find the HRIR for the given orientations
 			auto it1 = t_HRTF_Resampled_partitioned.find(orientation(orientation_pto1.azimuth, orientation_pto1.elevation));

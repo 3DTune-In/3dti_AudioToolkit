@@ -52,5 +52,14 @@ namespace Common
 		T left;		///< left channel
 		T right;	///< right channel
 	};
+
+	static bool AreSame(float a, float b, float epsilon)
+	{
+		//float absA = fabs(a);
+		//float absB = fabs(b);
+		float diff = fabs(a - b);
+
+		return diff < epsilon;
+	}
 }
 #endif

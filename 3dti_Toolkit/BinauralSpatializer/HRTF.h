@@ -42,7 +42,7 @@
 #define PI 3.14159265
 #endif
 #ifndef DEFAULT_RESAMPLING_STEP
-#define DEFAULT_RESAMPLING_STEP 5
+#define DEFAULT_RESAMPLING_STEP 15
 #endif
 
 #ifndef DEFAULT_HRTF_MEASURED_DISTANCE
@@ -54,6 +54,21 @@
 #define MAX_DISTANCE_BETWEEN_ELEVATIONS 5
 #define NUMBER_OF_PARTS 4 
 #define AZIMUTH_STEP  15
+
+#define ELEVATION_NORTH_POLE 90
+#define ELEVATION_SOUTH_POLE 270
+
+#define SPHERE_BORDER 360.0f
+
+#define DEFAULT_MIN_AZIMUTH 0
+#define DEFAULT_MAX_AZIMUTH 360
+#define DEFAULT_MIN_ELEVATION 0
+#define DEFAULT_MAX_ELEVATION 360
+
+#define ORIENTATION_RESOLUTION 0.01
+
+
+
 //#define EPSILON 0.01f;
 
 /*! \file */
@@ -64,14 +79,14 @@
 */
 struct orientation
 {
-	int32_t azimuth;	///< Azimuth angle in degrees
-	int32_t elevation;	///< Elevation angle in degrees
-    orientation(int32_t _azimuth, int32_t _elevation):azimuth{_azimuth}, elevation{_elevation}{}
-    orientation():orientation{0,0}{}
-    bool operator==(const orientation& oth) const
-    {
-        return ((this->azimuth == oth.azimuth) && (this->elevation == oth.elevation));
-    }
+	float azimuth;		///< Azimuth angle in degrees
+	float elevation;	///< Elevation angle in degrees	
+	orientation(float _azimuth, float _elevation) :azimuth{ _azimuth }, elevation{ _elevation } {}
+	orientation() :orientation{ 0,0 } {}
+	bool operator==(const orientation& other) const
+	{
+		return ((Common::AreSame(this->azimuth, other.azimuth, ORIENTATION_RESOLUTION)) && (Common::AreSame(this->elevation, other.elevation, ORIENTATION_RESOLUTION)));
+	}
 };
 
 /** \brief Type definition for a left-right pair of impulse response with the ITD removed and stored in a specific struct field
@@ -121,12 +136,15 @@ namespace std
     struct hash<orientation>
     {
         // adapted from http://en.cppreference.com/w/cpp/utility/hash
-        size_t operator()(const orientation & key) const
-        {
-            size_t h1 = std::hash<int32_t>()(key.azimuth);
-            size_t h2 = std::hash<int32_t>()(key.elevation);
-            return h1 ^ (h2 << 1);  // exclusive or of hash functions for each int.
-        }
+		size_t operator()(const orientation& key) const
+		{
+			int keyAzimuth_hundredth = static_cast<int> (round(key.azimuth / ORIENTATION_RESOLUTION));
+			int keyElevation_hundredth = static_cast<int> (round(key.elevation / ORIENTATION_RESOLUTION));
+
+			size_t h1 = std::hash<int32_t>()(keyAzimuth_hundredth);
+			size_t h2 = std::hash<int32_t>()(keyElevation_hundredth);
+			return h1 ^ (h2 << 1);  // exclusive or of hash functions for each int.
+		}
     };
 }
 
@@ -178,6 +196,19 @@ namespace Binaural
 		int32_t GetHRIRLength() const
 		{
 			return HRIRLength;
+		}
+
+
+		enum class TPole { north, south };
+
+		int GetPoleElevation(TPole _pole)const
+		{
+			if (_pole == TPole::north) { return ELEVATION_NORTH_POLE; }
+			else if (_pole == TPole::south) { return ELEVATION_SOUTH_POLE; }
+			else {
+				SET_RESULT(RESULT_ERROR_NOTALLOWED, "Attempt to get a non-existent pole");
+				return 0;
+			}
 		}
 
 		/** \brief Start a new HRTF configuration
@@ -311,12 +342,15 @@ namespace Binaural
 		float sphereBorder;						// Define spheere "sewing"
 		float epsilon_sewing = 0.001f;
 
+		int aziMin, aziMax, eleMin, eleMax, eleNorth, eleSouth;	// Variables that define limits of work area
+
+
 		bool setupInProgress;						// Variable that indicates the HRTF add and resample algorithm are in process
 		bool HRTFLoaded;							// Variable that indicates if the HRTF has been loaded correctly
 		bool bInterpolatedResampleTable;			// If true: calculate the HRTF resample matrix with interpolation
 		int resamplingStep; 						// HRTF Resample table step (azimuth and elevation)
 		bool enableCustomizedITD;					// Indicate the use of a customized delay
-		int gapTreshold;							// Max distance between elevations that will be consider Big Gap
+		int gapThreshold;							// Max distance between elevations that will be consider Big Gap
 
 
 
