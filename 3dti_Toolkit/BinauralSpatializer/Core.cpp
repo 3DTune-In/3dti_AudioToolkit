@@ -22,7 +22,6 @@
 
 #include <BinauralSpatializer/Core.h>
 #include <BinauralSpatializer/Listener.h>
-#include <BinauralSpatializer/AmbisonicDSP.h>
 #include <BinauralSpatializer/Environment.h>
 #include <Common/ErrorHandler.h>
 #include <string>
@@ -219,36 +218,6 @@ namespace Binaural {
 		else
 			SET_RESULT(RESULT_ERROR_INVALID_PARAM, "Single Source DSP was not found when attempting to remove");
 	}
-
-	// Create a new ambisonic configuration
-	shared_ptr<CAmbisonicDSP> CCore::CreateAmbisonic()
-	{
-		if (!ambisonic) {
-			try
-			{
-				shared_ptr<CAmbisonicDSP> newAmbisonic(new CAmbisonicDSP(this));
-				ambisonic = newAmbisonic;
-
-				SET_RESULT(RESULT_OK, "Ambisonic created succesfully");
-				return newAmbisonic;
-			}
-			catch (std::bad_alloc& ba)
-			{
-				ASSERT(false, RESULT_ERROR_BADALLOC, ba.what(), "");
-				return nullptr;
-			}
-		}
-		else {
-			SET_RESULT(RESULT_ERROR_NOTALLOWED, "There is already a configuration of ambisonic, creating a new one is not allowed. Remove the existing ambisonic configuration first");
-			return nullptr;
-		}
-	}
-
-	//Remove ambisonic configuration for spatialization
-	void CCore::RemoveAmbisonic()
-	{
-		ambisonic.reset();
-	}
 	
 	//Reset the convolution buffers of each source
 	void CCore::ResetConvolutionBuffers() {
@@ -301,7 +270,6 @@ namespace Binaural {
 			//FIXME what happen with more than one environment???	
 			SET_RESULT(RESULT_ERROR_BADSIZE, "The are more than one enviroment");
 		}
-		if (ambisonic != nullptr) { ambisonic->CalculateHRTF(); }
 	}
 	
 	//Reset HRTF, BRIR and ILD when samplerate changes

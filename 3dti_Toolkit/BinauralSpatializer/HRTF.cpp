@@ -306,10 +306,6 @@ namespace Binaural
 		return emptyOneEarHRIR;
 	}
 
-	bool CHRTF::IsIREmpty(const TOneEarHRIRPartitionedStruct& in) {
-		if (in.delay == emptyOneEarHRIR_partitioned.delay && in.HRIR_Partitioned == emptyOneEarHRIR_partitioned.HRIR_Partitioned) { return true; }
-		else { return false; }
-	}
 
 	const std::vector<CMonoBuffer<float>> CHRTF::GetHRIR_partitioned(Common::T_ear ear, float _azimuth, float _elevation, bool runTimeInterpolation) const
 	{
@@ -382,6 +378,7 @@ namespace Binaural
 					{
 						newHRIR = it->second.rightHRIR_Partitioned;
 					}
+					return newHRIR;
 				}
 				else
 				{

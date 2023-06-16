@@ -292,9 +292,8 @@ namespace Binaural
 		*   \eh Nothing is reported to the error handler.
 		*/
 		float GetHRTFDistanceOfMeasurement();
-
-		bool IsIREmpty(const TOneEarHRIRPartitionedStruct& in);
 		
+
 	private:
 		///////////////
 		// ATTRIBUTES
@@ -410,7 +409,6 @@ namespace Binaural
 
 
 		friend class CListener;
-		friend class CAmbisonicDSP;
 	};
 }
 #endif
