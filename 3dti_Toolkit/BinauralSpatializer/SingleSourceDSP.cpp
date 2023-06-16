@@ -121,6 +121,13 @@ namespace Binaural {
 		ASSERT(channelToListener.GetMostRecentBuffer().size() > 0, RESULT_ERROR_NOTSET, "Getting empty buffer from single source DSP", "");
 		return channelToListener.GetMostRecentBuffer();
 	}
+
+	void CSingleSourceDSP::GetEffectiveBuffer(CMonoBuffer<float> &inBuffer, Common::CVector3 &effectiveSourcePosition) {
+
+		Common::CTransform listenerTransform = ownerCore->GetListener()->GetListenerTransform();
+
+		channelToListener.PopFront(inBuffer, listenerTransform.GetPosition(), effectiveSourcePosition, ownerCore->GetAudioState(), ownerCore->GetMagnitudes().GetSoundSpeed());
+	}
 	
 	// Set source tranform (position and orientation)
 	void CSingleSourceDSP::SetSourceTransform(Common::CTransform newTransform)
@@ -265,29 +272,33 @@ namespace Binaural {
 
 	// Process data from input buffer to generate anechoic spatialization (direct path). Overloaded: using internal buffer
 	void CSingleSourceDSP::ProcessAnechoic(CMonoBuffer<float> &outLeftBuffer, CMonoBuffer<float> &outRightBuffer)
-	{
-		if (readyForAnechoic) {			
-			CMonoBuffer<float> inBuffer;			
-			Common::CVector3 effectiveSourcePosition;															
-			Common::CTransform listenerTransform = ownerCore->GetListener()->GetListenerTransform();
-			
-			channelToListener.PopFront(inBuffer, listenerTransform.GetPosition(), effectiveSourcePosition, ownerCore->GetAudioState(), ownerCore->GetMagnitudes().GetSoundSpeed());			
-			
-			if (this->channelToListener.IsPropagationDelayEnabled()) {
-				
-				effectiveSourceTransform.SetPosition(effectiveSourcePosition);
-				CalculateEffectiveSourceCoordinates();
-				ProcessAnechoic(inBuffer, outLeftBuffer, outRightBuffer, effectiveVectorToListener, effectiveDistanceToListener, effectiveLeftElevation, effectiveLeftAzimuth, effectiveRightElevation, effectiveRightAzimuth, effectiveCenterElevation, effectiveCenterAzimuth, effectiveInterauralAzimuth);
-			} else {				
-				ProcessAnechoic(inBuffer, outLeftBuffer, outRightBuffer, currentVectorToListener, currentDistanceToListener, currentLeftElevation, currentLeftAzimuth, currentRightElevation, currentRightAzimuth, currentCenterElevation, currentCenterAzimuth, currentInterauralAzimuth);
-			}						
+	{	
+		if (spatializationMode != TSpatializationMode::Ambisonic) {
+			if (readyForAnechoic) {
+				CMonoBuffer<float> inBuffer;
+				Common::CVector3 effectiveSourcePosition;
+				Common::CTransform listenerTransform = ownerCore->GetListener()->GetListenerTransform();
+
+				channelToListener.PopFront(inBuffer, listenerTransform.GetPosition(), effectiveSourcePosition, ownerCore->GetAudioState(), ownerCore->GetMagnitudes().GetSoundSpeed());
+
+				if (this->channelToListener.IsPropagationDelayEnabled()) {
+
+					effectiveSourceTransform.SetPosition(effectiveSourcePosition);
+					CalculateEffectiveSourceCoordinates();
+					ProcessAnechoic(inBuffer, outLeftBuffer, outRightBuffer, effectiveVectorToListener, effectiveDistanceToListener, effectiveLeftElevation, effectiveLeftAzimuth, effectiveRightElevation, effectiveRightAzimuth, effectiveCenterElevation, effectiveCenterAzimuth, effectiveInterauralAzimuth);
+				}
+				else {
+					ProcessAnechoic(inBuffer, outLeftBuffer, outRightBuffer, currentVectorToListener, currentDistanceToListener, currentLeftElevation, currentLeftAzimuth, currentRightElevation, currentRightAzimuth, currentCenterElevation, currentCenterAzimuth, currentInterauralAzimuth);
+				}
+			}
+			else
+			{
+				SET_RESULT(RESULT_WARNING, "Attempt to do anechoic process without updating source buffer; please call to SetBuffer before ProcessAnechoic.");
+				outLeftBuffer.Fill(ownerCore->GetAudioState().bufferSize, 0.0f);
+				outRightBuffer.Fill(ownerCore->GetAudioState().bufferSize, 0.0f);
+			}
 		}
-		else
-		{
-			SET_RESULT(RESULT_WARNING, "Attempt to do anechoic process without updating source buffer; please call to SetBuffer before ProcessAnechoic.");
-			outLeftBuffer.Fill(ownerCore->GetAudioState().bufferSize, 0.0f);
-			outRightBuffer.Fill(ownerCore->GetAudioState().bufferSize, 0.0f);
-		}
+		
 	}
 	// Process data from input buffer to generate anechoic spatialization (direct path). Overloaded: using internal buffer
 	void CSingleSourceDSP::ProcessAnechoic(CStereoBuffer<float> & outBuffer)

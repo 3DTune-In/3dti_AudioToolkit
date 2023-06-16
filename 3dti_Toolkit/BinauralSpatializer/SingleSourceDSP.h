@@ -48,7 +48,8 @@ namespace Binaural {
 	enum TSpatializationMode {
 		NoSpatialization,					///<    No spatialization
 		HighPerformance,			///<	Spatialize using the high performance method
-		HighQuality					///<	Spatialize using the high quality method
+		HighQuality,					///<	Spatialize using the high quality method
+		Ambisonic
 	};
 
 	class CCore;
@@ -80,7 +81,9 @@ namespace Binaural {
 		*	\retval buffer internal buffer content
 		*   \eh Nothing is reported to the error handler.
 		*/
-		CMonoBuffer<float> GetBuffer() const;						
+		CMonoBuffer<float> GetBuffer() const;	
+
+		void GetEffectiveBuffer(CMonoBuffer<float> &inBuffer, Common::CVector3 &effectiveSourcePosition);
 
 		/** \brief Move source (position and orientation)
 		*	\param [in] _sourceTransform new position and orientation of source
@@ -465,7 +468,8 @@ namespace Binaural {
 
 
 		friend class CEnvironment;		//Friend Class definition
-		friend class CCore;				//Friend Class definition		
+		friend class CCore;				//Friend Class definition	
+		friend class CAmbisonicDSP;     
 	};   
 }
 #endif
