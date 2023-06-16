@@ -156,6 +156,23 @@ public:
      */
     void RemoveSingleSourceDSP(shared_ptr<CSingleSourceDSP> source);
 
+	///////////////////////
+	// Ambisonic methods
+	///////////////////////
+
+	///** \brief Creates a new listener
+	//*	\param [in] listenerHeadRadius listener head radius in meters (defaults to 0.0875)
+	// *	\retval listener shared pointer to newly created listener with empty HRTF.
+	// *   \eh On success, RESULT_OK is reported to the error handler.
+	// *       On error, an error code is reported to the error handler.
+	// */
+	shared_ptr<CAmbisonicDSP> CreateAmbisonic();
+
+	///** \brief Removes ambisonic
+	//*   \eh On error, an error code is reported to the error handler.
+	//*/
+	void RemoveAmbisonic();
+
 private:
 	// Reset the convolution buffer of each source	
 	void ResetConvolutionBuffers();
@@ -175,6 +192,7 @@ private:
 	// ATTRIBUTES
 	///////////////	
 	shared_ptr<CListener > listener;					// Listener attributes	
+	shared_ptr<CAmbisonicDSP> ambisonic;					// Ambisonic attributes	
     vector<shared_ptr<CEnvironment>> environments;		// Environment attributes 															
 	vector<shared_ptr<CSingleSourceDSP>> audioSources;	// List of audio sources 
 	
@@ -184,6 +202,7 @@ private:
 		
     friend class CEnvironment;							// Friend class definition
 	friend class CListener;								// Friend class definition
+	friend class CAmbisonicDSP;                         // Friend class definition
 };
  
 }
