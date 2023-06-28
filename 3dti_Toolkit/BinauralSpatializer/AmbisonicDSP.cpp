@@ -450,6 +450,10 @@ namespace Binaural {
 			if (eachSource->GetCurrentDistanceSourceListener() < ownerCore->GetListener()->GetHeadRadius())
 				continue;
 
+			//Check if the source is muted
+			if (!eachSource->enableAnechoic)
+				continue;
+
 			/// Return next buffer frame after pass throught the waveguide
 
 			CMonoBuffer<float> sourceBuffer;
