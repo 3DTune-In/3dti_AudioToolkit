@@ -1,11 +1,30 @@
 #include "ISM.h"
 
+//#define USE_PROFILER_3
+#ifdef USE_PROFILER_3
+#include <Windows.h>
+#include "Common/Profiler.h"
+Common::CProfilerDataSet dsProcessAbsortion;
+Common::CProfilerDataSet dsProcessImageData;
+Common::CProfilerDataSet dsProcessVisible;
+#endif
+
 namespace ISM
 {
 	
 	CISM::CISM(Binaural::CCore* _ownerCore) :ownerCore{ _ownerCore }, reflectionOrder{ 1 },  maxDistanceSourcesToListener { 100 } {
 
 		originalSource = make_shared<SourceImages>(this);
+
+#ifdef USE_PROFILER_3
+		Common::PROFILER3DTI.InitProfiler();
+		Common::PROFILER3DTI.SetAutomaticWrite(dsProcessAbsortion, "PROF_APP_PROCESSAbsortion.txt");
+		Common::PROFILER3DTI.StartRelativeSampling(dsProcessAbsortion);
+		Common::PROFILER3DTI.SetAutomaticWrite(dsProcessImageData, "PROF_APP_PROCESSImageData.txt");
+		Common::PROFILER3DTI.StartRelativeSampling(dsProcessImageData);
+		Common::PROFILER3DTI.SetAutomaticWrite(dsProcessVisible, "PROF_APP_PROCESSVisible.txt");
+		Common::PROFILER3DTI.StartRelativeSampling(dsProcessVisible);
+#endif
 	}
 
 	void CISM::SetupShoeBoxRoom(float length, float width, float height)
@@ -35,7 +54,6 @@ namespace ISM
 		}
 		originalSource->createImages(mainRoom, reflectionOrder);
 	}
-
 
 	void CISM::setAbsortion(std::vector<std::vector<float>> absortionPerBandPerWall)
 	{
@@ -98,8 +116,7 @@ namespace ISM
 
 		return numberOfSlilencedFrames;
 	}
-	
-		
+			
 	float CISM::getMaxDistanceImageSources()
 	{
 		return maxDistanceSourcesToListener;
@@ -116,14 +133,12 @@ namespace ISM
 		return originalSource->getLocation();
 	}
 
-
 	std::vector<Common::CVector3> CISM::getImageSourceLocations()
 	{		
 		std::vector<Common::CVector3> imageSourceList;
 		originalSource->getImageLocations(imageSourceList);
 		return imageSourceList;
 	}
-
 
 	std::vector<ISM::ImageSourceData> CISM::getImageSourceData()
 	{
@@ -134,19 +149,35 @@ namespace ISM
 
 	void CISM::proccess(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation)
 	{
+#ifdef USE_PROFILER_3
+		Common::PROFILER3DTI.RelativeSampleStart(dsProcessAbsortion);
+#endif
 		originalSource->processAbsortion(inBuffer, imageBuffers, listenerLocation);
-		
 
-		std::vector<ImageSourceData> images = getImageSourceData();
-		ASSERT(imageBuffers.size() == images.size(), RESULT_ERROR_BADSIZE, "Vector of buffers to be processed by ISM should be the same size as the number of image sources", "");
+#ifdef USE_PROFILER_3
+		Common::PROFILER3DTI.RelativeSampleEnd(dsProcessAbsortion);
+#endif
 		
+#ifdef USE_PROFILER_3
+		Common::PROFILER3DTI.RelativeSampleStart(dsProcessImageData);
+#endif
+		std::vector<ImageSourceData> images = getImageSourceData();
+#ifdef USE_PROFILER_3
+		Common::PROFILER3DTI.RelativeSampleEnd(dsProcessImageData);
+#endif
+		ASSERT(imageBuffers.size() == images.size(), RESULT_ERROR_BADSIZE, "Vector of buffers to be processed by ISM should be the same size as the number of image sources", "");
+#ifdef USE_PROFILER_3
+		Common::PROFILER3DTI.RelativeSampleStart(dsProcessVisible);
+#endif
+		//int fuentes = 0;
 		for (int i = 0; i < imageBuffers.size(); i++)
 		{
 			if (images.at(i).visible)
 			{
+				//fuentes++;
 				for (int j = 0; j < inBuffer.size(); j++)
 				{
-					imageBuffers.at(i).at(j) = images.at(i).visibility*imageBuffers.at(i).at(j);
+					imageBuffers.at(i).at(j) = images.at(i).visibility * imageBuffers.at(i).at(j);
 				}
 			}
 			else
@@ -157,7 +188,11 @@ namespace ISM
 				}
 			}
 		}
-		
+		//cout << fuentes << endl;
+#ifdef USE_PROFILER_3
+		Common::PROFILER3DTI.RelativeSampleEnd(dsProcessVisible);
+#endif
+	
 	}
 
 	Binaural::CCore* CISM::GetCore() const{

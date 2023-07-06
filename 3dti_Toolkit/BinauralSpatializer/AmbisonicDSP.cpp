@@ -33,7 +33,8 @@ namespace Binaural {
 		:ownerCore{ _ownerCore }
 	{
 		interpolation = true;
-		AmbisonicOrder = 1;
+		ambisonicOrder = 1;
+		numberOfChannels = CalculateNumberOfChannels();
 		normalization = ambisonicNormalization::N3D;
 	}
 
@@ -74,7 +75,7 @@ namespace Binaural {
 
 	int CAmbisonicDSP::GetOrder()
 	{
-		return AmbisonicOrder;
+		return ambisonicOrder;
 	}
 
 	bool CAmbisonicDSP::SetAHRBIR() 
@@ -426,9 +427,22 @@ namespace Binaural {
 
 		// We assume all buffers have the same number of samples
 		size_t samplesInBuffer = ownerCore->GetAudioState().bufferSize;
+		// Initialize the sumation channels				
+		for (int i = 0; i < GetTotalChannels(); i++)
+		{
+			CMonoBuffer<float> emptyChannels_left;
+			emptyChannels_left.Fill(samplesInBuffer, 0.0f);
+			codAmbisonic_left.push_back(emptyChannels_left);
 
-		//To initialize the sumation channels
-		bool initializedBuffer = false;
+			CMonoBuffer<float> emptyChannels_right;
+			emptyChannels_right.Fill(samplesInBuffer, 0.0f);
+			codAmbisonic_right.push_back(emptyChannels_right);
+
+		}
+		// Initialize factor 
+		std::vector<float> factors_left(GetTotalChannels());
+		std::vector<float> factors_right(GetTotalChannels());
+
 
 		/////////////////////////////////////////
 		//      Virtual Ambisonics Encoder
@@ -478,7 +492,6 @@ namespace Binaural {
 			eachSource->GetEffectiveBuffer(sourceBuffer, SourcePosition);
 
 			if (eachSource->channelToListener.IsPropagationDelayEnabled()) {
-				/*CalculateSourceCoordinates(effectiveSourceTransform, vectorToListener, distanceToListener, centerElevation, centerAzimuth, interauralAzimuth, leftElevation, leftAzimuth, rightElevation, rightAzimuth); */
 				SourceTransform.SetPosition(SourcePosition);
 			}
 			else { 
@@ -486,9 +499,6 @@ namespace Binaural {
 			}
 
 			eachSource->CalculateSourceCoordinates(SourceTransform, vectorToListener, distanceToListener, leftElevation, leftAzimuth, rightElevation, rightAzimuth, centerElevation, centerAzimuth, interauralAzimuth);
-
-			DegreesToRadians(centerElevation);
-			DegreesToRadians(centerAzimuth);
 			
 			//Apply Far distance effect
 			if (eachSource->IsFarDistanceEffectEnabled()) { eachSource->ProcessFarDistanceEffect(sourceBuffer, distanceToListener); }
@@ -500,73 +510,16 @@ namespace Binaural {
 			uint64_t leftDelay = ownerCore->GetListener()->GetHRTF()->GetHRIRDelay(Common::T_ear::LEFT, leftAzimuth, leftElevation, interpolation);
 			uint64_t rightDelay = ownerCore->GetListener()->GetHRTF()->GetHRIRDelay(Common::T_ear::RIGHT, rightAzimuth, rightElevation, interpolation);
 
-			//Radians
-			DegreesToRadians(leftElevation);
-			DegreesToRadians(leftAzimuth);
-			DegreesToRadians(rightElevation);
-			DegreesToRadians(rightAzimuth);
-
 			eachSource->ProcessAddDelay_ExpansionMethod(sourceBuffer, outBufferLeft, eachSource->leftChannelDelayBuffer, leftDelay);
 			eachSource->ProcessAddDelay_ExpansionMethod(sourceBuffer, outBufferRight, eachSource->rightChannelDelayBuffer, rightDelay);
 
 			// Apply Near field effects (ILD)
 			eachSource->ProcessNearFieldEffect(outBufferLeft, outBufferRight, distanceToListener, interauralAzimuth);											
-
-			size_t samplesInBufferLeft = outBufferLeft.size();
-			size_t samplesInBufferRight = outBufferRight.size();
-
-			// Init sumation channels
-			if (!initializedBuffer) {
-				for (int i = 0; i < GetTotalChannels(); i++)
-				{
-					CMonoBuffer<float> emptyChannels_left;
-					emptyChannels_left.Fill(samplesInBufferLeft, 0.0f);
-					codAmbisonic_left.push_back(emptyChannels_left);
-
-					CMonoBuffer<float> emptyChannels_right;
-					emptyChannels_right.Fill(samplesInBufferRight, 0.0f);
-					codAmbisonic_right.push_back(emptyChannels_right);
-
-				}
-				initializedBuffer = true;
-			}
-			
-
-			// Get azimuth, elevation and distance from listener to each source
-			// We precompute everything, to minimize per-sample computations. 
-			std::vector<float> factors_left(GetTotalChannels());
-			std::vector<float> factors_right(GetTotalChannels());
 				
+			//OneChannelAmbisonicEnconder(outBufferLeft, codAmbisonic_left, DegreesToRadians(leftAzimuth), DegreesToRadians(leftElevation));
+			//OneChannelAmbisonicEnconder(outBufferRight, codAmbisonic_right, DegreesToRadians(rightAzimuth), DegreesToRadians(rightElevation));
+			TwoChannelAmbisonicEnconder(outBufferLeft, codAmbisonic_left, DegreesToRadians(leftAzimuth), DegreesToRadians(leftElevation), outBufferRight, codAmbisonic_right, DegreesToRadians(rightAzimuth), DegreesToRadians(rightElevation));
 
-			getRealSphericalHarmonics(leftAzimuth, leftElevation, factors_left);
-			getRealSphericalHarmonics(rightAzimuth, rightElevation, factors_right);
-
-
-			// Go trough each sample [left]
-			for (int nSample = 0; nSample < samplesInBufferLeft; nSample++)
-			{
-				// Value from the input buffer				
-				float newSample = outBufferLeft[nSample];
-
-				// Add partial contribution of this source to each channel								
-				for (int i = 0; i < GetTotalChannels(); i++) {
-					codAmbisonic_left[i][nSample] += newSample * factors_left[i];
-				}
-			}
-
-			// Go trough each sample [right]
-			for (int nSample = 0; nSample < samplesInBufferRight; nSample++)
-			{
-				// Value from the input buffer				
-				float newSample = outBufferRight[nSample];
-
-				// Add partial contribution of this source to each channel								
-				for (int i = 0; i < GetTotalChannels(); i++) {
-					codAmbisonic_right[i][nSample] += newSample * factors_right[i];
-				}
-			}
-			
-			
 			eachSource->readyForAnechoic = false;	// Mark the buffer as already used for anechoic process
 
 		}
@@ -577,9 +530,6 @@ namespace Binaural {
 
 		///Apply UPC algorithm
 		for (int i = 0; i < GetTotalChannels(); i++) {
-
-			CMonoBuffer<float> new_Ahrbir_left_FFT_withoutDelay;
-			CMonoBuffer<float> new_Ahrbir_right_FFT_withoutDelay;
 
 			CMonoBuffer<float> new_Ahrbir_left_FFT;
 			CMonoBuffer<float> new_Ahrbir_right_FFT;
@@ -600,8 +550,8 @@ namespace Binaural {
 		///////////////////////////////////////
 		// Mix of channels in Frequency domain
 		///////////////////////////////////////
-	    mixerOutput_right = mixChannels(Ahrbir_right);
-		mixerOutput_left = mixChannels(Ahrbir_left);
+	    mixerOutput_right = MixChannels(Ahrbir_right);
+		mixerOutput_left = MixChannels(Ahrbir_left);
 
 
 		//////////////////////////////////////////////
@@ -615,221 +565,44 @@ namespace Binaural {
 		WATCH(WV_ENVIRONMENT_OUTPUT_RIGHT, outBufferRight, CMonoBuffer<float>);
 	}
 
-	void CAmbisonicDSP::ProcessVirtualAmbisonicISM(CMonoBuffer<float>& outBufferLeft, CMonoBuffer<float>& outBufferRight, vector<CSingleSourceDSP>& virtualSources, int numberOfSilencedFrames)
-	{
-		if (!environmentAHRBIR.IsInitialized())
-		{
-			SET_RESULT(RESULT_ERROR_NOTINITIALIZED, "Data is not ready to be processed");
-			return;
+	void CAmbisonicDSP::OneChannelAmbisonicEnconder(const CMonoBuffer<float>& inBuffer, std::vector< CMonoBuffer<float> >& outVectorOfBuffers, float azimuth, float elevation) {
+		
+		std::vector<float> ambisonicFactors(GetTotalChannels());
+		getRealSphericalHarmonics(azimuth, elevation, ambisonicFactors);
+
+		// Go trough each sample [left]
+		for (int nSample = 0; nSample < inBuffer.size(); nSample++)
+		{			
+			// Add partial contribution of this source to each channel								
+			for (int i = 0; i < GetTotalChannels(); i++) {
+				outVectorOfBuffers[i][nSample] += inBuffer[nSample] * ambisonicFactors[i];
+			}
 		}
-
-		// Check outbuffers size
-		if (outBufferLeft.size() != 0 || outBufferRight.size() != 0) {
-			outBufferLeft.clear();
-			outBufferRight.clear();
-			SET_RESULT(RESULT_ERROR_BADSIZE, "outBufferLeft and outBufferRight were expected to be empty, they will be cleared. CAmbisonicDSP::ProcessVirtualAmbisonicAnechoic");
-		}
-
-		// This would crash if there are no sources created. Rather than reporting error, do nothing
-		if (ownerCore->audioSources.size() == 0)
-			return;
-
-		std::vector< CMonoBuffer<float> > codAmbisonic_left;
-		std::vector< CMonoBuffer<float> > codAmbisonic_right;
-		std::vector< CMonoBuffer<float> > codAmbisonic;
-
-		std::vector < CMonoBuffer<float> > Ahrbir_left;
-		std::vector < CMonoBuffer<float> > Ahrbir_right;
-
-		CMonoBuffer<float> mixerOutput_left;
-		CMonoBuffer<float> mixerOutput_right;
-
-		// We assume all buffers have the same number of samples
-		size_t samplesInBuffer = ownerCore->GetAudioState().bufferSize;
-
-		//To initialize the sumation channels
-		bool initializedBuffer = false;
-
-		/////////////////////////////////////////
-		//      Virtual Ambisonics Encoder
-		/////////////////////////////////////////
-		// 
-
-		// Go through each source
-		for (auto eachSource : virtualSources)
-		{
-
-			if (!eachSource.IsAnechoicProcessReady()) {
-				SET_RESULT(RESULT_WARNING, "Attempt to do anechoic process without updating source buffer; please call to SetBuffer before ProcessAnechoic.");
-				continue;
-			}
-
-			//Check if the source is in the same position as the listener head. If yes, do not apply spatialization to this source
-			if (eachSource.GetCurrentDistanceSourceListener() < ownerCore->GetListener()->GetHeadRadius())
-				continue;
-
-			/// Return next buffer frame after pass throught the waveguide
-
-			CMonoBuffer<float> sourceBuffer;
-			CMonoBuffer<float> outBufferLeft;
-			CMonoBuffer<float> outBufferRight;
-
-			Common::CVector3  vectorToListener;
-			float distanceToListener;
-			float centerElevation;
-			float centerAzimuth;
-			float interauralAzimuth;
-
-			float leftElevation;
-			float leftAzimuth;
-			float rightElevation;
-			float rightAzimuth;
-
-			Common::CVector3 SourcePosition;
-			Common::CTransform SourceTransform;
-
-
-			eachSource.GetEffectiveBuffer(sourceBuffer, SourcePosition);
-
-			if (eachSource.channelToListener.IsPropagationDelayEnabled()) {
-				/*CalculateSourceCoordinates(effectiveSourceTransform, vectorToListener, distanceToListener, centerElevation, centerAzimuth, interauralAzimuth, leftElevation, leftAzimuth, rightElevation, rightAzimuth); */
-				SourceTransform.SetPosition(SourcePosition);
-			}
-			else {
-				SourceTransform = eachSource.GetCurrentSourceTransform();
-			}
-
-			eachSource.CalculateSourceCoordinates(SourceTransform, vectorToListener, distanceToListener, leftElevation, leftAzimuth, rightElevation, rightAzimuth, centerElevation, centerAzimuth, interauralAzimuth);
-
-			DegreesToRadians(centerElevation);
-			DegreesToRadians(centerAzimuth);
-
-			//Apply Far distance effect
-			if (eachSource.IsFarDistanceEffectEnabled()) { eachSource.ProcessFarDistanceEffect(sourceBuffer, distanceToListener); }
-
-			// Apply distance attenuation
-			if (eachSource.IsDistanceAttenuationEnabledAnechoic()) { eachSource.ProcessDistanceAttenuationAnechoic(sourceBuffer, ownerCore->GetAudioState().bufferSize, ownerCore->GetAudioState().sampleRate, distanceToListener); }
-
-			//Degress
-			uint64_t leftDelay = ownerCore->GetListener()->GetHRTF()->GetHRIRDelay(Common::T_ear::LEFT, leftAzimuth, leftElevation, interpolation);
-			uint64_t rightDelay = ownerCore->GetListener()->GetHRTF()->GetHRIRDelay(Common::T_ear::RIGHT, rightAzimuth, rightElevation, interpolation);
-
-			//Radians
-			DegreesToRadians(leftElevation);
-			DegreesToRadians(leftAzimuth);
-			DegreesToRadians(rightElevation);
-			DegreesToRadians(rightAzimuth);
-
-			eachSource.ProcessAddDelay_ExpansionMethod(sourceBuffer, outBufferLeft, eachSource.leftChannelDelayBuffer, leftDelay);
-			eachSource.ProcessAddDelay_ExpansionMethod(sourceBuffer, outBufferRight, eachSource.rightChannelDelayBuffer, rightDelay);
-
-			// Apply Near field effects (ILD)
-			eachSource.ProcessNearFieldEffect(outBufferLeft, outBufferRight, distanceToListener, interauralAzimuth);
-
-			size_t samplesInBufferLeft = outBufferLeft.size();
-			size_t samplesInBufferRight = outBufferRight.size();
-
-			// Init sumation channels
-			if (!initializedBuffer) {
-				for (int i = 0; i < GetTotalChannels(); i++)
-				{
-					CMonoBuffer<float> emptyChannels_left;
-					emptyChannels_left.Fill(samplesInBufferLeft, 0.0f);
-					codAmbisonic_left.push_back(emptyChannels_left);
-
-					CMonoBuffer<float> emptyChannels_right;
-					emptyChannels_right.Fill(samplesInBufferRight, 0.0f);
-					codAmbisonic_right.push_back(emptyChannels_right);
-
-				}
-				initializedBuffer = true;
-			}
-			
-
-			// Get azimuth, elevation and distance from listener to each source
-			// We precompute everything, to minimize per-sample computations. 
-			std::vector<float> factors_left(GetTotalChannels());
-			std::vector<float> factors_right(GetTotalChannels());
-
-
-			getRealSphericalHarmonics(leftAzimuth, leftElevation, factors_left);
-			getRealSphericalHarmonics(rightAzimuth, rightElevation, factors_right);
-
-
-			// Go trough each sample [left]
-			for (int nSample = 0; nSample < samplesInBufferLeft; nSample++)
-			{
-				// Value from the input buffer				
-				float newSample = outBufferLeft[nSample];
-
-				// Add partial contribution of this source to each channel								
-				for (int i = 0; i < GetTotalChannels(); i++) {
-					codAmbisonic_left[i][nSample] += newSample * factors_left[i];
-				}
-			}
-
-			// Go trough each sample [right]
-			for (int nSample = 0; nSample < samplesInBufferRight; nSample++)
-			{
-				// Value from the input buffer				
-				float newSample = outBufferRight[nSample];
-
-				// Add partial contribution of this source to each channel								
-				for (int i = 0; i < GetTotalChannels(); i++) {
-					codAmbisonic_right[i][nSample] += newSample * factors_right[i];
-				}
-			}
-
-
-			eachSource.readyForAnechoic = false;	// Mark the buffer as already used for anechoic process
-
-		}
-
-		///////////////////////////////////////////
-		// Frequency-Domain Convolution with ABIR
-		///////////////////////////////////////////	
-
-		///Apply UPC algorithm
-		for (int i = 0; i < GetTotalChannels(); i++) {
-
-			CMonoBuffer<float> new_Ahrbir_left_FFT_withoutDelay;
-			CMonoBuffer<float> new_Ahrbir_right_FFT_withoutDelay;
-
-			CMonoBuffer<float> new_Ahrbir_left_FFT;
-			CMonoBuffer<float> new_Ahrbir_right_FFT;
-
-			TOneEarHRIRPartitionedStruct TOneEar_left;
-			TOneEarHRIRPartitionedStruct TOneEar_right;
-
-			TOneEar_left = GetAHRBIR().GetImpulseResponse_Partitioned(i, Common::T_ear::LEFT);
-			TOneEar_right = GetAHRBIR().GetImpulseResponse_Partitioned(i, Common::T_ear::RIGHT);
-
-			left_UPConvolutionVector[i]->ProcessUPConvolutionWithMemory(codAmbisonic_left[i], TOneEar_left, new_Ahrbir_left_FFT);
-			Ahrbir_left.push_back(new_Ahrbir_left_FFT);
-
-			right_UPConvolutionVector[i]->ProcessUPConvolutionWithMemory(codAmbisonic_right[i], TOneEar_right, new_Ahrbir_right_FFT);
-			Ahrbir_right.push_back(new_Ahrbir_right_FFT);
-		}
-
-		///////////////////////////////////////
-		// Mix of channels in Frequency domain
-		///////////////////////////////////////
-		mixerOutput_right = mixChannels(Ahrbir_right);
-		mixerOutput_left = mixChannels(Ahrbir_left);
-
-
-		//////////////////////////////////////////////
-		// Move channels to output buffers
-		//////////////////////////////////////////////			
-		outBufferLeft = std::move(mixerOutput_left);			//To use in C++11
-		outBufferRight = std::move(mixerOutput_right);			//To use in C++11			
-
-		// WATCHER
-		WATCH(WV_ENVIRONMENT_OUTPUT_LEFT, outBufferLeft, CMonoBuffer<float>);
-		WATCH(WV_ENVIRONMENT_OUTPUT_RIGHT, outBufferRight, CMonoBuffer<float>);
 	}
 
-	CMonoBuffer<float> CAmbisonicDSP::mixChannels(std::vector< CMonoBuffer<float>> Ahrbir_FFT) {
+	void CAmbisonicDSP::TwoChannelAmbisonicEnconder(const CMonoBuffer<float>& inBufferLeft,  std::vector< CMonoBuffer<float> >& outVectorOfLeftBuffers, float leftAzimuth, float leftElevation, 
+		const CMonoBuffer<float>& inBufferRight, std::vector< CMonoBuffer<float> >& outVectorOfRightBuffers, float rightAzimuth, float rightElevation) {
+
+
+		// TODO Check if left and right buffers have the same size
+		std::vector<float> leftAmbisonicFactors(GetTotalChannels());
+		getRealSphericalHarmonics(leftAzimuth, leftElevation, leftAmbisonicFactors);
+		
+		std::vector<float> rightAmbisonicFactors(GetTotalChannels());
+		getRealSphericalHarmonics(rightAzimuth, rightElevation, rightAmbisonicFactors);
+
+		// Go trough each sample [left]
+		for (int nSample = 0; nSample < inBufferLeft.size(); nSample++)
+		{
+			// Add partial contribution of this source to each channel								
+			for (int i = 0; i < GetTotalChannels(); i++) {
+				outVectorOfLeftBuffers[i][nSample] += inBufferLeft[nSample] * leftAmbisonicFactors[i];
+				outVectorOfRightBuffers[i][nSample] += inBufferRight[nSample] * rightAmbisonicFactors[i];
+			}
+		}
+	}
+
+	CMonoBuffer<float> CAmbisonicDSP::MixChannels(std::vector< CMonoBuffer<float>> Ahrbir_FFT) {
 		
 		// Get size of all sourceBuffers and check they are the same
 		size_t bufferSize = 0;
@@ -856,7 +629,6 @@ namespace Binaural {
 		return mixerOutput_FFT;
 	}
 
-
 	// Process virtual ambisonic anechoic for specified buffers (LISTO)
 	void CAmbisonicDSP::ProcessVirtualAmbisonicAnechoic(CStereoBuffer<float> & outBuffer, int numberOfSilencedFrames)
 	{
@@ -869,13 +641,18 @@ namespace Binaural {
 
 	void CAmbisonicDSP::SetOrder(int _order)
 	{
-		AmbisonicOrder = _order;
+		ambisonicOrder = _order;
+		numberOfChannels = CalculateNumberOfChannels();
 		ResetAHRBIR();
 	}
 
-	int CAmbisonicDSP::GetTotalChannels()
+	int CAmbisonicDSP::GetTotalChannels() {
+		return numberOfChannels;
+	}
+
+	int CAmbisonicDSP::CalculateNumberOfChannels()
 	{
-		return pow((AmbisonicOrder + 1),2);
+		return pow((ambisonicOrder + 1),2);
 	}
 
 	//brief Calculate the HRTF again
@@ -896,22 +673,22 @@ namespace Binaural {
 
 	int CAmbisonicDSP::GetTotalLoudspeakers() 
 	{
-		if (AmbisonicOrder == 1) { return 6; }
-		else if (AmbisonicOrder == 2) { return 12; }
+		if (ambisonicOrder == 1) { return 6; }
+		else if (ambisonicOrder == 2) { return 12; }
 		else { return 20; }
 	}
 
 	std::vector<float> CAmbisonicDSP::GetambisonicAzimut()
 	{
-		if (AmbisonicOrder == 1) { return ambisonicAzimut_order1; }
-		else if (AmbisonicOrder == 2) { return ambisonicAzimut_order2; }
+		if (ambisonicOrder == 1) { return ambisonicAzimut_order1; }
+		else if (ambisonicOrder == 2) { return ambisonicAzimut_order2; }
 		else { return ambisonicAzimut_order3; }
 	}
 
 	std::vector<float> CAmbisonicDSP::GetambisonicElevation()
 	{
-		if (AmbisonicOrder == 1) { return ambisonicElevation_order1; }
-		else if (AmbisonicOrder == 2) { return ambisonicElevation_order2; }
+		if (ambisonicOrder == 1) { return ambisonicElevation_order1; }
+		else if (ambisonicOrder == 2) { return ambisonicElevation_order2; }
 		else { return ambisonicElevation_order3; }
 	}
 
@@ -921,8 +698,8 @@ namespace Binaural {
 		}
 	}
 
-	void CAmbisonicDSP::DegreesToRadians(float & _degrees) {
-			_degrees = (_degrees * PI) / 180;
+	float CAmbisonicDSP::DegreesToRadians(float & _degrees) {
+			return (_degrees * PI) / 180;
 	}
 	
 	void CAmbisonicDSP::SetInterpolation(bool _interpolation) {

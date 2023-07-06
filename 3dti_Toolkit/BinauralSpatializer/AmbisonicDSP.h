@@ -82,9 +82,7 @@ namespace Binaural {
 		*	\sa SetBuffer, SingleSourceDSP
 		*   \eh Warnings may be reported to the error handler.
 		*/
-		void ProcessVirtualAmbisonicAnechoic(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames = 0);
-		void ProcessVirtualAmbisonicISM(CMonoBuffer<float>& outBufferLeft, CMonoBuffer<float>& outBufferRight, vector<CSingleSourceDSP>& virtualSources, int numberOfSilencedFrames = 0);
-			
+		void ProcessVirtualAmbisonicAnechoic(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames = 0);			
 
 		/** \brief Process virtual ambisonics reverb for all sources with binaural output in a single stereo buffer
 		*	\details Internally takes as input the (updated) buffers of all registered audio sources
@@ -101,24 +99,22 @@ namespace Binaural {
 
 		void SetOrder(int _order);
 
+		int CalculateNumberOfChannels();
 		int GetTotalChannels();
 
 		std::vector<float> GetambisonicAzimut();
 
 		std::vector<float> GetambisonicElevation();
 
-		//void CalculateSourceCoordinates(Common::CTransform _sourceTransform, Common::CVector3 & _vectorToListener, float & _distanceToListener, float & centerElevation, float & centerAzimuth, float & interauralAzimuth);
-		//void CalculateSourceCoordinates(Common::CTransform _sourceTransform, Common::CVector3 & _vectorToListener, float & _distanceToListener, float & leftElevation, float & leftAzimuth, float & rightElevation, float & rightAzimuth, float & centerElevation, float & centerAzimuth, float & interauralAzimuth);
-
 		void getRealSphericalHarmonics(float _ambisonicAzimut, float _ambisonicElevation, std::vector<float> & _factors);
 
-		CMonoBuffer<float> mixChannels(std::vector< CMonoBuffer<float>> Ahrbir_FFT);
+		CMonoBuffer<float> MixChannels(std::vector< CMonoBuffer<float>> Ahrbir_FFT);
 
 		bool SetAHRBIR();
 
 		void CAmbisonicDSP::DegreesToRadians(std::vector<float>& _degrees);
 
-		void CAmbisonicDSP::DegreesToRadians(float& _degrees);
+		float CAmbisonicDSP::DegreesToRadians(float& _degrees);
 		// Reset AHRBIR
 		void ResetAHRBIR();
 
@@ -145,6 +141,8 @@ namespace Binaural {
 		// Set AHRBIR of environment. Create AIR class using ambisonic codification. Also, initialize convolution buffers
 		// Calculate the HRTF again
 		void CalculateHRTF();
+		void OneChannelAmbisonicEnconder(const CMonoBuffer<float>& inBuffer, std::vector< CMonoBuffer<float> >& outVectorOfBuffers, float azimuth, float elevation);
+		void TwoChannelAmbisonicEnconder(const CMonoBuffer<float>& inBufferLeft, std::vector< CMonoBuffer<float> >& outVectorOfLeftBuffers, float leftAzimuth, float leftElevation, const CMonoBuffer<float>& inBufferRight, std::vector< CMonoBuffer<float> >& outVectorOfRightBuffers, float rightAzimuth, float rightElevation);
 
 		// ATTRIBUTES
 
@@ -159,7 +157,8 @@ namespace Binaural {
 		std::vector<std::shared_ptr<CUPCAnechoic>> right_UPConvolutionVector;   //Vector with buffers to perform Uniformly Partitioned Convolution (Right)
 
 		//Ambisonic order
-		int AmbisonicOrder;
+		int ambisonicOrder;
+		int numberOfChannels;
 
 		/** \brief Type definition for position of virtual speakers in HRIR */
 		std::vector<float> ambisonicAzimut_order1 = { 90, 270,  0,  0,  0, 180 };
