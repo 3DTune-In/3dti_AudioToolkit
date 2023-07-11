@@ -1,22 +1,22 @@
-/*
-* \class CCore
+/**
+* \class CAmbisonicDSP
 *
-* \brief Definition of AmbisonicDSP class.
+* \brief Declaration of AmbisonicDSP interface.
+* \date	July 2023
 *
-* \authors 3DI-DIANA Research Group (University of Malaga), in alphabetical order: M. Cuevas-Rodriguez, C. Garre,  D. Gonzalez-Toledo, E.J. de la Rubia-Cuestas, L. Molina-Tanco ||
+* \authors 3DI-DIANA Research Group (University of Malaga), in alphabetical order: M. Cuevas-Rodriguez, P García-Jiménez, D. Gonzalez-Toledo, L. Molina-Tanco ||
 * Coordinated by , A. Reyes-Lecuona (University of Malaga) and L.Picinali (Imperial College London) ||
 * \b Contact: areyes@uma.es and l.picinali@imperial.ac.uk
 *
 * \b Contributions: (additional authors/contributors can be added here)
 *
-* \b Project: 3DTI (3D-games for TUNing and lEarnINg about hearing aids) ||
-* \b Website: http://3d-tune-in.eu/
+* \b Project: SAVLab (Spatial Audio Virtual Laboratory) ||
 *
-* \b Copyright: University of Malaga and Imperial College London - 2018
+* \b Copyright: University of Malaga - 2021
 *
-* \b Licence: This copy of 3dti_AudioToolkit is licensed to you under the terms described in the 3DTI_AUDIOTOOLKIT_LICENSE file included in this distribution.
+* \b Licence: GPL v3
 *
-* \b Acknowledgement: This project has received funding from the European Union's Horizon 2020 research and innovation programme under grant agreement No 644051
+* \b Acknowledgement: This project has received funding from Spanish Ministerio de Ciencia e Innovación under the SAVLab project (PID2019-107854GB-I00)
 */
 
 #include <BinauralSpatializer/Core.h>
@@ -36,12 +36,6 @@ namespace Binaural {
 		ambisonicOrder = 1;
 		numberOfChannels = CalculateNumberOfChannels();
 		normalization = ambisonicNormalization::N3D;
-	}
-
-	// Get Core AudioState Struct
-	Common::TAudioStateStruct CAmbisonicDSP::GetCoreAudioState() const
-	{
-		return ownerCore->GetAudioState();
 	}
 
 	void CAmbisonicDSP::ResetAmbisonicBuffers()
@@ -99,112 +93,6 @@ namespace Binaural {
 		}
 		else { return false; }
 	}
-
-	/*bool CAmbisonicDSP::CalculateAHRBIRPartitioned()
-	{
-		environmentAHRBIR.Setup(ownerCore->GetAudioState().bufferSize, ownerCore->GetListener()->GetHRTF()->GetHRIRLength());
-		std::vector<TImpulseResponse_Partitioned> Partitioned_Left;
-		std::vector<TImpulseResponse_Partitioned> Partitioned_Right;
-
-		std::vector<float> ambisonicAzimut = GetambisonicAzimut();
-		std::vector<float> ambisonicElevation = GetambisonicElevation();
-
-		//1. Get BRIR values for each channel
-		for (int i = 0; i < GetTotalLoudspeakers(); i++) {
-			std::vector<CMonoBuffer<float>> leftResponse = ownerCore->GetListener()->GetHRTF()->GetHRIR_partitioned(Common::T_ear::LEFT, ambisonicAzimut[i], ambisonicElevation[i], interpolation);
-			std::vector<CMonoBuffer<float>> rightResponse = ownerCore->GetListener()->GetHRTF()->GetHRIR_partitioned(Common::T_ear::RIGHT, ambisonicAzimut[i], ambisonicElevation[i], interpolation);
-
-
-			TImpulseResponse_Partitioned leftResponse_(leftResponse.begin(), leftResponse.end());
-			TImpulseResponse_Partitioned rightResponse_(rightResponse.begin(), rightResponse.end());
-
-			Partitioned_Left.push_back(leftResponse_);
-			Partitioned_Right.push_back(rightResponse_);
-		}
-
-		TImpulseResponse_Partitioned left = Partitioned_Left[0];
-
-
-		size_t s = left.size();
-
-		if (s == 0)
-		{
-			SET_RESULT(RESULT_ERROR_BADSIZE, "Buffers should be the same and not zero");
-			return false;
-		}
-
-		for (int i = 0; i < GetTotalLoudspeakers(); i++) {
-			TOneEarHRIRPartitionedStruct TOneEar_left;
-			TOneEarHRIRPartitionedStruct TOneEar_right;
-
-			TOneEar_left.HRIR_Partitioned = Partitioned_Left[i];
-			TOneEar_right.HRIR_Partitioned = Partitioned_Right[i];
-
-			if (Partitioned_Left[i].size() != s || Partitioned_Right[i].size() != s || ownerCore->GetListener()->GetHRTF()->IsIREmpty(TOneEar_left) || ownerCore->GetListener()->GetHRTF()->IsIREmpty(TOneEar_right)) {
-				SET_RESULT(RESULT_ERROR_BADSIZE, "Buffers should be the same and not zero");
-				return false;
-			}
-
-		}
-
-		//2. Init AIR buffers
-		std::vector<TImpulseResponse_Partitioned> newAIR_right;
-		std::vector<TImpulseResponse_Partitioned> newAIR_left;
-
-		//Decoding factor
-		std::vector<std::vector<float>> factors;
-		factors.resize(GetTotalLoudspeakers(), std::vector<float>(GetTotalChannels()));
-
-		DegreesToRadians(ambisonicAzimut);
-		DegreesToRadians(ambisonicElevation);
-
-		for (int i = 0; i < GetTotalLoudspeakers(); i++) {
-			getRealSphericalHarmonics(ambisonicAzimut[i], ambisonicElevation[i], factors[i]);
-		}
-
-		for (int i = 0; i < GetTotalChannels(); i++) {
-
-			TImpulseResponse_Partitioned AIR_left;
-			AIR_left.resize(ownerCore->GetListener()->GetHRTF()->GetHRIRNumberOfSubfilters());
-			newAIR_left.push_back(AIR_left);
-
-			TImpulseResponse_Partitioned AIR_right;
-			AIR_right.resize(ownerCore->GetListener()->GetHRTF()->GetHRIRNumberOfSubfilters());
-			newAIR_right.push_back(AIR_right);
-
-			for (int j = 0; j < ownerCore->GetListener()->GetHRTF()->GetHRIRNumberOfSubfilters(); j++)
-			{
-				newAIR_left[i][j].resize(ownerCore->GetListener()->GetHRTF()->GetHRIRSubfilterLength(), 0.0f);
-				newAIR_right[i][j].resize(ownerCore->GetListener()->GetHRTF()->GetHRIRSubfilterLength(), 0.0f);
-			}
-
-			//3. AIR codification from BRIR
-			for (int j = 0; j < ownerCore->GetListener()->GetHRTF()->GetHRIRNumberOfSubfilters(); j++)
-			{
-				for (int k = 0; k < ownerCore->GetListener()->GetHRTF()->GetHRIRSubfilterLength(); k++)
-				{
-					for (int l=0; l < GetTotalLoudspeakers(); l++)
-					{
-						newAIR_left[i][j][k] += Partitioned_Left[l][j][k] * factors[l][i];
-						newAIR_right[i][j][k] += Partitioned_Right[l][j][k] * factors[l][i];
-
-
-					}
-						
-				}
-			}
-
-		}
-
-		//Setup AIR class
-		for (int i = 0; i < GetTotalChannels(); i++) {
-
-			//environmentAHRBIR.AddImpulseResponse(i, Common::T_ear::LEFT, std::move(newAIR_left[i]));
-			//environmentAHRBIR.AddImpulseResponse(i, Common::T_ear::RIGHT, std::move(newAIR_right[i]));
-		}
-
-		return true;
-	}*/
 
 	bool CAmbisonicDSP::CalculateAHRBIRPartitioned()
 	{
@@ -629,7 +517,7 @@ namespace Binaural {
 		return mixerOutput_FFT;
 	}
 
-	// Process virtual ambisonic anechoic for specified buffers (LISTO)
+	// Process virtual ambisonic anechoic for specified buffers 
 	void CAmbisonicDSP::ProcessVirtualAmbisonicAnechoic(CStereoBuffer<float> & outBuffer, int numberOfSilencedFrames)
 	{
 		CMonoBuffer<float> outLeftBuffer;
@@ -711,4 +599,10 @@ namespace Binaural {
 		return interpolation;
 	}
 
+	void CAmbisonicDSP::SetNormalization(ambisonicNormalization _normalization) {
+		normalization = _normalization; ResetAHRBIR();
+	}
+
+	ambisonicNormalization CAmbisonicDSP::GetNormalization() { return normalization; }
 }
+

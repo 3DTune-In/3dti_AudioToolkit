@@ -1,23 +1,22 @@
 /**
-* \class CEnvironment
+* \class CAmbisonicDSP
 *
-* \brief Declaration of CEnvironment interface.
-* \date	July 2016
+* \brief Declaration of AmbisonicDSP interface.
+* \date	July 2023
 *
-* \authors 3DI-DIANA Research Group (University of Malaga), in alphabetical order: M. Cuevas-Rodriguez, C. Garre,  D. Gonzalez-Toledo, E.J. de la Rubia-Cuestas, L. Molina-Tanco ||
+* \authors 3DI-DIANA Research Group (University of Malaga), in alphabetical order: M. Cuevas-Rodriguez, P García-Jiménez, D. Gonzalez-Toledo, L. Molina-Tanco ||
 * Coordinated by , A. Reyes-Lecuona (University of Malaga) and L.Picinali (Imperial College London) ||
 * \b Contact: areyes@uma.es and l.picinali@imperial.ac.uk
 *
 * \b Contributions: (additional authors/contributors can be added here)
 *
-* \b Project: 3DTI (3D-games for TUNing and lEarnINg about hearing aids) ||
-* \b Website: http://3d-tune-in.eu/
+* \b Project: SAVLab (Spatial Audio Virtual Laboratory) ||
+* 
+* \b Copyright: University of Malaga - 2021
 *
-* \b Copyright: University of Malaga and Imperial College London - 2018
+* \b Licence: GPL v3
 *
-* \b Licence: This copy of 3dti_AudioToolkit is licensed to you under the terms described in the 3DTI_AUDIOTOOLKIT_LICENSE file included in this distribution.
-*
-* \b Acknowledgement: This project has received funding from the European Union's Horizon 2020 research and innovation programme under grant agreement No 644051
+* \b Acknowledgement: This project has received funding from Spanish Ministerio de Ciencia e Innovación under the SAVLab project (PID2019-107854GB-I00)
 */
 
 #ifndef _CCAMBISONICDSP_H_
@@ -45,109 +44,68 @@ namespace Binaural {
 	{
 	public:
 
-		/** \brief Constructor with parameters
-		 *	\param [in] ownerCore pointer to owner core
-		 *   \eh Nothing is reported to the error handler.
-		 */
 		CAmbisonicDSP(CCore* ownerCore);
 
-		/** \brief Get AudioState of the owner Core of this Environment
-		*	\retval TAudioStateStruct current audio state set in core
-		*/
-		Common::TAudioStateStruct GetCoreAudioState() const;
-
-		/** \brief Get ABIR of environment
-		 *	\retval ABIR reference to current environment ABIR
-		 *   \eh Nothing is reported to the error handler.
-		 */
-		const CAHRBIR& GetAHRBIR() const;
-
-		/** \brief Reset the reverb play buffers
-		*   \details This must be called when all sources have been stopped
-		*   \eh Nothing is reported to the error handler.
-		*/
 		void ResetAmbisonicBuffers();
 
-		/** \brief Configure AIR class (with the partitioned impulse responses) using BRIR data for the UPC algorithm
-		*	\retval	boolean to indicate if calculation was successful
-		*   \eh Nothing is reported to the error handler.
-		*/
-		bool CalculateAHRBIRPartitioned();
-
-		/** \brief Process virtual ambisonics reverb for all sources with binaural output in separate mono buffers
-		*	\details Internally takes as input the (updated) buffers of all registered audio sources
-		*	\param [out] outBufferLeft output buffer with the processed reverb for left ear
-		*	\param [out] outBufferRight output buffer with the processed reverb for right ear
-		*   \param [in] numberOfSilencedFrames number of initial silenced frames in the reverb stage
-		*	\sa SetBuffer, SingleSourceDSP
-		*   \eh Warnings may be reported to the error handler.
-		*/
 		void ProcessVirtualAmbisonicAnechoic(CMonoBuffer<float> & outBufferLeft, CMonoBuffer<float> & outBufferRight, int numberOfSilencedFrames = 0);			
 
-		/** \brief Process virtual ambisonics reverb for all sources with binaural output in a single stereo buffer
-		*	\details Internally takes as input the (updated) buffers of all registered audio sources
-		*	\param [out] outBuffer stereo output buffer with the processed reverb
-		*   \param [in] numberOfSilencedFrames number of initial silenced frames in the reverb stage
-		*	\sa SetBuffer, SingleSourceDSP
-		*   \eh Nothing is reported to the error handler.
-		*/
 		void ProcessVirtualAmbisonicAnechoic(CStereoBuffer<float> & outBuffer, int numberOfSilencedFrames = 0);
+
+		bool SetAHRBIR();
+		
+		void SetOrder(int _order);
 
 		int GetOrder();
 
-		int GetTotalLoudspeakers();
+		void SetInterpolation(bool _interpolation);
+		
+		bool GetInterpolation();
 
-		void SetOrder(int _order);
+		void SetNormalization(ambisonicNormalization _normalization);
 
-		int CalculateNumberOfChannels();
-		int GetTotalChannels();
+		ambisonicNormalization GetNormalization();
 
-		std::vector<float> GetambisonicAzimut();
+	private:
 
-		std::vector<float> GetambisonicElevation();
+		void CalculateHRTF();
+		
+		void OneChannelAmbisonicEnconder(const CMonoBuffer<float>& inBuffer, std::vector< CMonoBuffer<float> >& outVectorOfBuffers, float azimuth, float elevation);
+		
+		void TwoChannelAmbisonicEnconder(const CMonoBuffer<float>& inBufferLeft, std::vector< CMonoBuffer<float> >& outVectorOfLeftBuffers, float leftAzimuth, float leftElevation, const CMonoBuffer<float>& inBufferRight, std::vector< CMonoBuffer<float> >& outVectorOfRightBuffers, float rightAzimuth, float rightElevation);
+		
+		void convertN3DtoSN3D(std::vector<float>& _factors);
+
+		void convertN3DtoMaxN(std::vector<float>& _factors);
+
+		const CAHRBIR& GetAHRBIR() const;
+
+		void ResetAHRBIR();
+
+		bool CalculateAHRBIRPartitioned();
+
+		void CAmbisonicDSP::DegreesToRadians(std::vector<float>& _degrees);
+
+		float CAmbisonicDSP::DegreesToRadians(float& _degrees);
 
 		void getRealSphericalHarmonics(float _ambisonicAzimut, float _ambisonicElevation, std::vector<float> & _factors);
 
 		CMonoBuffer<float> MixChannels(std::vector< CMonoBuffer<float>> Ahrbir_FFT);
 
-		bool SetAHRBIR();
+		std::vector<float> GetambisonicAzimut();
 
-		void CAmbisonicDSP::DegreesToRadians(std::vector<float>& _degrees);
+		std::vector<float> GetambisonicElevation();
 
-		float CAmbisonicDSP::DegreesToRadians(float& _degrees);
-		// Reset AHRBIR
-		void ResetAHRBIR();
+		int GetTotalLoudspeakers();
 
-		void SetInterpolation(bool _interpolation);
-		bool GetInterpolation();
+		int CalculateNumberOfChannels();
 
-		void SetNormalization(ambisonicNormalization _normalization) {
-			normalization = _normalization;
-			ResetAHRBIR();
-		}
+		int GetTotalChannels();
 
-		ambisonicNormalization GetNormalization() {
-			return normalization;
-		}
-
-		void convertN3DtoSN3D(std::vector<float>& _factors);
-
-		void convertN3DtoMaxN(std::vector<float>& _factors);
-
-		void ExpansionMethod(CMonoBuffer<float>& input, CMonoBuffer<float>& output, CMonoBuffer<float>& delayBuffer, int newDelay);
-
-	private:
-
-		// Set AHRBIR of environment. Create AIR class using ambisonic codification. Also, initialize convolution buffers
-		// Calculate the HRTF again
-		void CalculateHRTF();
-		void OneChannelAmbisonicEnconder(const CMonoBuffer<float>& inBuffer, std::vector< CMonoBuffer<float> >& outVectorOfBuffers, float azimuth, float elevation);
-		void TwoChannelAmbisonicEnconder(const CMonoBuffer<float>& inBufferLeft, std::vector< CMonoBuffer<float> >& outVectorOfLeftBuffers, float leftAzimuth, float leftElevation, const CMonoBuffer<float>& inBufferRight, std::vector< CMonoBuffer<float> >& outVectorOfRightBuffers, float rightAzimuth, float rightElevation);
 
 		// ATTRIBUTES
 
 		bool interpolation;
-		bool separateCoding;
 		ambisonicNormalization normalization;
 
 		CCore* ownerCore;									//Owner Core
@@ -161,14 +119,14 @@ namespace Binaural {
 		int numberOfChannels;
 
 		/** \brief Type definition for position of virtual speakers in HRIR */
-		std::vector<float> ambisonicAzimut_order1 = { 90, 270,  0,  0,  0, 180 };
-		std::vector<float> ambisonicElevation_order1 = { 0,   0,  90, 270, 0,  0 };
+		const std::vector<float> ambisonicAzimut_order1 = { 90, 270,  0,  0,  0, 180 };
+		const std::vector<float> ambisonicElevation_order1 = { 0,   0,  90, 270, 0,  0 };
 
-		std::vector<float> ambisonicAzimut_order2 = { 328.28, 31.72, 148.28, 211.72,      270,       90,     270,      90,      180,       0,      180,       0 };
-		std::vector<float> ambisonicElevation_order2 = { 0,       0,        0,        0, 328.28, 328.28, 31.72, 31.72, 301.72, 301.72, 58.28, 58.28 };
+		const std::vector<float> ambisonicAzimut_order2 = { 328.28, 31.72, 148.28, 211.72,      270,       90,     270,      90,      180,       0,      180,       0 };
+		const std::vector<float> ambisonicElevation_order2 = { 0,       0,        0,        0, 328.28, 328.28, 31.72, 31.72, 301.72, 301.72, 58.28, 58.28 };
 
-		std::vector<float> ambisonicAzimut_order3 = { 290.91, 69.1, 249.1, 110.91,     315,      45,     225,      135,      315,       45,      225,      135,        0,      180,       0,     180,     270,      90,     270,        90 };
-		std::vector<float> ambisonicElevation_order3 = { 0,       0,        0,        0, 35.26, 35.26, 35.26,  35.26, 324.74, 324.74, 324.74, 324.74, 339.1, 339.1, 20.91, 20.91, 69.1, 69.1, 290.91, 290.91 };
+		const std::vector<float> ambisonicAzimut_order3 = { 290.91, 69.1, 249.1, 110.91,     315,      45,     225,      135,      315,       45,      225,      135,        0,      180,       0,     180,     270,      90,     270,        90 };
+		const std::vector<float> ambisonicElevation_order3 = { 0,       0,        0,        0, 35.26, 35.26, 35.26,  35.26, 324.74, 324.74, 324.74, 324.74, 339.1, 339.1, 20.91, 20.91, 69.1, 69.1, 290.91, 290.91 };
 
 		friend class CCore;									//Friend class definition
 		friend class CHRTF;
