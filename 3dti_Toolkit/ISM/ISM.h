@@ -161,6 +161,15 @@ namespace ISM
 		*/
 		void proccess(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation);
 
+		/** \brief Enable static distance criterion
+		*	\details This method reduces the number of potential image sources to be considered according to the distance criterion
+		*/
+		void enableStaticDistanceCriterion();
+
+		/** \brief Disable static distance criterion
+		*	\details This method establishes a dynamic distance criterion and considers all possible sources as potential sources
+		*/
+		void disableStaticDistanceCriterion();
 		
 	private:
 		////////////
@@ -182,6 +191,8 @@ namespace ISM
 
 		float maxDistanceSourcesToListener; 
 		float transitionMeters;                   //Transition meters associated with the _windowSlopeDistance
+
+		bool staticDistanceCriterion;           // When enabled, the number of potential images is smaller.
 
 
 		Binaural::CCore* ownerCore;				// owner Core	

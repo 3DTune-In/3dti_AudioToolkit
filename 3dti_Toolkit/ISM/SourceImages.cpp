@@ -109,11 +109,21 @@ namespace ISM
 						float roomsDistance = 0.0;
 						if(reflectionWalls.size()>0) 
 						{
-								//roomsDistance = walls.at(i).getMinimumDistanceFromWall(reflectionWalls.front());
+							// the distance criterion can be static or dynamic
+							if (ownerISM->staticDistanceCriterion == false)
+								roomsDistance = walls.at(i).getMinimumDistanceFromWall(reflectionWalls.front());
+							else
 							    roomsDistance = (listenerLocation - tempImageLocation).GetDistance();
 						}
-						//if (roomsDistance <= ownerISM->getMaxDistanceImageSources())
-						if (roomsDistance <= ownerISM->getMaxDistanceImageSources() + ownerISM->transitionMeters * 0.5)
+
+						// the distance criterion can be static or dynamic
+						float maxDistanceImageSources;
+						if (ownerISM->staticDistanceCriterion == false)
+							maxDistanceImageSources = ownerISM->getMaxDistanceImageSources();
+						else
+							maxDistanceImageSources = ownerISM->getMaxDistanceImageSources() + ownerISM->transitionMeters * 0.5;
+
+						if (roomsDistance <= maxDistanceImageSources)
 						{
 							//The new candidate meets all requirements and will be a source image. It is therefor finally completed
 							tempSourceImage->setLocation(tempImageLocation);

@@ -197,6 +197,15 @@ namespace ISM
 		return ownerCore->GetListener();
 	}
 
+
+	void CISM::enableStaticDistanceCriterion() {
+		staticDistanceCriterion = true;
+	}
+
+	void CISM::disableStaticDistanceCriterion() {
+		staticDistanceCriterion = false;
+	}
+
 }//namespace ISM
 
 
