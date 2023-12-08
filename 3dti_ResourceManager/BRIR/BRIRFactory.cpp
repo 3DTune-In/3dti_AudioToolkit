@@ -153,6 +153,7 @@ namespace BRIR
 		{
 			SET_RESULT(RESULT_ERROR_UNKNOWN, "Unknown error when reading BRIR");
 		}
+        return -1;
 	}
 
 	//////////////////////////////////////////////////////////////////////
