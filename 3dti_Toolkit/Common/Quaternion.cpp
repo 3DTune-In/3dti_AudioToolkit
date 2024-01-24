@@ -297,4 +297,20 @@ namespace Common {
 	{
 		return std::atan2(2.0*(x*y + w*z), w*w + x*x - y*y - z*z);
 	}
+
+	//////////////////////////////////////////////
+
+	// Get the yaw angle
+	float CQuaternion::GetYaw()
+	{
+		CVector3 vectorPart = CVector3(x, y, z);
+		float up = vectorPart.GetAxis(UP_AXIS);
+		float right = vectorPart.GetAxis(RIGHT_AXIS);
+		float forward = vectorPart.GetAxis(FORWARD_AXIS);
+		float down = -up;
+		double t3 = 2.0f * (w * down + forward * right);
+		double t4 = 1.0f - 2.0f * (right * right + down * down);
+
+		return std::atan2(t3, t4);
+	}
 }//end namespace Common

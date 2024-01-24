@@ -175,6 +175,12 @@ namespace Common {
 		*/
 		float GetRoll();
 
+		/**
+		 * @brief Get the yaw angle in radians
+		 * @return yaw yaw angle in radians
+		*/
+		float GetYaw();
+
 		// ATTRIBUTES
 	public:
 		float w;    ///< w component of the quaternion (scalar part)
