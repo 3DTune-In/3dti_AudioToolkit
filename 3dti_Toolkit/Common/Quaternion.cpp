@@ -288,14 +288,39 @@ namespace Common {
 	// Get the pitch angle
 	float CQuaternion::GetPitch()
 	{
-		return std::asin(-2.0*(x*z - w*y));
+		// Get vector part of quaternion and extract up, forward and right axis values
+		CVector3 vectorPart = CVector3(x, y, z);
+		float up = vectorPart.GetAxis(UP_AXIS);
+		float right = vectorPart.GetAxis(RIGHT_AXIS);
+		float forward = vectorPart.GetAxis(FORWARD_AXIS);
+		float down = -up;
+
+		// pitch (right-axis rotation)
+		double t2 = 2.0f * (w * right - down * forward);
+		t2 = t2 > 1.0f ? 1.0f : t2;
+		t2 = t2 < -1.0f ? -1.0f : t2;
+		return std::asin(t2);
+
+		//return std::asin(-2.0*(x*z - w*y));
 	}
 	//////////////////////////////////////////////
 
 	// Get the roll angle
 	float CQuaternion::GetRoll()
 	{
-		return std::atan2(2.0*(x*y + w*z), w*w + x*x - y*y - z*z);
+		// Get vector part of quaternion and extract up, forward and right axis values
+		CVector3 vectorPart = CVector3(x, y, z);
+		float up = vectorPart.GetAxis(UP_AXIS);
+		float right = vectorPart.GetAxis(RIGHT_AXIS);
+		float forward = vectorPart.GetAxis(FORWARD_AXIS);
+		float down = -up;
+
+		// roll (forward-axis rotation)
+		double t0 = 2.0f * (w * forward + right * down);
+		double t1 = 1.0f - 2.0f * (forward * forward + right * right);
+		return std::atan2(t0, t1);
+
+		//return std::atan2(2.0*(x*y + w*z), w*w + x*x - y*y - z*z);
 	}
 
 	//////////////////////////////////////////////
