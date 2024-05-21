@@ -79,10 +79,10 @@ namespace Common {
 
 	//////////////////////////////////////////////
 
-	void CBiquadFilter::Setup(float samplingRate, float frequency, float Q, T_filterType filterType)
+	void CBiquadFilter::Setup(float samplingRate, float frequency, float Q, T_filterType filterType, float gain)
 	{
 		samplingFreq = samplingRate;
-		SetCoefficients(frequency, Q, filterType);
+		SetCoefficients(frequency, Q, filterType, gain);
 	}
 
 	//////////////////////////////////////////////
@@ -120,16 +120,35 @@ namespace Common {
 
 	//////////////////////////////////////////////
 
-	void CBiquadFilter::SetCoefficients(float frequency, float Q, T_filterType filterType)
+	void CBiquadFilter::SetCoefficients(float frequency, float Q, T_filterType filterType, float gain)
 	{
-		if (filterType == LOWPASS)
+		if (filterType == LOWPASS) {
+			SetGeneralGain(gain);
 			SetCoefsFor_LPF(frequency, Q);
-
-		else if (filterType == HIGHPASS)
+		}
+		else if (filterType == HIGHPASS) {
+			SetGeneralGain(gain);
 			SetCoefsFor_HPF(frequency, Q);
-
-		else if (filterType == BANDPASS)
+		}
+		else if (filterType == BANDPASS) {
+			SetGeneralGain(gain);
 			SetCoefsFor_BandPassFilter(frequency, Q);
+		}
+		else if (filterType == LOWSHELF) {
+			// Not implemented
+            SET_RESULT(RESULT_ERROR_NOTIMPLEMENTED, "Lowshelf filter type not implemented");
+		}
+		else if (filterType == HIGHSHELF) {
+			// Not implemented
+            SET_RESULT(RESULT_ERROR_NOTIMPLEMENTED, "Highshelf filter type not implemented");
+		}
+		else if (filterType == PEAKNOTCH) {
+			// Not implemented
+            SET_RESULT(RESULT_ERROR_NOTIMPLEMENTED, "Peak Notch filter type not implemented");
+		}
+		else {
+            SET_RESULT(RESULT_ERROR_INVALID_PARAM, "Invalid filter type");
+		}
 	}
 
 	//////////////////////////////////////////////
@@ -246,6 +265,27 @@ namespace Common {
 			return false;
 		}
 	}
+
+	//////////////////////////////////////////////
+	bool CBiquadFilter::SetCoefsFor_PeakNotch(double centerFreqHz, double Q)
+	{
+		// Use Vällimäki's method to calculate the coefficients of a peak-notch filter
+
+
+	}
+	
+	//////////////////////////////////////////////
+	bool CBiquadFilter::SetCoefsFor_LowShelf(double cutoffFreq, double Q)
+	{
+		// Not implemented
+	}
+
+	//////////////////////////////////////////////
+	bool CBiquadFilter::SetCoefsFor_HighShelf(double cutoffFreq, double Q)
+	{
+		// Not implemented
+	}
+
 
 	//////////////////////////////////////////////
 	void CBiquadFilter::Process(CMonoBuffer<float> &inBuffer, CMonoBuffer<float> & outBuffer, bool addResult)
