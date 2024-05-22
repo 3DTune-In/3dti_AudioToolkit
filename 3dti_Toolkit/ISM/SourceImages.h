@@ -23,6 +23,7 @@
 #include "Room.h"
 #include <Common/Vector3.h>
 #include <Common/FiltersBank.h>
+#include <Common/FiltersChain.h>
 
 #define VISIBILITY_MARGIN	0.2
 #define FRAMES_OF_MARGIN 1    //Number of Frames for Transition
@@ -149,6 +150,7 @@ namespace ISM
 		std::vector<float> reflectionBands;     //coeficients, for each octave Band, to be applied to simulate walls' absortion
 
 		Common::CFiltersBank FilterBank;
+		Common::CFiltersChain FilterChain;
 
 		ISM::CISM* ownerISM;					// TO CHECK if this possible using smart pointer
 	};

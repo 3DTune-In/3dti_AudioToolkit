@@ -78,11 +78,11 @@ namespace Common {
 	}
 
 	//////////////////////////////////////////////
-
-	void CBiquadFilter::Setup(float samplingRate, float frequency, float Q, T_filterType filterType)
+		
+	void CBiquadFilter::Setup(float samplingRate, float frequency, float Q, T_filterType filterType, float gain )
 	{
 		samplingFreq = samplingRate;
-		SetCoefficients(frequency, Q, filterType);
+		SetCoefficients(frequency, Q, filterType, gain);
 	}
 
 	//////////////////////////////////////////////
@@ -120,16 +120,28 @@ namespace Common {
 
 	//////////////////////////////////////////////
 
-	void CBiquadFilter::SetCoefficients(float frequency, float Q, T_filterType filterType)
+	void CBiquadFilter::SetCoefficients(float frequency, float Q, T_filterType filterType, float gain)
 	{
-		if (filterType == LOWPASS)
+		if (filterType == LOWPASS) {
+			SetGeneralGain(gain);
 			SetCoefsFor_LPF(frequency, Q);
-
-		else if (filterType == HIGHPASS)
+		}
+		else if (filterType == HIGHPASS) {
+			SetGeneralGain(gain);
 			SetCoefsFor_HPF(frequency, Q);
-
-		else if (filterType == BANDPASS)
+		}
+		else if (filterType == BANDPASS) {
+			SetGeneralGain(gain);
 			SetCoefsFor_BandPassFilter(frequency, Q);
+		}
+		else if (filterType == LOWSHELF)
+			SetCoefsFor_LSelf(frequency, Q, gain);
+
+		else if (filterType == HIGHSHELF)
+			SetCoefsFor_HSelf(frequency, Q, gain);
+
+		else if (filterType == PEAKNOCH)
+			SetCoefsFor_PeakNoch(frequency, Q, gain);
 	}
 
 	//////////////////////////////////////////////
@@ -243,6 +255,122 @@ namespace Common {
 		{
 			//SET_RESULT(RESULT_ERROR_INVALID_PARAM, "");
 			SET_RESULT(RESULT_ERROR_DIVBYZERO, "Division by zero setting coefficients for HPF biquad filter");
+			return false;
+		}
+	}
+
+	bool CBiquadFilter::SetCoefsFor_LSelf(double cutoffFreq, double Q, double gain)
+	{
+		if (samplingFreq < 0.1 || cutoffFreq > samplingFreq / 2.0) // To prevent aliasing problems
+		{
+			SET_RESULT(RESULT_ERROR_INVALID_PARAM, "Cutoff frequency of biquad (LOWSHELF) filter is higher than Nyquist frequency");
+			return false;
+		}
+		
+		try // -> To handle division by 0
+		{
+			double A = std::sqrt(gain);
+			double w0 = 2 * M_PI * cutoffFreq / samplingFreq;
+			double beta = std::sqrt(A) / Q;
+
+			double _b0 =      A * ((A + 1) - (A - 1) * std::cos(w0) + beta * std::sin(w0));
+			double _b1 =  2 * A * ((A - 1) - (A + 1) * std::cos(w0));
+			double _b2 =      A * ((A + 1) - (A - 1) * std::cos(w0) - beta * std::sin(w0));
+			double _a0 =           (A + 1) + (A - 1) * std::cos(w0) + beta * std::sin(w0);
+			double _a1 = -2 *     ((A - 1) + (A + 1) * std::cos(w0));
+			double _a2 =           (A + 1) + (A - 1) * std::cos(w0) - beta * std::sin(w0);
+			
+			_b2 = _b2 / _a0; _b1 = _b1 / _a0; _b0 = _b0 / _a0;
+			_a2 = _a2 / _a0; _a1 = _a1 / _a0; _a0 = 1;
+
+			SetCoefficients(_b0, _b1, _b2, _a1, _a2);
+
+			SET_RESULT(RESULT_OK, "LOWSHELF filter coefficients of biquad filter succesfully set");
+
+			return true;
+		}
+		catch (exception e)
+		{
+			//SET_RESULT(RESULT_ERROR_INVALID_PARAM, "");
+			SET_RESULT(RESULT_ERROR_DIVBYZERO, "Division by zero setting coefficients for LOWSHELF biquad filter");
+			return false;
+		}
+	}
+		//////////////////////////////////////////////
+	bool CBiquadFilter::SetCoefsFor_HSelf(double cutoffFreq, double Q, double gain)
+	{
+		if (samplingFreq < 0.1 || cutoffFreq > samplingFreq / 2.0) // To prevent aliasing problems
+		{
+			SET_RESULT(RESULT_ERROR_INVALID_PARAM, "Cutoff frequency of biquad (HIGHSHELF) filter is higher than Nyquist frequency");
+			return false;
+		}
+
+		try // -> To handle division by 0
+		{
+			double A = std::sqrt(gain);
+			double w0 = 2 * M_PI * cutoffFreq / samplingFreq;
+			double beta = std::sqrt(A) / Q;
+
+			double _b0 =      A * ((A + 1) + (A - 1) * std::cos(w0) + beta * std::sin(w0));
+			double _b1 = -2 * A * ((A - 1) + (A + 1) * std::cos(w0));
+			double _b2 =      A * ((A + 1) + (A - 1) * std::cos(w0) - beta * std::sin(w0));
+			double _a0 =           (A + 1) - (A - 1) * std::cos(w0) + beta * std::sin(w0);
+			double _a1 = +2 *     ((A - 1) - (A + 1) * std::cos(w0));
+			double _a2 =           (A + 1) - (A - 1) * std::cos(w0) - beta * std::sin(w0);
+
+			_b2 = _b2 / _a0; _b1 = _b1 / _a0; _b0 = _b0 / _a0;
+			_a2 = _a2 / _a0; _a1 = _a1 / _a0; _a0 = 1;
+
+			SetCoefficients(_b0, _b1, _b2, _a1, _a2);
+
+			SET_RESULT(RESULT_OK, "HIGHSHELF filter coefficients of biquad filter succesfully set");
+
+			return true;
+		}
+		catch (exception e)
+		{
+				//SET_RESULT(RESULT_ERROR_INVALID_PARAM, "");
+				SET_RESULT(RESULT_ERROR_DIVBYZERO, "Division by zero setting coefficients for LOWSHELF biquad filter");
+				return false;
+		}
+	}
+		
+	//////////////////////////////////////////////
+	bool CBiquadFilter::SetCoefsFor_PeakNoch(double centerFreqHz, double Q, double gain)
+	{
+		if (samplingFreq < 0.1 || Q < 0.0000001 || centerFreqHz > samplingFreq / 2.0) // To prevent aliasing problems
+		{
+			SET_RESULT(RESULT_ERROR_INVALID_PARAM, "Cutoff frequency of PeakNoch filter is higher than Nyquist frequency");
+			return false;
+		}
+
+		try // -> To handle division by 0
+		{
+			double A = std::sqrt(gain);
+			double Wc = 2 * M_PI * centerFreqHz / samplingFreq;
+			double Bw = Wc / Q;
+			double beta = 2*A*std::cos(Wc);
+
+			double _b0 = A + gain * std::tan(Bw/2);
+			double _b1 =     -2*A * std::cos(Wc);
+			double _b2 = A - gain * std::tan(Bw / 2);
+			double _a0 = A +        std::tan(Bw / 2);
+			double _a1 = -2*A     * std::cos(Wc);
+			double _a2 = A -        std::tan(Bw / 2);
+
+			_b2 = _b2 / _a0; _b1 = _b1 / _a0; _b0 = _b0 / _a0;
+			_a2 = _a2 / _a0; _a1 = _a1 / _a0; _a0 = 1;
+
+			SetCoefficients(_b0, _b1, _b2, _a1, _a2);
+
+			SET_RESULT(RESULT_OK, "PeakNoch filter coefficients of biquad filter succesfully set");
+
+			return true;
+		}
+		catch (exception e)
+		{
+			//SET_RESULT(RESULT_ERROR_INVALID_PARAM, "");
+			SET_RESULT(RESULT_ERROR_DIVBYZERO, "Division by zero setting coefficients for PeakNoch filter");
 			return false;
 		}
 	}
