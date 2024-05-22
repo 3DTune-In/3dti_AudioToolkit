@@ -143,8 +143,7 @@ namespace Common {
             SET_RESULT(RESULT_ERROR_NOTIMPLEMENTED, "Highshelf filter type not implemented");
 		}
 		else if (filterType == PEAKNOTCH) {
-			// Not implemented
-            SET_RESULT(RESULT_ERROR_NOTIMPLEMENTED, "Peak Notch filter type not implemented");
+			SetCoefsFor_PeakNotch(frequency, Q, gain);
 		}
 		else {
             SET_RESULT(RESULT_ERROR_INVALID_PARAM, "Invalid filter type");
@@ -267,21 +266,70 @@ namespace Common {
 	}
 
 	//////////////////////////////////////////////
-	bool CBiquadFilter::SetCoefsFor_PeakNotch(double centerFreqHz, double Q)
+	bool CBiquadFilter::SetCoefsFor_PeakNotch(double centerFreqHz, double Q, float gain)
 	{
 		// Use Vällimäki's method to calculate the coefficients of a peak-notch filter
+		// See: Välimäki, V., Reiss, J. D., "All About Audio Equalization: Solutions and Frontiers", MDPI, 2016
+		//      https://www.mdpi.com/2076-3417/6/5/129
+		if (gain < 0)
+		{
+			SET_RESULT(RESULT_ERROR_INVALID_PARAM, "Gain of biquad (peak-notch) filter is negative");
+			return false;
+		}
+		else if (gain == 0)
+		{
+			SET_RESULT(RESULT_ERROR_INVALID_PARAM, "Gain of biquad (peak-notch) filter is zero");
+			return false;
+		}
+		else if (gain == 1.0) 
+		{
+			SET_RESULT(RESULT_WARNING, "Gain of biquad (peak-notch) filter is 1.0");
+		}
 
+		if (centerFreqHz > samplingFreq / 2.0) // To warn of aliasing problems
+		{
+			SET_RESULT(RESULT_WARNING, "Cutoff frequency of biquad (peak-notch) filter is higher than Nyquist frequency");
+		}
 
+		try { // -> To handle division by 0
+			double sqGain = sqrt(gain);
+			double wc = 2 * M_PI * centerFreqHz / samplingFreq;
+			double Bover2 = wc / Q;
+			double _a0 = sqGain + tan(Bover2);
+			double _a1 = -2 * sqGain * cos(wc);
+			double _a2 = sqGain - tan(Bover2);
+			double _b0 = sqGain + gain * tan(Bover2);
+			double _b1 = -2 * sqGain * cos(wc);
+			double _b2 = sqGain - gain * tan(Bover2);
+
+			double norm = 1 / _a0;
+			_b0 *= norm;
+			_b1 *= norm;
+			_b2 *= norm;
+			_a1 *= norm;
+			_a2 *= norm;
+
+			SetCoefficients(_b0, _b1, _b2, _a1, _a2);
+
+			SET_RESULT(RESULT_OK, "Peak-Notch filter coefficients of biquad filter succesfully set");
+
+			return true;
+		}
+		catch (exception & e)
+		{
+			SET_RESULT(RESULT_ERROR_DIVBYZERO, "Division by zero setting coefficients for peak-notch biquad filter");
+			return false;
+		}
 	}
 	
 	//////////////////////////////////////////////
-	bool CBiquadFilter::SetCoefsFor_LowShelf(double cutoffFreq, double Q)
+	bool CBiquadFilter::SetCoefsFor_LowShelf(double cutoffFreq, double Q, float gain)
 	{
 		// Not implemented
 	}
 
 	//////////////////////////////////////////////
-	bool CBiquadFilter::SetCoefsFor_HighShelf(double cutoffFreq, double Q)
+	bool CBiquadFilter::SetCoefsFor_HighShelf(double cutoffFreq, double Q, float gain)
 	{
 		// Not implemented
 	}

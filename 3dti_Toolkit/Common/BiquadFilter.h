@@ -153,9 +153,9 @@ namespace Common {
 		bool SetCoefsFor_BandPassFilter(double centerFreqHz, double Q); // Calculates the coefficients of a biquad band-pass filter.
 		bool SetCoefsFor_LPF(double cutoffFreq, double Q);              // Calculate the coefficients of a biquad low-pass filter.
 		bool SetCoefsFor_HPF(double cutoffFreq, double Q);              // Calculates the coefficients of a biquad high-pass filter.  
-		bool SetCoefsFor_LowShelf(double cutoffFreq, double Q);         // Calculates the coefficients of a biquad low-shelf filter.
-		bool SetCoefsFor_HighShelf(double cutoffFreq, double Q);        // Calculates the coefficients of a biquad high-shelf filter.
-		bool SetCoefsFor_PeakNotch(double centerFreqHz, double Q);      // Calculates the coefficients of a biquad peak-notch filter.   
+		bool SetCoefsFor_LowShelf(double cutoffFreq, double Q, float gain);         // Calculates the coefficients of a biquad low-shelf filter.
+		bool SetCoefsFor_HighShelf(double cutoffFreq, double Q, float gain);        // Calculates the coefficients of a biquad high-shelf filter.
+		bool SetCoefsFor_PeakNotch(double centerFreqHz, double Q, float gain);      // Calculates the coefficients of a biquad peak-notch filter.   
 
 																		// Does the basic processing of the biquad filter. Receives the current sample, the coefficients and the delayed samples
 																		// Returns the result of the biquad filter 
