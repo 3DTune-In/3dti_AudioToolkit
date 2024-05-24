@@ -120,18 +120,18 @@ namespace Common {
 
 	//////////////////////////////////////////////
 
-	void CBiquadFilter::SetCoefficients(float frequency, float Q, T_filterType filterType, float gain)
+	void CBiquadFilter::SetCoefficients(float frequency, float Q, T_filterType filterType, float commandGain)
 	{
+		if (commandGain != 1.0f && (filterType == LOWPASS || filterType == HIGHPASS || filterType == BANDPASS)) {
+			SET_RESULT(RESULT_WARNING, "commandGain is not used for LowPass, HighPass and BandPass filters");
+		}
 		if (filterType == LOWPASS) {
-			SetGeneralGain(gain);
 			SetCoefsFor_LPF(frequency, Q);
 		}
 		else if (filterType == HIGHPASS) {
-			SetGeneralGain(gain);
 			SetCoefsFor_HPF(frequency, Q);
 		}
 		else if (filterType == BANDPASS) {
-			SetGeneralGain(gain);
 			SetCoefsFor_BandPassFilter(frequency, Q);
 		}
 		else if (filterType == LOWSHELF) {
@@ -143,7 +143,7 @@ namespace Common {
             SET_RESULT(RESULT_ERROR_NOTIMPLEMENTED, "Highshelf filter type not implemented");
 		}
 		else if (filterType == PEAKNOTCH) {
-			SetCoefsFor_PeakNotch(frequency, Q, gain);
+			SetCoefsFor_PeakNotch(frequency, Q, commandGain);
 		}
 		else {
             SET_RESULT(RESULT_ERROR_INVALID_PARAM, "Invalid filter type");

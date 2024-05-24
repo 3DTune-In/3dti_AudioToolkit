@@ -106,10 +106,11 @@ namespace Common {
 		*	\param [in] frequency relevant frequency (cutoff or band center)
 		*	\param [in] Q Q factor
 		*	\param [in] filterType type of filter
-         *   \param [in] gain filter gain (general Gain for LowPass, HighPass, BandPass; gain for LowShelf, HighShelf, PeakNotch)
+         *  \param [in] commandGain gain for LowShelf, HighShelf, PeakNotch. 
+		 *  \warning the commandGain is not used for LowPass, HighPass and BandPass filters. Eventually this function will be split 
 		*   \eh On error, an error code is reported to the error handler.
 		*/
-		void SetCoefficients(float frequency, float Q, T_filterType filterType, float gain = 1.0f);
+		void SetCoefficients(float frequency, float Q, T_filterType filterType, float commandGain = 1.0f);
 
 		/** \brief Set the sampling frequency at which audio samples were acquired
 		*	\param [in] _samplingFreq sampling frequency, in Hertzs
@@ -153,9 +154,9 @@ namespace Common {
 		bool SetCoefsFor_BandPassFilter(double centerFreqHz, double Q); // Calculates the coefficients of a biquad band-pass filter.
 		bool SetCoefsFor_LPF(double cutoffFreq, double Q);              // Calculate the coefficients of a biquad low-pass filter.
 		bool SetCoefsFor_HPF(double cutoffFreq, double Q);              // Calculates the coefficients of a biquad high-pass filter.  
-		bool SetCoefsFor_LowShelf(double cutoffFreq, double Q, float gain);         // Calculates the coefficients of a biquad low-shelf filter.
-		bool SetCoefsFor_HighShelf(double cutoffFreq, double Q, float gain);        // Calculates the coefficients of a biquad high-shelf filter.
-		bool SetCoefsFor_PeakNotch(double centerFreqHz, double Q, float gain);      // Calculates the coefficients of a biquad peak-notch filter.   
+		bool SetCoefsFor_LowShelf(double cutoffFreq, double Q, float commandGain);         // Calculates the coefficients of a biquad low-shelf filter.
+		bool SetCoefsFor_HighShelf(double cutoffFreq, double Q, float commandGain);        // Calculates the coefficients of a biquad high-shelf filter.
+		bool SetCoefsFor_PeakNotch(double centerFreqHz, double Q, float commandGain);      // Calculates the coefficients of a biquad peak-notch filter.   
 
 																		// Does the basic processing of the biquad filter. Receives the current sample, the coefficients and the delayed samples
 																		// Returns the result of the biquad filter 
