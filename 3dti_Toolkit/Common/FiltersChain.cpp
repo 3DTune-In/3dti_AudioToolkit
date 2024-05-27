@@ -76,6 +76,7 @@ namespace Common {
 	}
 
 	//////////////////////////////////////////////
+	
 	void CFiltersChain::Process(CMonoBuffer <float> & buffer)
 	{
 		//SET_RESULT(RESULT_OK, "");
@@ -84,6 +85,19 @@ namespace Common {
 			shared_ptr<CBiquadFilter> f = filters[c];
 			if (f != NULL)
 				f->Process(buffer);
+		}
+	}
+    
+	void CFiltersChain::Process(CMonoBuffer <float>& buffer, CMonoBuffer<float>& outBuffer)
+	{
+	    for (std::size_t c = 0; c < filters.size(); c++)
+		{
+			shared_ptr<Common::CBiquadFilter> f = filters[c];
+			if (f != NULL)
+			{
+				f->Process(buffer, outBuffer);
+				buffer = outBuffer;
+			}
 		}
 	}
 

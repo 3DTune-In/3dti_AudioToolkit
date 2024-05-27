@@ -122,6 +122,8 @@ namespace ISM
 
 		bool shoeBox = false;				//Flag indicating if the room was set up as a shoebox
 		std::vector<Wall> walls;            //Vector with all the walls of the room
+	public:
+		static float inverseBmatrix[NUM_BAND_ABSORTION][NUM_BAND_ABSORTION];
 	};
 
 }//namespace ISM

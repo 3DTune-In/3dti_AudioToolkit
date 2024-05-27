@@ -48,6 +48,12 @@ namespace ISM
 	class SourceImages
 	{
 	public:
+
+		enum T_equalizerType {
+			PARALLEL = 0,	///< Parallel
+			CASCADE = 1,	///< Cascade
+		};
+
 		////////////
 		// Methods
 		////////////
@@ -113,9 +119,9 @@ namespace ISM
 		*	\param [in] inBuffer: original buffer used for all images
 		*   \param [out] imageBuffers: vector of buffers with the sound filtered (One buffer per image)
 		*	\param [in] listenerLocation: needed to know visibility of sources
-		*	\param [in] reflectionOrder: depth parameter used in the recursion
+		*	\param [in] equalizerType: Equalizer Type (Parallel or Cascade)
 		*/
-		void processAbsortion(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation);
+		void processAbsortion(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation, int equalizerType);
 
 	private:
 
@@ -133,7 +139,7 @@ namespace ISM
 		*	\param [in]
 		*   \param [in]
 		*/
-		void createImages(Room _room, int reflectionOrder, std::vector<Wall> reflectionWalls);
+		void createImages(Room _room, int reflectionOrder, std::vector<Wall> reflectionWalls, int equalizerType);
 
 		////////////
 		// Attributes
@@ -151,6 +157,8 @@ namespace ISM
 
 		Common::CFiltersBank FilterBank;
 		Common::CFiltersChain FilterChain;
+		float gdB[NUM_BAND_ABSORTION];
+		float gCmd[NUM_BAND_ABSORTION];
 
 		ISM::CISM* ownerISM;					// TO CHECK if this possible using smart pointer
 	};

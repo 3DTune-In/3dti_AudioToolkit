@@ -46,13 +46,16 @@ namespace ISM
 		*	\param [in] length: extension of the room along the X axis.
 		*	\param [in] height: extension of the room along the Z axis
 		*/
-		void SetupShoeBoxRoom(float length, float width, float height);
+		void SetupShoeBoxRoom(float length, float width, float height, int equalizerType);
 
 		/** \brief Initializes the object with a shoebox room
 		*	\details creates a room with arbitrary geometry by means of defining all its corners and the walls as polygons with those corners
 		*	\param [in] roomGeometry: struct containing all the vertices and walls
 		*/
-		void setupArbitraryRoom(RoomGeometry roomGeometry);
+		void setupArbitraryRoom(RoomGeometry roomGeometry, int equalizerType);
+
+		void setupEqualizerType(int equalizerType);
+		int  getEqualizerType();
 
 		/** \brief Sets walls' absortion
 		*   \details sets the absortion coeficient (absroved energy / incident energy) of each wall of the main room
@@ -198,6 +201,8 @@ namespace ISM
 		Binaural::CCore* ownerCore;				// owner Core	
 		
 		friend class SourceImages;
+
+		int equalizerType;                      // PARALLEL or CASCADE
 	};
 
 }//namespace ISM

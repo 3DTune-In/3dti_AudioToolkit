@@ -83,6 +83,8 @@ namespace Common {
 		*/
 		void Process(CMonoBuffer <float> & buffer);
 
+		void Process(CMonoBuffer <float>& buffer, CMonoBuffer<float>& outBuffer);
+
 		/** \brief Setup a filters chain from a vector of (ordered) coefficients for any number of biquads	
 		*	\details If the number of coefficients in the vector fits the current number of filters in the chain, the existing filter coefficients are set, 
 		*	instead of creating a new filters chain from scratch

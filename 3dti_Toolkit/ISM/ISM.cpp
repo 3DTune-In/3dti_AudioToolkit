@@ -8,16 +8,28 @@ namespace ISM
 		originalSource = make_shared<SourceImages>(this);
 	}
 
-	void CISM::SetupShoeBoxRoom(float length, float width, float height)
+	void CISM::SetupShoeBoxRoom(float length, float width, float height, int equalizerType)
 	{
 		mainRoom.setupShoeBox(length, width, height);
+		setupEqualizerType(equalizerType);
 		originalSource->createImages(mainRoom, reflectionOrder); 
 	}
 
-	void CISM::setupArbitraryRoom(RoomGeometry roomGeometry)
+	void CISM::setupArbitraryRoom(RoomGeometry roomGeometry, int equalizerType)
 	{
 		mainRoom.setupRoomGeometry(roomGeometry);
+		setupEqualizerType(equalizerType);
 		originalSource->createImages(mainRoom, reflectionOrder); 
+	}
+
+	void CISM::setupEqualizerType(int _equalizerType)
+	{
+		equalizerType = _equalizerType;
+	}
+
+	int CISM::getEqualizerType()
+	{
+		return equalizerType;
 	}
 
 	void CISM::setAbsortion(std::vector<float> absortionPerWall)
@@ -159,9 +171,8 @@ namespace ISM
 
 	void CISM::proccess(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation)
 	{
-		originalSource->processAbsortion(inBuffer, imageBuffers, listenerLocation);
-		
-
+		originalSource->processAbsortion(inBuffer, imageBuffers, listenerLocation, equalizerType);
+	
 		std::vector<ImageSourceData> images = getImageSourceData();
 		ASSERT(imageBuffers.size() == images.size(), RESULT_ERROR_BADSIZE, "Vector of buffers to be processed by ISM should be the same size as the number of image sources", "");
 		

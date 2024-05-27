@@ -75,12 +75,13 @@ namespace ISM
 
 	void SourceImages::createImages(Room _room, int reflectionOrder)
 	{
-		images.clear();		
-		createImages(_room, reflectionOrder, reflectionWalls);		
+		images.clear();	
+		int equalizerType = ownerISM->getEqualizerType();
+		createImages(_room, reflectionOrder, reflectionWalls, equalizerType);
 		updateImages();
 	}
 
-	void SourceImages::createImages(Room _room, int reflectionOrder, std::vector<Wall> reflectionWalls)
+	void SourceImages::createImages(Room _room, int reflectionOrder, std::vector<Wall> reflectionWalls, int equalizerType)
 	{
 		Common::CVector3 roomCenter = ownerISM->getRoom().getCenter();
 		Common::CTransform listenerTransform = ownerISM->GetListener()->GetListenerTransform();
@@ -130,7 +131,8 @@ namespace ISM
 							reflectionWalls.push_back(walls.at(i));
 							tempSourceImage->reflectionWalls = reflectionWalls;
 
-							tempSourceImage->FilterChain.RemoveFilters();
+							if (equalizerType == CASCADE)        tempSourceImage->FilterChain.RemoveFilters();
+							else if (equalizerType == PARALLEL)  tempSourceImage->FilterBank.RemoveFilters();
 
 							////////////////////// Set up an equalisation filterbank to simulate frequency dependent absortion
 							float samplingFrec = ownerISM->GetSampleRate();
@@ -141,22 +143,51 @@ namespace ISM
 							std::vector<float> tempReflectionCoefficients(NUM_BAND_ABSORTION, 1.0);	//creates band reflection coeffs and initialise them to 1.0
 							tempSourceImage->reflectionBands = tempReflectionCoefficients ;
 
-							//double g[9] = {0.1258,    0.0679,    0.0713,    0.0714,    0.0715,    0.0718,    0.0726,    0.0726,    0.1008 }; 
-							double g[9] = { 0.2516,    0.1358,    0.1427,    0.1429,    0.1431,    0.1436,    0.1452,    0.1452,    0.2015 };
+							if (equalizerType == CASCADE) 
+							{
+								// Absorption values are expressed in dBs
+								int nf, nc;
+								for (nc = 0; nc < NUM_BAND_ABSORTION; nc++)
+									if (walls.at(i).getAbsortionB().at(nc) == 1) gdB[nc] = -40;
+									else if (walls.at(i).getAbsortionB().at(nc) > 0.01) {
+										float A = walls.at(i).getAbsortionB().at(nc);
+										gdB[nc] = 20 * log10(1 - A);
+									}
+									else if (walls.at(i).getAbsortionB().at(nc) < 0.01) gdB[nc] = 0;
+								// Command gains are calculated
+								for (nf = 0; nf < NUM_BAND_ABSORTION; nf++) {
+									gCmd[nf] = 0;
+									for (nc = 0; nc < NUM_BAND_ABSORTION; nc++)
+										gCmd[nf] += Room::inverseBmatrix[nf][nc] * gdB[nc];
+								}
+								// Command gains are expressed in linear mode
+								for (nc = 0; nc < NUM_BAND_ABSORTION; nc++)
+									gCmd[nc] = pow(10.0, ((gCmd[nc]) / 20.0));
+								//float  gCmd[NUM_BAND_ABSORTION] = { 2.5546,  2.4005, 0.4056, 2.4646, 3.3480, 0.1198, 1.3390, 0.1377, 3.9254 };
+							}
+							
 
 							for (int k = 0; k < NUM_BAND_ABSORTION; k++)
 							{
 								shared_ptr<Common::CBiquadFilter> filter;
-								filter = tempSourceImage->FilterChain.AddFilter();
-								if ( k == 0)
-									filter->Setup(samplingFrec, bandFrequency * Q_BPF, 1 / Q_BPF, Common::T_filterType::LOWSHELF, g[k] );
-									//filter->Setup(samplingFrec, bandFrequency * Q_BPF, 1 / Q_BPF, Common::T_filterType::LOWPASS);
+								if (equalizerType      == CASCADE)  filter = tempSourceImage->FilterChain.AddFilter();
+								else if (equalizerType == PARALLEL) filter = tempSourceImage->FilterBank.AddFilter();
+
+								if (k == 0)
+									if (equalizerType == CASCADE)
+										filter->Setup(samplingFrec, bandFrequency * Q_BPF, 1 / Q_BPF, Common::T_filterType::LOWSHELF, gCmd[k]);
+									else if (equalizerType == PARALLEL) 
+									    filter->Setup(samplingFrec, bandFrequency * Q_BPF, 1 / Q_BPF, Common::T_filterType::LOWPASS, 1.0);
 								else if (k < NUM_BAND_ABSORTION-1)
-									filter->Setup(samplingFrec, bandFrequency, Q_BPF, Common::T_filterType::PEAKNOCH, g[k] );
-								    //filter->Setup(samplingFrec, bandFrequency, Q_BPF, Common::T_filterType::BANDPASS);
+									if (equalizerType == CASCADE)
+									    filter->Setup(samplingFrec, bandFrequency, Q_BPF, Common::T_filterType::PEAKNOCH, gCmd[k] );
+									else if (equalizerType == PARALLEL)
+								        filter->Setup(samplingFrec, bandFrequency, Q_BPF, Common::T_filterType::BANDPASS, 1.0);
 								else
-									filter->Setup(samplingFrec, bandFrequency / Q_BPF, 1 / Q_BPF, Common::T_filterType::HIGHSHELF, g[k] );
-									//filter->Setup(samplingFrec, bandFrequency / Q_BPF, 1 / Q_BPF, Common::T_filterType::HIGHPASS);
+									if (equalizerType == CASCADE)
+									    filter->Setup(samplingFrec, bandFrequency / Q_BPF, 1 / Q_BPF, Common::T_filterType::HIGHSHELF, gCmd[k] );
+									else if (equalizerType == PARALLEL)
+									    filter->Setup(samplingFrec, bandFrequency / Q_BPF, 1 / Q_BPF, Common::T_filterType::HIGHPASS, 1.0);
 								
 								CMonoBuffer<float> tempBuffer(1, 0.0);		// A minimal process with a one sample buffer is carried out to make the coeficients stable
 								filter->Process(tempBuffer);				// and avoid crossfading at the begining.
@@ -167,9 +198,9 @@ namespace ISM
 								{
 									tempSourceImage->reflectionBands[k] *= sqrt(1 - reflectionWalls.at(j).getAbsortionB().at(k));
 								}
-								//filter->SetGeneralGain(tempSourceImage->reflectionBands.at(k));	//FIXME: the gain per band is dulicated (inside the filters and  in reflectionBands attribute
-								//filter->SetGeneralGain(g[k]);	//FIXME: the gain per band is dulicated (inside the filters and  in reflectionBands attribute
-
+							    if (equalizerType == PARALLEL)
+								    filter->SetGeneralGain(tempSourceImage->reflectionBands.at(k));	//FIXME: the gain per band is dulicated (inside the filters and  in reflectionBands attribute
+								
 								bandFrequency *= octaveStepPow;
 							}
 							/////////////////////////
@@ -183,7 +214,7 @@ namespace ISM
 									Wall tempWall = walls.at(i).getImageWall(walls.at(j));
 									tempRoom.insertWall(tempWall);
 								}
-								tempSourceImage->createImages(tempRoom, reflectionOrder, reflectionWalls);
+								tempSourceImage->createImages(tempRoom, reflectionOrder, reflectionWalls, equalizerType);
 							}
 							images.push_back(tempSourceImage);
 							reflectionWalls.pop_back();
@@ -240,31 +271,19 @@ namespace ISM
 		}
 	}
 
-
-	/*
-	* void SourceImages::processAbsortion(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation)
-	{
-		for (int i = 0; i < images.size();i++)  //process buffers for each of the image sources, adding the result to the output vector of buffers
-		{
-			
-			CMonoBuffer<float> tempBuffer(inBuffer.size(), 0.0);
-
-			if (images.at(i)->visibility > 0.00001)
-			   images.at(i)->FilterBank.Process(inBuffer, tempBuffer);
-			imageBuffers.push_back(tempBuffer);
-			images.at(i)->processAbsortion(inBuffer, imageBuffers, listenerLocation);
-		}
-	}
-	*/
-	void SourceImages::processAbsortion(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>>& imageBuffers, Common::CVector3 listenerLocation)
+	void SourceImages::processAbsortion(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>>& imageBuffers, Common::CVector3 listenerLocation, int equalizerType)
 	{
 		for (int i = 0; i < images.size(); i++)  //process buffers for each of the image sources, adding the result to the output vector of buffers
 		{
+			CMonoBuffer<float> tempBuffer(inBuffer.size(), 0.0);
 
 			if (images.at(i)->visibility > 0.00001)
-				images.at(i)->FilterChain.Process(inBuffer);
-			imageBuffers.push_back(inBuffer);
-			images.at(i)->processAbsortion(inBuffer, imageBuffers, listenerLocation);
+				if (equalizerType == CASCADE) 
+					images.at(i)->FilterChain.Process(inBuffer, tempBuffer);
+				else if (equalizerType == PARALLEL) 
+					images.at(i)->FilterBank.Process(inBuffer, tempBuffer);
+			imageBuffers.push_back(tempBuffer);
+			images.at(i)->processAbsortion(inBuffer, imageBuffers, listenerLocation, equalizerType);
 		}
 	}
 
