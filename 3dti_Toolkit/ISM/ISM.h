@@ -202,7 +202,7 @@ namespace ISM
 		
 		friend class SourceImages;
 
-		int equalizerType;                      // PARALLEL or CASCADE
+		int equalizerType=0;                      // PARALLEL or CASCADE
 	};
 
 }//namespace ISM

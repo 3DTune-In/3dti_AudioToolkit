@@ -119,22 +119,22 @@ namespace Common {
 	}
 
 	//////////////////////////////////////////////
-
-	void CBiquadFilter::SetCoefficients(float frequency, float Q, T_filterType filterType, float gain)
+	void CBiquadFilter::SetCoefficients(float frequency, float Q, T_filterType filterType)
 	{
 		if (filterType == LOWPASS) {
-			SetGeneralGain(gain);
 			SetCoefsFor_LPF(frequency, Q);
 		}
 		else if (filterType == HIGHPASS) {
-			SetGeneralGain(gain);
 			SetCoefsFor_HPF(frequency, Q);
 		}
 		else if (filterType == BANDPASS) {
-			SetGeneralGain(gain);
 			SetCoefsFor_BandPassFilter(frequency, Q);
 		}
-		else if (filterType == LOWSHELF)
+	}
+
+	void CBiquadFilter::SetCoefficients(float frequency, float Q, T_filterType filterType, float gain)
+	{
+		if (filterType == LOWSHELF)
 			SetCoefsFor_LSelf(frequency, Q, gain);
 
 		else if (filterType == HIGHSHELF)

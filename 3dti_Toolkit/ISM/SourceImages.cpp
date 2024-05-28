@@ -77,6 +77,8 @@ namespace ISM
 	{
 		images.clear();	
 		int equalizerType = ownerISM->getEqualizerType();
+		if (equalizerType != 0 && equalizerType != 1)
+			SET_RESULT(RESULT_ERROR_INVALID_PARAM, "equalizerType");
 		createImages(_room, reflectionOrder, reflectionWalls, equalizerType);
 		updateImages();
 	}
@@ -131,8 +133,12 @@ namespace ISM
 							reflectionWalls.push_back(walls.at(i));
 							tempSourceImage->reflectionWalls = reflectionWalls;
 
-							if (equalizerType == CASCADE)        tempSourceImage->FilterChain.RemoveFilters();
-							else if (equalizerType == PARALLEL)  tempSourceImage->FilterBank.RemoveFilters();
+							if (equalizerType == CASCADE)        
+								tempSourceImage->FilterChain.RemoveFilters();
+							else if (equalizerType == PARALLEL)  
+								tempSourceImage->FilterBank.RemoveFilters();
+							else
+								SET_RESULT(RESULT_ERROR_INVALID_PARAM, "equalizerType");
 
 							////////////////////// Set up an equalisation filterbank to simulate frequency dependent absortion
 							float samplingFrec = ownerISM->GetSampleRate();
@@ -170,24 +176,34 @@ namespace ISM
 							for (int k = 0; k < NUM_BAND_ABSORTION; k++)
 							{
 								shared_ptr<Common::CBiquadFilter> filter;
-								if (equalizerType      == CASCADE)  filter = tempSourceImage->FilterChain.AddFilter();
-								else if (equalizerType == PARALLEL) filter = tempSourceImage->FilterBank.AddFilter();
+								if (equalizerType == CASCADE)
+									filter = tempSourceImage->FilterChain.AddFilter();
+								else if (equalizerType == PARALLEL)
+									filter = tempSourceImage->FilterBank.AddFilter();
+								else
+									SET_RESULT(RESULT_ERROR_INVALID_PARAM, "equalizerType");
 
 								if (k == 0)
 									if (equalizerType == CASCADE)
 										filter->Setup(samplingFrec, bandFrequency * Q_BPF, 1 / Q_BPF, Common::T_filterType::LOWSHELF, gCmd[k]);
-									else if (equalizerType == PARALLEL) 
-									    filter->Setup(samplingFrec, bandFrequency * Q_BPF, 1 / Q_BPF, Common::T_filterType::LOWPASS, 1.0);
-								else if (k < NUM_BAND_ABSORTION-1)
-									if (equalizerType == CASCADE)
-									    filter->Setup(samplingFrec, bandFrequency, Q_BPF, Common::T_filterType::PEAKNOCH, gCmd[k] );
 									else if (equalizerType == PARALLEL)
-								        filter->Setup(samplingFrec, bandFrequency, Q_BPF, Common::T_filterType::BANDPASS, 1.0);
+										filter->Setup(samplingFrec, bandFrequency * Q_BPF, 1 / Q_BPF, Common::T_filterType::LOWPASS);
+									else
+										SET_RESULT(RESULT_ERROR_INVALID_PARAM, "equalizerType");
+								else if (k < NUM_BAND_ABSORTION - 1)
+									if (equalizerType == CASCADE)
+										filter->Setup(samplingFrec, bandFrequency, Q_BPF, Common::T_filterType::PEAKNOCH, gCmd[k]);
+									else if (equalizerType == PARALLEL)
+										filter->Setup(samplingFrec, bandFrequency, Q_BPF, Common::T_filterType::BANDPASS);
+									else
+										SET_RESULT(RESULT_ERROR_INVALID_PARAM, "equalizerType");
 								else
 									if (equalizerType == CASCADE)
-									    filter->Setup(samplingFrec, bandFrequency / Q_BPF, 1 / Q_BPF, Common::T_filterType::HIGHSHELF, gCmd[k] );
+										filter->Setup(samplingFrec, bandFrequency / Q_BPF, 1 / Q_BPF, Common::T_filterType::HIGHSHELF, gCmd[k]);
 									else if (equalizerType == PARALLEL)
-									    filter->Setup(samplingFrec, bandFrequency / Q_BPF, 1 / Q_BPF, Common::T_filterType::HIGHPASS, 1.0);
+										filter->Setup(samplingFrec, bandFrequency / Q_BPF, 1 / Q_BPF, Common::T_filterType::HIGHPASS);
+									else
+										SET_RESULT(RESULT_ERROR_INVALID_PARAM, "equalizerType");
 								
 								CMonoBuffer<float> tempBuffer(1, 0.0);		// A minimal process with a one sample buffer is carried out to make the coeficients stable
 								filter->Process(tempBuffer);				// and avoid crossfading at the begining.
@@ -278,10 +294,12 @@ namespace ISM
 			CMonoBuffer<float> tempBuffer(inBuffer.size(), 0.0);
 
 			if (images.at(i)->visibility > 0.00001)
-				if (equalizerType == CASCADE) 
+				if (equalizerType == CASCADE)
 					images.at(i)->FilterChain.Process(inBuffer, tempBuffer);
-				else if (equalizerType == PARALLEL) 
+				else if (equalizerType == PARALLEL)
 					images.at(i)->FilterBank.Process(inBuffer, tempBuffer);
+				else
+					SET_RESULT(RESULT_ERROR_INVALID_PARAM, "equalizerType");
 			imageBuffers.push_back(tempBuffer);
 			images.at(i)->processAbsortion(inBuffer, imageBuffers, listenerLocation, equalizerType);
 		}

@@ -11,14 +11,20 @@ namespace ISM
 	void CISM::SetupShoeBoxRoom(float length, float width, float height, int equalizerType)
 	{
 		mainRoom.setupShoeBox(length, width, height);
-		setupEqualizerType(equalizerType);
+		if (equalizerType == 0 || equalizerType == 1)
+		   setupEqualizerType(equalizerType);
+		else
+			SET_RESULT(RESULT_ERROR_INVALID_PARAM, "equalizerType");
 		originalSource->createImages(mainRoom, reflectionOrder); 
 	}
 
 	void CISM::setupArbitraryRoom(RoomGeometry roomGeometry, int equalizerType)
 	{
 		mainRoom.setupRoomGeometry(roomGeometry);
-		setupEqualizerType(equalizerType);
+		if (equalizerType == 0 || equalizerType == 1)
+			setupEqualizerType(equalizerType);
+		else
+			SET_RESULT(RESULT_ERROR_INVALID_PARAM, "equalizerType");
 		originalSource->createImages(mainRoom, reflectionOrder); 
 	}
 

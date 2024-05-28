@@ -109,7 +109,8 @@ namespace Common {
 		*	\param [in] filterType type of filter
 		*   \eh On error, an error code is reported to the error handler.
 		*/
-		void SetCoefficients(float frequency, float Q, T_filterType filterType, float gain = 1.0f);
+		void SetCoefficients(float frequency, float Q, T_filterType filterType);
+		void SetCoefficients(float frequency, float Q, T_filterType filterType, float gain );
 
 		/** \brief Set the sampling frequency at which audio samples were acquired
 		*	\param [in] _samplingFreq sampling frequency, in Hertzs
