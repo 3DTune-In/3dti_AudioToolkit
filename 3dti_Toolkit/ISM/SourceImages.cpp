@@ -154,8 +154,8 @@ namespace ISM
 								// Absorption values are expressed in dBs
 								int nf, nc;
 								for (nc = 0; nc < NUM_BAND_ABSORTION; nc++)
-									if (walls.at(i).getAbsortionB().at(nc) == 1) gdB[nc] = -40;
-									else if (walls.at(i).getAbsortionB().at(nc) > 0.01) {
+									if (walls.at(i).getAbsortionB().at(nc) == 1) gdB[nc] = -26;
+									else if (walls.at(i).getAbsortionB().at(nc) > 0.05) {
 										float A = walls.at(i).getAbsortionB().at(nc);
 										gdB[nc] = 20 * log10(1 - A);
 									}

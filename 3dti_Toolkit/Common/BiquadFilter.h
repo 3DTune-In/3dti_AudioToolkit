@@ -79,7 +79,8 @@ namespace Common {
 		*   \param [in] linear gain
 		*   \eh On error, an error code is reported to the error handler.
 		*/
-		void Setup(float samplingRate, float frequency, float Q, T_filterType filterType, float gain = 1.0f );
+		void Setup(float samplingRate, float frequency, float Q, T_filterType filterType);
+		void Setup(float samplingRate, float frequency, float Q, T_filterType filterType, float gain);
 
 		/** \brief Set up coefficients of the filter
 		*	\param [in] b0 coefficient b0

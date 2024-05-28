@@ -79,7 +79,15 @@ namespace Common {
 
 	//////////////////////////////////////////////
 		
-	void CBiquadFilter::Setup(float samplingRate, float frequency, float Q, T_filterType filterType, float gain )
+	void CBiquadFilter::Setup(float samplingRate, float frequency, float Q, T_filterType filterType)
+	{
+		samplingFreq = samplingRate;
+		SetCoefficients(frequency, Q, filterType);
+	}
+
+	//////////////////////////////////////////////
+
+	void CBiquadFilter::Setup(float samplingRate, float frequency, float Q, T_filterType filterType, float gain)
 	{
 		samplingFreq = samplingRate;
 		SetCoefficients(frequency, Q, filterType, gain);
