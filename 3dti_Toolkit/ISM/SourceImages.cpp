@@ -149,17 +149,25 @@ namespace ISM
 							std::vector<float> tempReflectionCoefficients(NUM_BAND_ABSORTION, 1.0);	//creates band reflection coeffs and initialise them to 1.0
 							tempSourceImage->reflectionBands = tempReflectionCoefficients ;
 
+							float gMeanLinear;           // only for Cascade
 							if (equalizerType == CASCADE) 
 							{
 								// Absorption values are expressed in dBs
 								int nf, nc;
 								for (nc = 0; nc < NUM_BAND_ABSORTION; nc++)
-									if (walls.at(i).getAbsortionB().at(nc) == 1) gdB[nc] = -26;
-									else if (walls.at(i).getAbsortionB().at(nc) > 0.05) {
-										float A = walls.at(i).getAbsortionB().at(nc);
-										gdB[nc] = 20 * log10(1 - A);
+									if (walls.at(i).getAbsortionB().at(nc) == 1) gdB[nc] = -60;
+									else if (walls.at(i).getAbsortionB().at(nc) > 0.001) {
+										float R = walls.at(i).getAbsortionB().at(nc);
+										gdB[nc] = 20 * log10(1 - R);
 									}
-									else if (walls.at(i).getAbsortionB().at(nc) < 0.01) gdB[nc] = 0;
+									else if (walls.at(i).getAbsortionB().at(nc) < 0.001) gdB[nc] = 0;
+								
+								//average gain in dB
+								float gMeandB = 0;
+								for (nc = 0; nc < NUM_BAND_ABSORTION; nc++) gMeandB += gdB[nc];
+								gMeandB /= NUM_BAND_ABSORTION;
+								for (nc = 0; nc < NUM_BAND_ABSORTION; nc++) gdB[nc] -= gMeandB;
+								
 								// Command gains are calculated
 								for (nf = 0; nf < NUM_BAND_ABSORTION; nf++) {
 									gCmd[nf] = 0;
@@ -169,6 +177,7 @@ namespace ISM
 								// Command gains are expressed in linear mode
 								for (nc = 0; nc < NUM_BAND_ABSORTION; nc++)
 									gCmd[nc] = pow(10.0, ((gCmd[nc]) / 20.0));
+								gMeanLinear = pow(10.0, ((gMeandB) / 20.0));
 								//float  gCmd[NUM_BAND_ABSORTION] = { 2.5546,  2.4005, 0.4056, 2.4646, 3.3480, 0.1198, 1.3390, 0.1377, 3.9254 };
 							}
 							
@@ -198,8 +207,10 @@ namespace ISM
 									else
 										SET_RESULT(RESULT_ERROR_INVALID_PARAM, "equalizerType");
 								else
-									if (equalizerType == CASCADE)
+									if (equalizerType == CASCADE) {
 										filter->Setup(samplingFrec, bandFrequency / Q_BPF, 1 / Q_BPF, Common::T_filterType::HIGHSHELF, gCmd[k]);
+										filter->SetGeneralGain(gMeanLinear);
+									}
 									else if (equalizerType == PARALLEL)
 										filter->Setup(samplingFrec, bandFrequency / Q_BPF, 1 / Q_BPF, Common::T_filterType::HIGHPASS);
 									else
