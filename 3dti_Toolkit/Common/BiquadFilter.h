@@ -67,19 +67,21 @@ namespace Common {
 		*	\param [in] b2 coefficient b2
 		*	\param [in] a1 coefficient a1
 		*	\param [in] a2 coefficient a2
+		*	\param [in] _crossFadingEnabled true when cross fading must be applied between frames
 		*   \eh On error, an error code is reported to the error handler.
 		*/
-		void Setup(float samplingRate, float b0, float b1, float b2, float a1, float a2);
+		void Setup(float samplingRate, float b0, float b1, float b2, float a1, float a2, bool _crossFadingEnabled = true);
 
 		/** \brief Set up the filter
 		*	\param [in] samplingRate sampling frequency, in Hertzs
 		*	\param [in] frequency relevant frequency (cutoff or band center)
 		*	\param [in] Q Q factor
 		*	\param [in] filterType type of filter
-		*	\param [in] gain filter gain (general Gain for LowPass, HighPass, BandPass; gain for LowShelf, HighShelf, PeakNotch)
+		*	\param [in] commandGain  (ignored for LowPass, HighPass, BandPass; command gain for LowShelf, HighShelf, PeakNotch)
+		*	\param [in] _crossFadingEnabled true when cross fading must be applied between frames
 		*   \eh On error, an error code is reported to the error handler.
 		*/
-		void Setup(float samplingRate, float frequency, float Q, T_filterType filterType, float gain = 1.0f);
+		void Setup(float samplingRate, float frequency, float Q, T_filterType filterType, double commandGain = 1.0, bool _crossFadingEnabled = true);		
 
 		/** \brief Set up coefficients of the filter
 		*	\param [in] b0 coefficient b0
@@ -87,30 +89,34 @@ namespace Common {
 		*	\param [in] b2 coefficient b2
 		*	\param [in] a1 coefficient a1
 		*	\param [in] a2 coefficient a2
+		*	\param [in] _crossFadingEnabled true when cross fading must be applied between frames
 		*   \eh Nothing is reported to the error handler.
 		*/
-		void SetCoefficients(float b0, float b1, float b2, float a1, float a2);
+		void SetCoefficients(float b0, float b1, float b2, float a1, float a2, bool _crossFadingEnabled = true);
 
 		/** \brief Set up coefficients of the filter
-		*	\param [in] coefficients coefficients array. Order: b0, b1, a1, a2  
+		*	\param [in] coefficients coefficients array. Order: b0, b1, a1, a2 
+		*	\param [in] _crossFadingEnabled true when cross fading must be applied between frames 
 		*   \eh Nothing is reported to the error handler. */
-		void SetCoefficients(float *coefficients);
+		void SetCoefficients(float *coefficients, bool _crossFadingEnabled = true);
 		
 		/** \brief Set up coefficients of the filter
 		*	\param [in] coefficients coefficients vector. Order: b0, b1, a1, a2  
+		*	\param [in] _crossFadingEnabled true when cross fading must be applied between frames
 		*   \eh Nothing is reported to the error handler. */		
-		void SetCoefficients(TBiquadCoefficients& coefficients);
+		void SetCoefficients(TBiquadCoefficients& coefficients, bool _crossFadingEnabled = true);
 
 		/** \brief Set up coefficients of the filter
 		*	\details Lowpass, Highpass and Bandpass filters are Butterworth design
 		*	\param [in] frequency relevant frequency (cutoff or band center)
 		*	\param [in] Q Q factor
 		*	\param [in] filterType type of filter
-         *  \param [in] commandGain gain for LowShelf, HighShelf, PeakNotch. 
-		 *  \warning the commandGain is not used for LowPass, HighPass and BandPass filters. Eventually this function will be split 
+		*	\param [in] _crossFadingEnabled true when cross fading must be applied between frames
+		*   \param [in] commandGain gain for LowShelf, HighShelf, PeakNotch. 
+		*  \warning the commandGain is not used for LowPass, HighPass and BandPass filters. Eventually this function will be split 
 		*   \eh On error, an error code is reported to the error handler.
 		*/
-		void SetCoefficients(float frequency, float Q, T_filterType filterType, float commandGain = 1.0f);
+        void SetCoefficients(float frequency, float Q, T_filterType filterType, double commandGain = 1.0, bool _crossFadingEnabled = true);	
 
 		/** \brief Set the sampling frequency at which audio samples were acquired
 		*	\param [in] _samplingFreq sampling frequency, in Hertzs
@@ -145,6 +151,11 @@ namespace Common {
 		*/
 		float GetGeneralGain();
 
+		/** \brief Resets z1_l, z2_l, z1_r, z2_r, new_z1_l, new_z2_l, new_z1_r, new_z2_r and firstBuffer
+		 *  \eh Nothing is reported to the error handler.
+		 */
+		void ResetBuffers(); 
+
 	private:
 		////////////////////
 		// PRIVATE METHODS
@@ -152,11 +163,11 @@ namespace Common {
 		void AvoidNanValues();                                          // Prevent the filter from ending up in unstable states
 
 		bool SetCoefsFor_BandPassFilter(double centerFreqHz, double Q); // Calculates the coefficients of a biquad band-pass filter.
-		bool SetCoefsFor_LPF(double cutoffFreq, double Q);              // Calculate the coefficients of a biquad low-pass filter.
-		bool SetCoefsFor_HPF(double cutoffFreq, double Q);              // Calculates the coefficients of a biquad high-pass filter.  
-		bool SetCoefsFor_LowShelf(double cutoffFreq, double Q, float commandGain);         // Calculates the coefficients of a biquad low-shelf filter.
-		bool SetCoefsFor_HighShelf(double cutoffFreq, double Q, float commandGain);        // Calculates the coefficients of a biquad high-shelf filter.
-		bool SetCoefsFor_PeakNotch(double centerFreqHz, double Q, float commandGain);      // Calculates the coefficients of a biquad peak-notch filter.   
+		bool SetCoefsFor_LPF(double cutoffFreq, double Q, bool _crossFadingEnabled);              // Calculate the coefficients of a biquad low-pass filter.
+		bool SetCoefsFor_HPF(double cutoffFreq, double);              // Calculates the coefficients of a biquad high-pass filter.  
+		bool SetCoefsFor_LowShelf(double cutoffFreq, double Q, double commandGain);         // Calculates the coefficients of a biquad low-shelf filter.
+		bool SetCoefsFor_HighShelf(double cutoffFreq, double Q, double commandGain);        // Calculates the coefficients of a biquad high-shelf filter.
+		bool SetCoefsFor_PeakNotch(double centerFreqHz, double Q, double commandGain, bool _crossFadingEnabled);      // Calculates the coefficients of a biquad peak-notch filter.   
 
 																		// Does the basic processing of the biquad filter. Receives the current sample, the coefficients and the delayed samples
 																		// Returns the result of the biquad filter 
@@ -171,12 +182,13 @@ namespace Common {
 		float generalGain;                                              // Gain applied to every sample obtained with Process
 
 		double samplingFreq;                                            // Keep the sampling rate at which audio samples were taken
-		double z1_l, z2_l, z1_r, z2_r;                                  // Keep last values to implement the delays of the filter (left and right channels)
+		double z1_l, z2_l;                                              // Keep last values to implement the delays of the filter 
 		double b0, b1, b2, a1, a2;                                      // Coeficients of the Butterworth filter
 
 		double new_b0, new_b1, new_b2, new_a1, new_a2;                  // New coefficients to implement cross fading
-		double new_z1_l, new_z2_l, new_z1_r, new_z2_r;                  // Keep last values to implement the delays of the filter (left and right channels)
-		bool   crossfadingNeeded;                                       // True when cross fading must be applied in the next frame
+		double new_z1_l, new_z2_l;                                      // Keep last values to implement the delays of the filter 
+		bool   crossFadingEnabled;                                      // True when cross fading must be applied in the next frame
+		bool   firstBuffer; 										   // True when the first buffer is processed
 	};
 }
 #endif

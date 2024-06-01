@@ -42,8 +42,6 @@ namespace Common {
 
 		z1_l = 0;
 		z2_l = 0;
-		z1_r = 0;
-		z2_r = 0;
 
 		b0 = 1;
 		b1 = 0;
@@ -56,40 +54,39 @@ namespace Common {
 		new_b2 = 0;
 		new_a1 = 0;
 		new_a2 = 0;
-		crossfadingNeeded = false;
+		crossFadingEnabled = false;
 		new_z1_l = 0;
 		new_z2_l = 0;
-		new_z1_r = 0;
-		new_z2_r = 0;
 
-		SetCoefficients(1, 0, 0, 0, 0);
+//		SetCoefficients(1, 0, 0, 0, 0);
 
 		generalGain = 1.0f;
+        firstBuffer = true;
 
 		SetSamplingFreq(DEFAULT_SAMPLING_RATE);
 	}
 
 	//////////////////////////////////////////////
 
-	void CBiquadFilter::Setup(float samplingRate, float _b0, float _b1, float _b2, float _a1, float _a2)
+	void CBiquadFilter::Setup(float samplingRate, float _b0, float _b1, float _b2, float _a1, float _a2, bool _crossFadingEnabled) 
 	{
 		samplingFreq = samplingRate;
-		SetCoefficients(_b0, _b1, _b2, _a1, _a2);
+		SetCoefficients(_b0, _b1, _b2, _a1, _a2, _crossFadingEnabled);
 	}
 
 	//////////////////////////////////////////////
 
-	void CBiquadFilter::Setup(float samplingRate, float frequency, float Q, T_filterType filterType, float gain)
+	void CBiquadFilter::Setup(float samplingRate, float frequency, float Q, T_filterType filterType, double gain, bool _crossFadingEnabled)
 	{
 		samplingFreq = samplingRate;
-		SetCoefficients(frequency, Q, filterType, gain);
+		SetCoefficients(frequency, Q, filterType, gain, _crossFadingEnabled);
 	}
 
 	//////////////////////////////////////////////
 
-	void CBiquadFilter::SetCoefficients(float _b0, float _b1, float _b2, float _a1, float _a2)
+	void CBiquadFilter::SetCoefficients(float _b0, float _b1, float _b2, float _a1, float _a2, bool _crossFadingEnabled)
 	{
-		crossfadingNeeded = true;
+		crossFadingEnabled = _crossFadingEnabled;
 
 		new_b0 = _b0;
 		new_b1 = _b1;
@@ -99,34 +96,31 @@ namespace Common {
 
 		new_z1_l = 0;
 		new_z2_l = 0;
-		new_z1_r = 0;
-		new_z2_r = 0;
+
 	}
 
 	//////////////////////////////////////////////
 
-	void CBiquadFilter::SetCoefficients(float *coefficients)
+	void CBiquadFilter::SetCoefficients(float *coefficients, bool _crossFadingEnabled)
 	{
 		//SET_RESULT(RESULT_OK, "");
-		SetCoefficients(coefficients[0], coefficients[1], coefficients[2], coefficients[3], coefficients[4]);
+		SetCoefficients(coefficients[0], coefficients[1], coefficients[2], coefficients[3], coefficients[4], _crossFadingEnabled);
 	}
 
 	//void CBiquadFilter::SetCoefficients(std::vector<float>& coefficients)
-	void CBiquadFilter::SetCoefficients(TBiquadCoefficients& coefficients)
+	void CBiquadFilter::SetCoefficients(TBiquadCoefficients& coefficients, bool _crossFadingEnabled)
 	{
 		//SET_RESULT(RESULT_OK, "");
-		SetCoefficients(coefficients[0], coefficients[1], coefficients[2], coefficients[3], coefficients[4]);
+		SetCoefficients(coefficients[0], coefficients[1], coefficients[2], coefficients[3], coefficients[4], _crossFadingEnabled);
 	}
 
-	//////////////////////////////////////////////
-
-	void CBiquadFilter::SetCoefficients(float frequency, float Q, T_filterType filterType, float commandGain)
+	void CBiquadFilter::SetCoefficients(float frequency, float Q, T_filterType filterType, double commandGain, bool _crossFadingEnabled)
 	{
 		if (commandGain != 1.0f && (filterType == LOWPASS || filterType == HIGHPASS || filterType == BANDPASS)) {
 			SET_RESULT(RESULT_WARNING, "commandGain is not used for LowPass, HighPass and BandPass filters");
 		}
 		if (filterType == LOWPASS) {
-			SetCoefsFor_LPF(frequency, Q);
+			SetCoefsFor_LPF(frequency, Q, _crossFadingEnabled);
 		}
 		else if (filterType == HIGHPASS) {
 			SetCoefsFor_HPF(frequency, Q);
@@ -143,7 +137,7 @@ namespace Common {
             SET_RESULT(RESULT_ERROR_NOTIMPLEMENTED, "Highshelf filter type not implemented");
 		}
 		else if (filterType == PEAKNOTCH) {
-			SetCoefsFor_PeakNotch(frequency, Q, commandGain);
+			SetCoefsFor_PeakNotch(frequency, Q, commandGain, _crossFadingEnabled);
 		}
 		else {
             SET_RESULT(RESULT_ERROR_INVALID_PARAM, "Invalid filter type");
@@ -198,7 +192,7 @@ namespace Common {
 	}
 
 	//////////////////////////////////////////////
-	bool CBiquadFilter::SetCoefsFor_LPF(double cutoffFreq, double Q)
+	bool CBiquadFilter::SetCoefsFor_LPF(double cutoffFreq, double Q, bool _crossFadingEnabled)
 	{
 		if (samplingFreq < 0.1 || cutoffFreq > samplingFreq / 2.0) // To prevent aliasing problems
 		{
@@ -217,7 +211,7 @@ namespace Common {
 			double _a1 = 2 * (K * K - 1) * norm;
 			double _a2 = (1 - K / Q + K * K) * norm;
 
-			SetCoefficients(_b0, _b1, _b2, _a1, _a2);
+			SetCoefficients(_b0, _b1, _b2, _a1, _a2, _crossFadingEnabled);
 
 			//SET_RESULT(RESULT_OK, "LPF filter coefficients of biquad filter succesfully set");
 
@@ -266,7 +260,7 @@ namespace Common {
 	}
 
 	//////////////////////////////////////////////
-	bool CBiquadFilter::SetCoefsFor_PeakNotch(double centerFreqHz, double Q, float gain)
+	bool CBiquadFilter::SetCoefsFor_PeakNotch(double centerFreqHz, double Q, double gain, bool _crossFadingEnabled)
 	{
 		// Use Vällimäki's method to calculate the coefficients of a peak-notch filter
 		// See: Välimäki, V., Reiss, J. D., "All About Audio Equalization: Solutions and Frontiers", MDPI, 2016
@@ -292,24 +286,21 @@ namespace Common {
 		}
 
 		try { // -> To handle division by 0
-			double sqGain = sqrt(gain);
-			double wc = 2 * M_PI * centerFreqHz / samplingFreq;
-			double Bover2 = wc / Q;
-			double _a0 = sqGain + tan(Bover2);
-			double _a1 = -2 * sqGain * cos(wc);
-			double _a2 = sqGain - tan(Bover2);
-			double _b0 = sqGain + gain * tan(Bover2);
-			double _b1 = -2 * sqGain * cos(wc);
-			double _b2 = sqGain - gain * tan(Bover2);
+			double A = std::sqrt(gain);
+			double Wc = 2 * M_PI * centerFreqHz / samplingFreq;
+			double Bw = Wc / Q;
 
-			double norm = 1 / _a0;
-			_b0 *= norm;
-			_b1 *= norm;
-			_b2 *= norm;
-			_a1 *= norm;
-			_a2 *= norm;
+			double _b0 = A + gain * std::tan(Bw/2);
+			double _b1 =     -2*A * std::cos(Wc);
+			double _b2 = A - gain * std::tan(Bw / 2);
+			double _a0 = A +        std::tan(Bw / 2);
+			double _a1 = -2*A     * std::cos(Wc);
+			double _a2 = A -        std::tan(Bw / 2);
 
-			SetCoefficients(_b0, _b1, _b2, _a1, _a2);
+			_b2 = _b2 / _a0; _b1 = _b1 / _a0; _b0 = _b0 / _a0;
+			_a2 = _a2 / _a0; _a1 = _a1 / _a0; 
+
+			SetCoefficients(_b0, _b1, _b2, _a1, _a2, _crossFadingEnabled);
 
 			SET_RESULT(RESULT_OK, "Peak-Notch filter coefficients of biquad filter succesfully set");
 
@@ -323,13 +314,13 @@ namespace Common {
 	}
 	
 	//////////////////////////////////////////////
-	bool CBiquadFilter::SetCoefsFor_LowShelf(double cutoffFreq, double Q, float gain)
+	bool CBiquadFilter::SetCoefsFor_LowShelf(double cutoffFreq, double Q, double gain)
 	{
 		// Not implemented
 	}
 
 	//////////////////////////////////////////////
-	bool CBiquadFilter::SetCoefsFor_HighShelf(double cutoffFreq, double Q, float gain)
+	bool CBiquadFilter::SetCoefsFor_HighShelf(double cutoffFreq, double Q, double gain)
 	{
 		// Not implemented
 	}
@@ -338,7 +329,7 @@ namespace Common {
 	//////////////////////////////////////////////
 	void CBiquadFilter::Process(CMonoBuffer<float> &inBuffer, CMonoBuffer<float> & outBuffer, bool addResult)
 	{
-		int size = inBuffer.size();
+		auto size = inBuffer.size();
 
 		if (size <= 0)
 		{
@@ -359,38 +350,49 @@ namespace Common {
 		// approach in which only 2 delays cells are used.
 		//   See schemes in: https://en.wikipedia.org/wiki/Digital_biquad_filter
 		//   y(n) = b0.x(n) + b1.x(n-1) + b2.x(n-2) + a1.y(n-1) + a2.y(n-2) 	
-
-		if (crossfadingNeeded && size > 0)  // size > 1 to avoid division by zero if size were 1 while calculating alpha
-		{
-			for (int c = 0; c < size; c++)
-			{
-				// To ensure alpha is in [0,1] we use -2 because the buffer is stereo
-				double alpha = ((double)c) / ((double)(size - 1));
-
-				double     sample = ProcessSample(inBuffer[c], a1, a2, b0, b1, b2, z1_l, z2_l);
-				double new_sample = ProcessSample(inBuffer[c], new_a1, new_a2, new_b0, new_b1, new_b2, new_z1_l, new_z2_l);
-
-				double res = sample * (1.0 - alpha) + new_sample * alpha;
-
-				outBuffer[c] = addResult ? outBuffer[c] + res : res;
-			}
-
-			UpdateAttributesAfterCrossfading();
-		}
-		else
-		{
-			for (int c = 0; c < size; c++)
-			{
-				double res = ProcessSample(inBuffer[c], a1, a2, b0, b1, b2, z1_l, z2_l);
-				outBuffer[c] = addResult ? outBuffer[c] + res : res;
-			}
-		}
+        if (firstBuffer) {
+            for (int c = 0; c < size; c++) {
+                double res = ProcessSample(inBuffer[c], new_a1, new_a2, new_b0, new_b1, new_b2, new_z1_l, new_z2_l);
+                outBuffer[c] = addResult ? outBuffer[c] + res : res;
+                }
+            firstBuffer = false;
+            
+        }
+        else {
+            
+            if (crossFadingEnabled && size > 0)  // size > 1 to avoid division by zero if size were 1 while calculating alpha
+            {
+                
+                for (int c = 0; c < size; c++)
+                {
+                    // To ensure alpha is in [0,1] we use -2 because the buffer is stereo
+                    double alpha = ((double)c) / ((double)(size - 1));
+                    
+                    double     sample = ProcessSample(inBuffer[c], a1, a2, b0, b1, b2, z1_l, z2_l);
+                    double new_sample = ProcessSample(inBuffer[c], new_a1, new_a2, new_b0, new_b1, new_b2, new_z1_l, new_z2_l);
+                    
+                    double res = sample * (1.0 - alpha) + new_sample * alpha;
+                    
+                    outBuffer[c] = addResult ? outBuffer[c] + res : res;
+                }
+                
+                UpdateAttributesAfterCrossfading();
+            }
+            else
+            {
+                for (int c = 0; c < size; c++)
+                {
+                    double res = ProcessSample(inBuffer[c], a1, a2, b0, b1, b2, z1_l, z2_l);
+                    outBuffer[c] = addResult ? outBuffer[c] + res : res;
+                }
+            }
+        }
 		AvoidNanValues();
 	}
 	//////////////////////////////////////////////
 	void CBiquadFilter::Process(CMonoBuffer<float> &buffer)
 	{
-		int size = buffer.size();
+		auto size = buffer.size();
 
 		if (size <= 0)
 		{
@@ -400,18 +402,25 @@ namespace Common {
 
 		//SET_RESULT(RESULT_OK, "Biquad filter process succesfull");
 
-		if (crossfadingNeeded)
+		if (crossFadingEnabled)
 		{
-			for (int c = 0; c < size; c++)
-			{
-				double alpha = ((double)c) / ((double)(size - 1));
-
-				double     sample = ProcessSample(buffer[c], a1, a2, b0, b1, b2, z1_l, z2_l);
-				double new_sample = ProcessSample(buffer[c], new_a1, new_a2, new_b0, new_b1, new_b2, new_z1_l, new_z2_l);
-
-				buffer[c] = sample * (1.0 - alpha) + new_sample * alpha;
+			if (firstBuffer) {
+				for (int c = 0; c < size; c++) {
+					buffer[c] = ProcessSample(buffer[c], new_a1, new_a2, new_b0, new_b1, new_b2, new_z1_l, new_z2_l);
+				}
+				firstBuffer = false;
 			}
+			else {
+				for (int c = 0; c < size; c++)
+				{
+					double alpha = ((double)c) / ((double)(size - 1));
 
+					double     sample = ProcessSample(buffer[c], a1, a2, b0, b1, b2, z1_l, z2_l);
+					double new_sample = ProcessSample(buffer[c], new_a1, new_a2, new_b0, new_b1, new_b2, new_z1_l, new_z2_l);
+
+					buffer[c] = sample * (1.0 - alpha) + new_sample * alpha;
+				}
+			}
 			UpdateAttributesAfterCrossfading();
 		}
 		else
@@ -422,6 +431,19 @@ namespace Common {
 
 		AvoidNanValues();
 	}
+
+	//////////////////////////////////////////////
+	void CBiquadFilter::ResetBuffers() {
+		z1_l = 0;
+		z2_l = 0;
+
+		new_z1_l = 0;
+		new_z2_l = 0;
+	
+		firstBuffer = true;
+	}
+
+
 	//////////////////////////////////////////////
 	void CBiquadFilter::AvoidNanValues()
 	{
@@ -433,13 +455,9 @@ namespace Common {
 
 		if (std::isnan(z1_l)) z1_l = 0;
 		if (std::isnan(z2_l)) z2_l = 0;
-		if (std::isnan(z1_r)) z1_r = 0;
-		if (std::isnan(z2_r)) z2_r = 0;
 
 		if (std::isnan(new_z1_l)) new_z1_l = 0;
 		if (std::isnan(new_z2_l)) new_z2_l = 0;
-		if (std::isnan(new_z1_r)) new_z1_r = 0;
-		if (std::isnan(new_z2_r)) new_z2_r = 0;
 	}
 
 	//////////////////////////////////////////////
@@ -459,12 +477,10 @@ namespace Common {
 	//////////////////////////////////////////////
 	void CBiquadFilter::UpdateAttributesAfterCrossfading()
 	{
-		crossfadingNeeded = false;
+		crossFadingEnabled = false;
 
 		z1_l = new_z1_l;
 		z2_l = new_z2_l;
-		z1_r = new_z1_r;
-		z2_r = new_z2_r;
 
 		b0 = new_b0;
 		b1 = new_b1;
