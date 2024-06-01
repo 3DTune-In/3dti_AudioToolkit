@@ -270,16 +270,6 @@ namespace Common {
 			SET_RESULT(RESULT_ERROR_INVALID_PARAM, "Gain of biquad (peak-notch) filter is negative");
 			return false;
 		}
-		else if (gain == 0)
-		{
-			SET_RESULT(RESULT_ERROR_INVALID_PARAM, "Gain of biquad (peak-notch) filter is zero");
-			return false;
-		}
-		else if (gain == 1.0) 
-		{
-			SET_RESULT(RESULT_WARNING, "Gain of biquad (peak-notch) filter is 1.0");
-		}
-
 		if (centerFreqHz > samplingFreq / 2.0) // To warn of aliasing problems
 		{
 			SET_RESULT(RESULT_WARNING, "Cutoff frequency of biquad (peak-notch) filter is higher than Nyquist frequency");
