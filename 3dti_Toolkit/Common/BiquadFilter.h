@@ -162,11 +162,11 @@ namespace Common {
 		///////////////////
 		void AvoidNanValues();                                          // Prevent the filter from ending up in unstable states
 
-		bool SetCoefsFor_BandPassFilter(double centerFreqHz, double Q); // Calculates the coefficients of a biquad band-pass filter.
+		bool SetCoefsFor_BandPassFilter(double centerFreqHz, double Q, bool _crossFadingEnabled); // Calculates the coefficients of a biquad band-pass filter.
 		bool SetCoefsFor_LPF(double cutoffFreq, double Q, bool _crossFadingEnabled);              // Calculate the coefficients of a biquad low-pass filter.
-		bool SetCoefsFor_HPF(double cutoffFreq, double);              // Calculates the coefficients of a biquad high-pass filter.  
-		bool SetCoefsFor_LowShelf(double cutoffFreq, double Q, double commandGain);         // Calculates the coefficients of a biquad low-shelf filter.
-		bool SetCoefsFor_HighShelf(double cutoffFreq, double Q, double commandGain);        // Calculates the coefficients of a biquad high-shelf filter.
+		bool SetCoefsFor_HPF(double cutoffFreq, double, bool _crossFadingEnabled);              // Calculates the coefficients of a biquad high-pass filter.  
+		bool SetCoefsFor_LowShelf(double cutoffFreq, double Q, double commandGain, bool _crossFadingEnabled);         // Calculates the coefficients of a biquad low-shelf filter.
+		bool SetCoefsFor_HighShelf(double cutoffFreq, double Q, double commandGain, bool _crossFadingEnabled);        // Calculates the coefficients of a biquad high-shelf filter.
 		bool SetCoefsFor_PeakNotch(double centerFreqHz, double Q, double commandGain, bool _crossFadingEnabled);      // Calculates the coefficients of a biquad peak-notch filter.   
 
 																		// Does the basic processing of the biquad filter. Receives the current sample, the coefficients and the delayed samples
