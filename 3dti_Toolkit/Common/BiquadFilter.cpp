@@ -132,8 +132,7 @@ namespace Common {
             SetCoefsFor_LowShelf(frequency, Q, commandGain, _crossFadingEnabled);
 		}
 		else if (filterType == HIGHSHELF) {
-			// Not implemented
-            SET_RESULT(RESULT_ERROR_NOTIMPLEMENTED, "Highshelf filter type not implemented");
+			SetCoefsFor_HighShelf(frequency, Q, commandGain, _crossFadingEnabled);
 		}
 		else if (filterType == PEAKNOTCH) {
 			SetCoefsFor_PeakNotch(frequency, Q, commandGain, _crossFadingEnabled);
@@ -348,7 +347,43 @@ namespace Common {
 	//////////////////////////////////////////////
 	bool CBiquadFilter::SetCoefsFor_HighShelf(double cutoffFreq, double Q, double gain, bool _crossFadingEnabled)
 	{
-		// Not implemented
+				if (cutoffFreq > samplingFreq / 2.0) // To prevent aliasing problems
+		{
+			SET_RESULT(RESULT_ERROR_INVALID_PARAM, "Cutoff frequency of biquad (LOWSHELF) filter is higher than Nyquist frequency");
+			return false;
+		}
+		
+		try // -> To handle division by 0
+		{
+			// High shelf implementation from Välimäki, V., Reiss, J. D., "All About Audio Equalization: Solutions and Frontiers", MDPI, 2016
+			//      https://www.mdpi.com/2076-3417/6/5/129
+			double sqrtGain = std::sqrt(gain);
+			double fourthrtGain = std::sqrt(sqrtGain);
+			double wc = 2 * M_PI * cutoffFreq / samplingFreq;
+			double sigma = std::tan(wc/2);
+			double sigma2 = sigma * sigma;
+
+			double _b0 = sqrtGain * (sqrtGain + std::sqrt(2.0) * sigma * fourthrtGain + sigma2);
+			double _b1 = sqrtGain * (- 2) * (sqrtGain - sigma2);
+			double _b2 = sqrtGain * (sqrtGain - std::sqrt(2.0) * sigma * fourthrtGain  + sigma2);
+			double _a0 = sqrtGain * sigma2 + std::sqrt(2.0) * sigma * fourthrtGain + 1; 
+			double _a1 =  2 * (sqrtGain * sigma2  - 1);
+			double _a2 = sqrtGain * sigma2 - std::sqrt(2.0) * sigma * fourthrtGain + 1;
+
+			_b2 = _b2 / _a0; _b1 = _b1 / _a0; _b0 = _b0 / _a0;
+			_a2 = _a2 / _a0; _a1 = _a1 / _a0;
+
+			SetCoefficients(_b0, _b1, _b2, _a1, _a2, _crossFadingEnabled);
+
+			SET_RESULT(RESULT_OK, "LOWSHELF filter coefficients of biquad filter succesfully set");
+
+			return true;
+		}
+		catch (exception e)
+		{
+			SET_RESULT(RESULT_ERROR_DIVBYZERO, "Division by zero setting coefficients for LOWSHELF biquad filter");
+			return false;
+		}
 	}
 
 
