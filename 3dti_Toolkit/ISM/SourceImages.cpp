@@ -154,14 +154,11 @@ namespace ISM
 							{
 								// Absorption values are expressed in dBs
 								int nf, nc;
-								for (nc = 0; nc < NUM_BAND_ABSORTION; nc++)
-									if (walls.at(i).getAbsortionB().at(nc) == 1) gdB[nc] = -60;
-									else if (walls.at(i).getAbsortionB().at(nc) > 0.001) {
-										float R = walls.at(i).getAbsortionB().at(nc);
-										gdB[nc] = 20 * log10(1 - R);
-									}
-									else if (walls.at(i).getAbsortionB().at(nc) < 0.001) gdB[nc] = 0;
-								
+								for (nc = 0; nc < NUM_BAND_ABSORTION; nc++) 
+								{
+									float R = walls.at(i).getAbsortionB().at(nc);
+									gdB[nc] = 20 * log10(1-R*R);
+								}
 								//average gain in dB
 								float gMeandB = 0;
 								for (nc = 0; nc < NUM_BAND_ABSORTION; nc++) gMeandB += gdB[nc];
