@@ -148,6 +148,15 @@ namespace ISM
 
 							std::vector<float> tempReflectionCoefficients(NUM_BAND_ABSORTION, 1.0);	//creates band reflection coeffs and initialise them to 1.0
 							tempSourceImage->reflectionBands = tempReflectionCoefficients ;
+							
+							//Set the reflection coefficient of each band according to absortion coeficients of reflectionWalls
+							for (int n = 0; n < NUM_BAND_ABSORTION; n++)
+							{
+								for (int j = 0; j < reflectionWalls.size(); j++)
+								{
+									tempSourceImage->reflectionBands[n] *= sqrt(1 - reflectionWalls.at(j).getAbsortionB().at(n));
+								}
+							}
 
 							float gMeanLinear;           // only for Cascade
 							if (equalizerType == CASCADE) 
@@ -156,8 +165,8 @@ namespace ISM
 								int nf, nc;
 								for (nc = 0; nc < NUM_BAND_ABSORTION; nc++) 
 								{
-									float R = walls.at(i).getAbsortionB().at(nc);
-									gdB[nc] = 20 * log10(1-R*R);
+									float R = tempSourceImage->reflectionBands[nc];
+									gdB[nc] = 20 * log10(R);
 								}
 								//average gain in dB
 								float gMeandB = 0;
@@ -216,14 +225,10 @@ namespace ISM
 								CMonoBuffer<float> tempBuffer(1, 0.0);		// A minimal process with a one sample buffer is carried out to make the coeficients stable
 								filter->Process(tempBuffer);				// and avoid crossfading at the begining.
 
-
-								//Set the reflection coefficient of each band according to absortion coeficients of reflectionWalls
-								for (int j = 0; j < reflectionWalls.size(); j++)
+								if (equalizerType == PARALLEL) 
 								{
-									tempSourceImage->reflectionBands[k] *= sqrt(1 - reflectionWalls.at(j).getAbsortionB().at(k));
+									filter->SetGeneralGain(tempSourceImage->reflectionBands.at(k));	//FIXME: the gain per band is dulicated (inside the filters and  in reflectionBands attribute
 								}
-							    if (equalizerType == PARALLEL)
-								    filter->SetGeneralGain(tempSourceImage->reflectionBands.at(k));	//FIXME: the gain per band is dulicated (inside the filters and  in reflectionBands attribute
 								
 								bandFrequency *= octaveStepPow;
 							}
