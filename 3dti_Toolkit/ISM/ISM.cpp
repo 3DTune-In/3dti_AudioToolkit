@@ -82,24 +82,49 @@ namespace ISM
 		return reflectionOrder;
 	}
 
-	void CISM::setMaxDistanceImageSources(float _MaxDistanceSourcesToListener)
+	void CISM::setMaxDistanceImageSources(float _MaxDistanceSourcesToListener, float _windowSlopeDistance)
 	{
-		maxDistanceSourcesToListener = _MaxDistanceSourcesToListener;	
-		originalSource->createImages(mainRoom, reflectionOrder); 
+		if (_windowSlopeDistance/2 < _MaxDistanceSourcesToListener) 
+		{
+			maxDistanceSourcesToListener = _MaxDistanceSourcesToListener;
+			setTransitionMeters(_windowSlopeDistance);
+			originalSource->createImages(mainRoom, reflectionOrder);
+		}
+		else
+		{
+			//TODO: ERROR
+		}
+		
 	}
 
+	void CISM::setTransitionMeters(float  _windowSlopeDistance)
+	{
+		transitionMeters = _windowSlopeDistance;
+	}
+		
 	int CISM::calculateNumOfSilencedFrames(float maxDistanceSourcesToListener)
 	{
-		float buffersize = (float) ownerCore->GetAudioState().bufferSize;
-		float samplerate = (float) ownerCore->GetAudioState().sampleRate;
+		float buffersize = (float)ownerCore->GetAudioState().bufferSize;
+		float samplerate = (float)ownerCore->GetAudioState().sampleRate;
 		float soundSpeed = ownerCore->GetMagnitudes().GetSoundSpeed();
 
-		int numberOfSlilencedFrames = ceil (((maxDistanceSourcesToListener / soundSpeed)*samplerate) / buffersize);
-
+		int numberOfSlilencedFrames = floor(((maxDistanceSourcesToListener / soundSpeed) * samplerate) / buffersize);
+		
 		return numberOfSlilencedFrames;
 	}
-	
-		
+
+	int CISM::calculateNumOfSilencedSamples(float maxDistanceSourcesToListener)
+	{
+		float buffersize = (float)ownerCore->GetAudioState().bufferSize;
+		float samplerate = (float)ownerCore->GetAudioState().sampleRate;
+		float soundSpeed = ownerCore->GetMagnitudes().GetSoundSpeed();
+
+		int numberOfSlilencedSamples = floor ((maxDistanceSourcesToListener * samplerate / soundSpeed) );
+
+		return numberOfSlilencedSamples;
+	}
+
+
 	float CISM::getMaxDistanceImageSources()
 	{
 		return maxDistanceSourcesToListener;
@@ -170,6 +195,15 @@ namespace ISM
 
 	shared_ptr<Binaural::CListener> CISM::GetListener() const {
 		return ownerCore->GetListener();
+	}
+
+
+	void CISM::enableStaticDistanceCriterion() {
+		staticDistanceCriterion = true;
+	}
+
+	void CISM::disableStaticDistanceCriterion() {
+		staticDistanceCriterion = false;
 	}
 
 }//namespace ISM

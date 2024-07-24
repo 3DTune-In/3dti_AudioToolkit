@@ -83,6 +83,12 @@ namespace Common {
 		*/
 		void Process(CMonoBuffer <float> & buffer);
 
+		/** \brief Process an buffer through the whole set of filters 
+		 * 	\param [in] inBuffer input buffer
+		 * 	\param [out] outBuffer output buffer
+		*/
+		void Process(CMonoBuffer <float> & inBuffer, CMonoBuffer <float> & outBuffer);
+
 		/** \brief Setup a filters chain from a vector of (ordered) coefficients for any number of biquads	
 		*	\details If the number of coefficients in the vector fits the current number of filters in the chain, the existing filter coefficients are set, 
 		*	instead of creating a new filters chain from scratch

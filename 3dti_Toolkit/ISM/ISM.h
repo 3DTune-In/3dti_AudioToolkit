@@ -100,7 +100,7 @@ namespace ISM
 		*	\details Sources that exceed the maximum distance will be considered non-visible sources.
 		*	\param [in] maxDistanceSourcesToListener
 		*/
-		void setMaxDistanceImageSources(float maxDistanceSourcesToListener);
+		void setMaxDistanceImageSources(float maxDistanceSourcesToListener, float windowSlopeDistance);
 
 		/** \brief Returns the maximum distance between the listener and each source image to be considered visible
 		*	\details Sources that exceed the maximum distance will be considered non-visible sources.
@@ -113,9 +113,21 @@ namespace ISM
 		*	\param [in] maxDistanceSourcesToListener
 		*	\param [out] numberOfSilencedFrames
 		*/
-		int calculateNumOfSilencedFrames (float maxDistanceSourcesToListener);
+		int calculateNumOfSilencedFrames(float maxDistanceSourcesToListener);
 		
+		/** \brief Returns number of silenced samples
+		*	\details calculates the number od silenced samples depending on the maximum distance between the images and the listener
+		*	\param [in] maxDistanceSourcesToListener
+		*	\param [out] numberOfSilencedSamples
+		*/
+		int calculateNumOfSilencedSamples (float maxDistanceSourcesToListener);
 
+		/** \brief Sets the distance in meters needed for the Fade-Out window in ISM.
+		*	\details Sets the parameter needed for the fade-out window
+		*	\param [in] windowSlopeDistance in meters (related to windowSlope time(s) in class CBRIR)
+		*/
+		void setTransitionMeters(float  _windowSlopeDistance);
+		
 		/** \brief Sets the source location
 		*	\details This method sets the location of the original source (direct path).
 		*	\param [in] location: location of the direct path source
@@ -149,6 +161,16 @@ namespace ISM
 		*/
 		void proccess(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation);
 
+		/** \brief Enable static distance criterion
+		*	\details This method reduces the number of potential image sources to be considered according to the distance criterion
+		*/
+		void enableStaticDistanceCriterion();
+
+		/** \brief Disable static distance criterion
+		*	\details This method establishes a dynamic distance criterion and considers all possible sources as potential sources
+		*/
+		void disableStaticDistanceCriterion();
+		
 	private:
 		////////////
 		// Methods
@@ -165,14 +187,16 @@ namespace ISM
 		//SourceImages originalSource;			//original sound source inside the main room with direct path to the listener
 		shared_ptr<SourceImages> originalSource;
 
-		int reflectionOrder;				//Number of reflections t be simulated
+		int reflectionOrder;				    //Number of reflections t be simulated
 
 		float maxDistanceSourcesToListener; 
+		float transitionMeters;                   //Transition meters associated with the _windowSlopeDistance
+
+		bool staticDistanceCriterion;           // When enabled, the number of potential images is smaller.
+
 
 		Binaural::CCore* ownerCore;				// owner Core	
 		
-
-
 		friend class SourceImages;
 	};
 
