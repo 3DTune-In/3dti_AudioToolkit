@@ -4,7 +4,7 @@
 * \brief Declaration of SourceImages interface. This class recursively contains the source images implementing the Image Source Methot (ISM) using 3D Tune-In Toolkit
 * \date	July 2021
 *
-* \authors F. Arebola-Pérez and A. Reyes-Lecuona, members of the 3DI-DIANA Research Group (University of Malaga)
+* \authors F. Arebola-Pï¿½rez and A. Reyes-Lecuona, members of the 3DI-DIANA Research Group (University of Malaga)
 * \b Contact: A. Reyes-Lecuona as head of 3DI-DIANA Research Group (University of Malaga): areyes@uma.es
 *
 * \b Contributions: (additional authors/contributors can be added here)
@@ -16,13 +16,13 @@
 *
 * \b Licence: GPLv3
 *
-* \b Acknowledgement: This project has received funding from Spanish Ministerio de Ciencia e Innovación under the SAVLab project (PID2019-107854GB-I00)
+* \b Acknowledgement: This project has received funding from Spanish Ministerio de Ciencia e Innovaciï¿½n under the SAVLab project (PID2019-107854GB-I00)
 *
 */
 #pragma once
 #include "Room.h"
 #include <Common/Vector3.h>
-#include <Common/FiltersBank.h>
+#include <Common/CascadeGraphicEq9OctaveBands.h>
 
 #define VISIBILITY_MARGIN	0.2
 #define FRAMES_OF_MARGIN 1    //Number of Frames for Transition
@@ -74,15 +74,13 @@ namespace ISM
 		/** \brief Returns the locations of all images but the original source
 		*   \details this method recurively goes through the image tree to collect all the image locations
 		*   \param [out] imageSourceList: vector containing all image locations.
-		*   \param [in] reflectionOrder: needed to trim the recursive tree
 		*/
 		void getImageLocations(std::vector<Common::CVector3> &imageSourceList);
 
 		/** \brief Returns data of all image sources
 		*	\details This method returns the location of all image sources and wether they are visible or not, not including the
 			original source (direct path).
-		*	\param [out] ImageSourceData: Vector containing the data of the image sources
-		*   \param [in] reflectionOrder: needed to trim the recursive tree
+		*	\param [out] imageSourceDataList: Vector containing the data of the image sources
 		*/
 		void getImageData(std::vector<ImageSourceData> &imageSourceDataList);
 
@@ -112,7 +110,6 @@ namespace ISM
 		*	\param [in] inBuffer: original buffer used for all images
 		*   \param [out] imageBuffers: vector of buffers with the sound filtered (One buffer per image)
 		*	\param [in] listenerLocation: needed to know visibility of sources
-		*	\param [in] reflectionOrder: depth parameter used in the recursion
 		*/
 		void processAbsortion(CMonoBuffer<float> inBuffer, std::vector<CMonoBuffer<float>> &imageBuffers, Common::CVector3 listenerLocation);
 
@@ -148,7 +145,7 @@ namespace ISM
 		bool visible = true;					//false when visibility = 0, true otherwise
 		std::vector<float> reflectionBands;     //coeficients, for each octave Band, to be applied to simulate walls' absortion
 
-		Common::CFiltersBank FilterBank;
+		Common::CascadeGraphicEq9OctaveBandsReduceRipple eq; //Graphic Equalizer to simulate walls' absortion
 
 		ISM::CISM* ownerISM;					// TO CHECK if this possible using smart pointer
 	};

@@ -86,6 +86,9 @@ namespace ISM
 		Common::CTransform listenerTransform = ownerISM->GetListener()->GetListenerTransform();
 		Common::CVector3 listenerLocation = listenerTransform.GetPosition();
 
+		/// Test all requirements to create a new image source
+
+		// The reflection order is decremented at each level of the recursive tree
 		if (reflectionOrder > 0) //if the reflection order is already 0 no more images should be created. We are at the leaves of the tree
 		{
 			reflectionOrder--;
@@ -94,7 +97,6 @@ namespace ISM
 			{
 				if (walls.at(i).isActive()) //if the wall is not active, its image is not created
 				{
-					shared_ptr<SourceImages> tempSourceImage = make_shared< SourceImages>(ownerISM);
 					Common::CVector3 tempImageLocation = walls[i].getImagePoint(sourceLocation);
 
 					// if the image is closer to the room center than the previous original, that reflection is not real and should not be included
@@ -126,47 +128,28 @@ namespace ISM
 						if (roomsDistance <= maxDistanceImageSources)
 						{
 							//The new candidate meets all requirements and will be a source image. It is therefor finally completed
+							shared_ptr<SourceImages> tempSourceImage = make_shared< SourceImages>(ownerISM);
+							std::vector<float> reflectionBands(NUM_BAND_ABSORTION, 1.0);
+							tempSourceImage->reflectionBands = reflectionBands;
 							tempSourceImage->setLocation(tempImageLocation);
 							reflectionWalls.push_back(walls.at(i));
 							tempSourceImage->reflectionWalls = reflectionWalls;
 
-							tempSourceImage->FilterBank.RemoveFilters();
+							tempSourceImage->eq.RemoveFilters();  //Remove all previously created filters
 
-							////////////////////// Set up an equalisation filterbank to simulate frequency dependent absortion
-							float samplingFrec = ownerISM->GetSampleRate();
-							float bandFrequency = FIRST_ABSORTION_BAND;						//frecuency of each band. We start with the first band
-							float octaveStepPow = 2.0;
-							float Q_BPF = std::sqrt(octaveStepPow) / (octaveStepPow - 1.0f); // We are using a constant Q filter bank. Q=sqrt(2)
-
-							std::vector<float> tempReflectionCoefficients(NUM_BAND_ABSORTION, 1.0);	//creates band reflection coeffs and initialise them to 1.0
-							tempSourceImage->reflectionBands = tempReflectionCoefficients ;
-
-							for (int k = 0; k < NUM_BAND_ABSORTION; k++)
+							// Calculate the reflection coefficients from the absortion coefficients of the reflection walls
+							for (int n = 0; n < NUM_BAND_ABSORTION; n++)
 							{
-								shared_ptr<Common::CBiquadFilter> filter;
-								filter = tempSourceImage->FilterBank.AddFilter();
-								if ( k == 0)
-									filter->Setup(samplingFrec, bandFrequency * Q_BPF, 1 / Q_BPF, Common::T_filterType::LOWPASS);
-								else if (k < NUM_BAND_ABSORTION-1)
-								    filter->Setup(samplingFrec, bandFrequency, Q_BPF, Common::T_filterType::BANDPASS);
-								else
-									filter->Setup(samplingFrec, bandFrequency / Q_BPF, 1 / Q_BPF, Common::T_filterType::HIGHPASS);
-								
-								CMonoBuffer<float> tempBuffer(1, 0.0);		// A minimal process with a one sample buffer is carried out to make the coeficients stable
-								filter->Process(tempBuffer);				// and avoid crossfading at the begining.
-
-
-								//Set the reflection coefficient of each band according to absortion coeficients of reflectionWalls
 								for (int j = 0; j < reflectionWalls.size(); j++)
 								{
-									tempSourceImage->reflectionBands[k] *= sqrt(1 - reflectionWalls.at(j).getAbsortionB().at(k));
+									tempSourceImage->reflectionBands[n] *= sqrt(1 - reflectionWalls.at(j).getAbsortionB().at(n));
 								}
-								filter->SetGeneralGain(tempSourceImage->reflectionBands.at(k));	//FIXME: the gain per band is dulicated (inside the filters and  in reflectionBands attribute
-
-								bandFrequency *= octaveStepPow;
 							}
-							/////////////////////////
 
+							// Set the reflection coefficients to the equalizer
+							tempSourceImage->eq.SetCommandGains(tempSourceImage->reflectionBands);
+
+							
 							if (reflectionOrder > 0)  //Still higher order reflections: we need to create images of the image just created
 							{
 								// We need to calculate the image room before asking for all the new images
@@ -242,7 +225,7 @@ namespace ISM
 			CMonoBuffer<float> tempBuffer(inBuffer.size(), 0.0);
 
 			if (images.at(i)->visibility > 0.00001)
-			   images.at(i)->FilterBank.Process(inBuffer, tempBuffer);
+			   images.at(i)->eq.Process(inBuffer, tempBuffer);
 			imageBuffers.push_back(tempBuffer);
 			images.at(i)->processAbsortion(inBuffer, imageBuffers, listenerLocation);
 		}

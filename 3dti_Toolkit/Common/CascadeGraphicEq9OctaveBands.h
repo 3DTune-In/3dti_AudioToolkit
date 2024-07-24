@@ -37,6 +37,14 @@ namespace Common {
 
         /** 
          * \brief Default constructor which creates a chain of 9 octave bands graphic equalizer filters.
+         */
+        CascadeGraphicEq9OctaveBands() {
+            std::vector<float> commandGains(NUM_BANDS, 1.0);
+            SetCommandGains(commandGains);
+        }
+        
+        /** 
+         * \brief Constructor which creates a chain of 9 octave bands graphic equalizer filters.
          * \param commandGains Vector of command gains at each band (note that these are not the peak gains of each inidividual filter)
         */
         CascadeGraphicEq9OctaveBands(const std::vector<float> & _commandGains) {
@@ -52,6 +60,20 @@ namespace Common {
         */
         void Process(CMonoBuffer<float> &buffer) {
             return CFiltersChain::Process(buffer);
+       }
+
+       /** 
+        * \brief Process an buffer through the whole set of filters
+        */
+       void Process(CMonoBuffer<float> &buffer, CMonoBuffer <float> &output) {
+           return CFiltersChain::Process(buffer, output);
+        }
+
+        /** 
+         * \brief Remove all previously created filters
+         */
+        void RemoveFilters() {
+            return CFiltersChain::RemoveFilters();
         }
 
         /** 
