@@ -145,7 +145,7 @@ namespace ISM
 		bool visible = true;					//false when visibility = 0, true otherwise
 		std::vector<float> reflectionBands;     //coeficients, for each octave Band, to be applied to simulate walls' absortion
 
-		Common::CascadeGraphicEq9OctaveBandsReduceRipple eq; //Graphic Equalizer to simulate walls' absortion
+		Common::CascadeGraphicEq9OctaveBands eq; //Graphic Equalizer to simulate walls' absortion
 
 		ISM::CISM* ownerISM;					// TO CHECK if this possible using smart pointer
 	};

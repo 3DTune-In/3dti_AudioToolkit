@@ -13,7 +13,7 @@
 
 
 namespace Common {
-    template <bool ReduceRipple> class CascadeGraphicEq9OctaveBands : private CFiltersChain {
+    class CascadeGraphicEq9OctaveBands : private CFiltersChain {
 
         constexpr static int NUM_BANDS = 9;
         constexpr static float Q = 1.414213562373095; // sqrt(2)
@@ -131,18 +131,18 @@ namespace Common {
                 commandGainsDB[i] = 20.0 * std::log10(commandGains[i]);
             }
             float meanCommandGainDB = 0.0;
-            if constexpr (ReduceRipple) {
-               // Calculate mean command gain
-                for (int i = 0; i < NUM_BANDS; i++) {
-                    meanCommandGainDB += commandGainsDB[i];
-                }
-                meanCommandGainDB /= NUM_BANDS;
-
-                // Substract mean command gain
-                for (int i = 0; i < NUM_BANDS; i++) {
-                    commandGainsDB[i] -= meanCommandGainDB;
-                }
+            
+            // Calculate mean command gain
+            for (int i = 0; i < NUM_BANDS; i++) {
+                meanCommandGainDB += commandGainsDB[i];
             }
+            meanCommandGainDB /= NUM_BANDS;
+
+            // Substract mean command gain
+            for (int i = 0; i < NUM_BANDS; i++) {
+                commandGainsDB[i] -= meanCommandGainDB;
+            }
+            
             std::vector<float> peakGainsDB(NUM_BANDS, 0.0);
             for (int i = 0; i < NUM_BANDS; i++) {
                     peakGainsDB[i] = 0.0;
@@ -150,11 +150,10 @@ namespace Common {
                     peakGainsDB[i] += inverseBmatrix[i][j] * commandGainsDB[j];
                 }
             }
-            if constexpr (ReduceRipple) {
-                // store the mean command gain in generalGain
-                generalGain = std::pow(10.0, meanCommandGainDB / 20.0);
-            }
-
+            
+            // store the mean command gain in generalGain
+            generalGain = std::pow(10.0, meanCommandGainDB / 20.0);
+            
             // Convert command gains to linear scale
             std::vector<float> peakGains(NUM_BANDS, 0.0);
             for (int i = 0; i < NUM_BANDS; i++) {
@@ -186,16 +185,13 @@ namespace Common {
             filter = AddFilter();
             filter->Setup(48000, 16000 / Q, dummyQ, T_filterType::HIGHSHELF, peakGains[8]); 
 
-            // if reducing ripple set general gain of last filter
-            if constexpr (ReduceRipple) {
-                filter->SetGeneralGain(generalGain);
-            }
+            // Set general gain of last filter
+            filter->SetGeneralGain(generalGain);
+            
             
        }
 
     };
 
-    /// Typedef for class CascadeGraphicEq9OctaveBands with ReduceRipple set to true
-    using CascadeGraphicEq9OctaveBandsReduceRipple = CascadeGraphicEq9OctaveBands<true>;
 }
 #endif
