@@ -9,7 +9,13 @@
 
 namespace ISM
 {
-	SourceImages::SourceImages(ISM::CISM* _ownerISM) : ownerISM{_ownerISM} {
+	SourceImages::SourceImages(ISM::CISM* _ownerISM) : 
+		ownerISM{_ownerISM}, 
+		eq{_ownerISM->GetSampleRate()}
+	{
+		sourceLocation = Common::CVector3(0, 0, 0);
+		visibility = 1.0;
+		visible = true;
 			
 	}
 
@@ -147,7 +153,7 @@ namespace ISM
 							}
 
 							// Set the reflection coefficients to the equalizer
-							tempSourceImage->eq.SetCommandGains(tempSourceImage->reflectionBands);
+							tempSourceImage->eq.SetCommandGains(ownerISM->GetSampleRate(),tempSourceImage->reflectionBands);
 
 							
 							if (reflectionOrder > 0)  //Still higher order reflections: we need to create images of the image just created

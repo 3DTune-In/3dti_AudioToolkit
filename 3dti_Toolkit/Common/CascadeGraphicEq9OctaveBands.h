@@ -38,20 +38,20 @@ namespace Common {
         /** 
          * \brief Default constructor which creates a chain of 9 octave bands graphic equalizer filters.
          */
-        CascadeGraphicEq9OctaveBands() {
+        CascadeGraphicEq9OctaveBands(float samplingRate) {
             std::vector<float> commandGains(NUM_BANDS, 1.0);
-            SetCommandGains(commandGains);
+            SetCommandGains(samplingRate, commandGains);
         }
         
         /** 
          * \brief Constructor which creates a chain of 9 octave bands graphic equalizer filters.
          * \param commandGains Vector of command gains at each band (note that these are not the peak gains of each inidividual filter)
         */
-        CascadeGraphicEq9OctaveBands(const std::vector<float> & _commandGains) {
+        CascadeGraphicEq9OctaveBands(float samplingRate, const std::vector<float> & _commandGains) {
             if (_commandGains.size() != NUM_BANDS) {
                 throw std::invalid_argument("CascadeGraphicEq9OctaveBands: gains vector must have 9 elements");
             }
-            SetCommandGains(_commandGains);
+            SetCommandGains(samplingRate, _commandGains);
         }
 
         /** 
@@ -78,16 +78,17 @@ namespace Common {
 
         /** 
          * \brief Set the command gains of the filter at each band
+         * \param samplingRate Sampling rate of the audio signal
          * \param gains Vector of command gains to be obtained at each band. Note that these are not the peak gains of each inidividual filter. 
          * \return True if the gains were set correctly, false otherwise
         */
-        bool SetCommandGains(const std::vector<float> &  _gains) {
+        bool SetCommandGains(float samplingRate, const std::vector<float> &  _gains) {
             if (_gains.size() != NUM_BANDS) {
                 SET_RESULT(RESULT_ERROR_INVALID_PARAM, "CascadeGraphicEq9OctaveBands: gains vector must have 9 elements");
                 return false;
             }
             commandGains = _gains;
-            ResetFiltersChain(CalculatePeakGains());
+            ResetFiltersChain(samplingRate, CalculatePeakGains());
         }
 
         /** 
@@ -167,23 +168,23 @@ namespace Common {
          * \brief Reset the filters chain with the new peak gains
          * \param gains Vector of gains to be set
         */
-       void ResetFiltersChain(const std::vector<float> & peakGains) {
+       void ResetFiltersChain(float samplingRate, const std::vector<float> & peakGains) {
             RemoveFilters();
 
             // Create first low shelf filter
             auto filter = AddFilter();
             constexpr float dummyQ = 1.0; // Not used inside the low shelf filter nor the high shelf filter
-            filter->Setup(48000, 62.5 * Q, dummyQ, T_filterType::LOWSHELF, peakGains[0]);
+            filter->Setup(samplingRate, 62.5 * Q, dummyQ, T_filterType::LOWSHELF, peakGains[0]);
 
             // Create 7 peak notch filters
             for (int i = 1; i < 8; i++) {
                 filter = AddFilter();
-                filter->Setup(48000, BANDS_CENTERS[i], Q, T_filterType::PEAKNOTCH, peakGains[i]);
+                filter->Setup(samplingRate, BANDS_CENTERS[i], Q, T_filterType::PEAKNOTCH, peakGains[i]);
             }
 
             // Create last high shelf filter
             filter = AddFilter();
-            filter->Setup(48000, 16000 / Q, dummyQ, T_filterType::HIGHSHELF, peakGains[8]); 
+            filter->Setup(samplingRate, 16000 / Q, dummyQ, T_filterType::HIGHSHELF, peakGains[8]); 
 
             // Set general gain of last filter
             filter->SetGeneralGain(generalGain);
