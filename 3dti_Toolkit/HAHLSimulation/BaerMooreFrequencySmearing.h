@@ -4,7 +4,7 @@
 * \brief  Declaration of CBaerMooreFrequencySmearing interface.
 * \date	June 2019
 *
-* \authors 3DI-DIANA Research Group (University of Malaga), in alphabetical order: M. Cuevas-Rodriguez, C. Garre,  D. Gonzalez-Toledo, Á. Rodríguez-Rivero, E.J. de la Rubia-Cuestas, L. Molina-Tanco ||
+* \authors 3DI-DIANA Research Group (University of Malaga), in alphabetical order: M. Cuevas-Rodriguez, C. Garre,  D. Gonzalez-Toledo, ï¿½. Rodrï¿½guez-Rivero, E.J. de la Rubia-Cuestas, L. Molina-Tanco ||
 * Coordinated by , A. Reyes-Lecuona (University of Malaga) and L.Picinali (Imperial College London) ||
 * \b Contact: areyes@uma.es and l.picinali@imperial.ac.uk
 *
@@ -26,7 +26,6 @@
 #include <Common/Fprocessor.h>
 #include <HAHLSimulation/FrequencySmearing.h>
 
-using namespace Eigen;
 #define EIGEN_NO_DEBUG 
 
 namespace HAHLSimulation {
@@ -101,9 +100,9 @@ namespace HAHLSimulation {
 		// Extends a matrix by adding all-zeros columns, getting an output matrix of size (originalSize, 3*originalSize/2)
 		BidimensionalDoubleMonoBuffer ExtendMatrix(BidimensionalDoubleMonoBuffer& inputMatrix);
 
-		MatrixXd BidimensionalCMonoBufferToEigenMatrix(BidimensionalDoubleMonoBuffer& input);
+		Eigen::MatrixXd BidimensionalCMonoBufferToEigenMatrix(BidimensionalDoubleMonoBuffer& input);
 
-		BidimensionalDoubleMonoBuffer EigenMatrixToBidimensionalCMonoBuffer(MatrixXd& input);
+		BidimensionalDoubleMonoBuffer EigenMatrixToBidimensionalCMonoBuffer(Eigen::MatrixXd& input);
 
 		// Returns A\B (matrix left division)
 		BidimensionalDoubleMonoBuffer Solve(BidimensionalDoubleMonoBuffer& matrixA, BidimensionalDoubleMonoBuffer& matrixB);
