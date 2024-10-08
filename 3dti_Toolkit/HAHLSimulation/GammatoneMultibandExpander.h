@@ -56,7 +56,7 @@ namespace HAHLSimulation {
 		*	\param [in] samplingRate sampling rate in samples per second
 		*	\param [in] iniFreq_Hz initial frequency, in Hertzs
 		*	\param [in] bandsNumber number of frequency bands
-		*	\param [in] filtersPerBand specifies the number of filters per band
+		* 	\param [in] filterGrouping specifies if the filters are grouped or not
 		*	\pre parameter filtersPerBand must be an odd number.
 		*   \eh On error, an error code is reported to the error handler.
 		*/
