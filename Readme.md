@@ -8,6 +8,12 @@ Technical details about the 3D Tune-In Toolkit spatialiser are described in:
 
 Cuevas-Rodríguez M, Picinali L, González-Toledo D, Garre C, de la Rubia-Cuestas E, Molina-Tanco L and Reyes-Lecuona A. (2019) 3D Tune-In Toolkit: An open-source library for real-time binaural spatialisation. PLOS ONE 14(3): e0211899. https://doi.org/10.1371/journal.pone.0211899
 
+> ⚠️ **Important Notice**  
+> The algorithms originally included in the 3DTI Toolkit have been migrated to the [**BRT (Binaural Rendering Toolbox)**](https://github.com/GrupoDiana/BRTLibrary), which provides an open and extensible architecture designed for advanced audio applications. The BRT offers enhanced functionality, greater flexibility, and is better suited for conducting psychoacoustic experiments and similar tasks.  
+>  
+> If you intend to use or extend the library, we strongly recommend transitioning to the BRT for an improved experience and ongoing support.
+
+
 **The structure of the repository is as follows:**
 ```
 3dti_AudioToolkit
