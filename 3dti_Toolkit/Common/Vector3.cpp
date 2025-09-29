@@ -418,6 +418,10 @@ namespace Common {
 	{
 		return CVector3(x - _rightHand.x, y - _rightHand.y, z - _rightHand.z);
 	}
+	CVector3 CVector3::operator-(CVector3 const _rightHand) const
+	{
+		return CVector3(x - _rightHand.x, y - _rightHand.y, z - _rightHand.z);
+	}
 
 	//////////////////////////////////////////////
 

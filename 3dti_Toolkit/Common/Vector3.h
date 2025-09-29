@@ -215,6 +215,7 @@ namespace Common {
 		/** \brief Component-wise substraction
 		*/
 		CVector3 operator-(const CVector3 _rightHand);
+		CVector3 operator-(const CVector3 _rightHand) const;
 
 		/** \brief Component-wise addition
 		*/
