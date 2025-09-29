@@ -78,6 +78,9 @@ namespace ISM
 	{
 		return absortionBands;
 	}
+	std::vector<float> Wall::getAbsortionB() const {
+		return const_cast<Wall*>(this)->getAbsortionB();
+	}
 
 	Common::CVector3 Wall::getNormal()
 	{
@@ -178,6 +181,10 @@ namespace ISM
 		return distance;
 	}
 
+	float Wall::getMinimumDistanceFromWall(ISM::Wall wall) const {
+		return const_cast<Wall*>(this)->getMinimumDistanceFromWall(wall);
+	}
+
 	float Wall::getMinimumDistanceFromWall(ISM::Wall wall)
 	{
 		Common::CVector3 cornerDistance = polygon.at(0) - wall.polygon.at(0);
@@ -196,7 +203,7 @@ namespace ISM
 		return minimumDistance;
 	}
 
-	Common::CVector3 Wall::getImagePoint(Common::CVector3 point)
+	Common::CVector3 Wall::getImagePoint(const Common::CVector3& point)
 	{
 		float distance;
 		Common::CVector3 imagePoint, normalRay;
@@ -211,6 +218,9 @@ namespace ISM
 
 		return imagePoint;
 	}
+	Common::CVector3 Wall::getImagePoint(const Common::CVector3& point) const {
+		return const_cast<Wall*>(this)->getImagePoint(point);
+	}
 
 	Wall Wall::getImageWall(Wall _wall)
 	{
@@ -224,6 +234,10 @@ namespace ISM
 		tempWall.absortionBands = _wall.absortionBands;
 		if (!_wall.isActive()) tempWall.disable();
 		return tempWall;
+	}
+
+	Wall Wall::getImageWall(Wall _wall) const {
+		return const_cast<Wall*>(this)->getImageWall(_wall);
 	}
 
 	Common::CVector3 Wall::getIntersectionPointWithLine(Common::CVector3 p1, Common::CVector3 p2)

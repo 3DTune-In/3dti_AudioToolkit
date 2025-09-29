@@ -1,14 +1,20 @@
 #include "ISM.h"
+#include <chrono>
+#include <string>
 
 namespace ISM
 {
 	
 	CISM::CISM(Binaural::CCore* _ownerCore) :ownerCore{ _ownerCore }, reflectionOrder{ 1 },  maxDistanceSourcesToListener { 100 } {
 
-		originalSource = make_shared<SourceImages>(this);
+		originalSource = make_shared<SourceImages>(this);		
 	}
 
-	void CISM::SetupShoeBoxRoom(float length, float width, float height)
+	void CISM::SetupRoom(const Room& _room) {
+		mainRoom = _room;
+	}
+
+	/*void CISM::SetupShoeBoxRoom(float length, float width, float height)
 	{
 		mainRoom.setupShoeBox(length, width, height);
 		originalSource->createImages(mainRoom, reflectionOrder); 
@@ -18,7 +24,7 @@ namespace ISM
 	{
 		mainRoom.setupRoomGeometry(roomGeometry);
 		originalSource->createImages(mainRoom, reflectionOrder); 
-	}
+	}*/
 
 	void CISM::setAbsortion(std::vector<float> absortionPerWall)
 	{
@@ -74,9 +80,9 @@ namespace ISM
 	void CISM::setReflectionOrder(int _reflectionOrder)
 	{
 		reflectionOrder = _reflectionOrder;
-		originalSource->createImages(mainRoom, reflectionOrder); 
-	}
-
+		originalSource->createImages(mainRoom, reflectionOrder);				
+	}	
+	
 	int CISM::getReflectionOrder()
 	{
 		return reflectionOrder;
@@ -101,6 +107,9 @@ namespace ISM
 	{
 		transitionMeters = _windowSlopeDistance;
 	}
+	float CISM::getTransitionMeters() {
+		return transitionMeters;
+	}
 		
 	int CISM::calculateNumOfSilencedFrames(float maxDistanceSourcesToListener)
 	{
@@ -113,7 +122,7 @@ namespace ISM
 		return numberOfSlilencedFrames;
 	}
 
-	int CISM::calculateNumOfSilencedSamples(float maxDistanceSourcesToListener)
+	/*int CISM::calculateNumOfSilencedSamples(float maxDistanceSourcesToListener)
 	{
 		float buffersize = (float)ownerCore->GetAudioState().bufferSize;
 		float samplerate = (float)ownerCore->GetAudioState().sampleRate;
@@ -122,7 +131,7 @@ namespace ISM
 		int numberOfSlilencedSamples = floor ((maxDistanceSourcesToListener * samplerate / soundSpeed) );
 
 		return numberOfSlilencedSamples;
-	}
+	}*/
 
 
 	float CISM::getMaxDistanceImageSources()

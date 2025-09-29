@@ -39,6 +39,12 @@ namespace ISM
 		
 		CISM(Binaural::CCore* _ownerCore);
 
+		/**
+		 * @brief Initializes or configures the specified room.
+		 * @param _room A constant reference to the Room object to be set up.
+		 */
+		void SetupRoom(const Room& _room);
+
 		/** \brief Initializes the object with a shoebox room
 		*	\details creates six walls conforming a shoebox room with 0,0,0 at the center. Wall order is: front, left, right,back, floor, ceiling.
 		*			 It must be used right after creating the empty object.
@@ -46,13 +52,13 @@ namespace ISM
 		*	\param [in] length: extension of the room along the X axis.
 		*	\param [in] height: extension of the room along the Z axis
 		*/
-		void SetupShoeBoxRoom(float length, float width, float height);
+		//void SetupShoeBoxRoom(float length, float width, float height);
 
 		/** \brief Initializes the object with a shoebox room
 		*	\details creates a room with arbitrary geometry by means of defining all its corners and the walls as polygons with those corners
 		*	\param [in] roomGeometry: struct containing all the vertices and walls
 		*/
-		void setupArbitraryRoom(RoomGeometry roomGeometry);
+		//void setupArbitraryRoom(RoomGeometry roomGeometry);
 
 		/** \brief Sets walls' absortion
 		*   \details sets the absortion coeficient (absroved energy / incident energy) of each wall of the main room
@@ -120,14 +126,15 @@ namespace ISM
 		*	\param [in] maxDistanceSourcesToListener
 		*	\param [out] numberOfSilencedSamples
 		*/
-		int calculateNumOfSilencedSamples (float maxDistanceSourcesToListener);
+		//int calculateNumOfSilencedSamples (float maxDistanceSourcesToListener);
 
 		/** \brief Sets the distance in meters needed for the Fade-Out window in ISM.
 		*	\details Sets the parameter needed for the fade-out window
 		*	\param [in] windowSlopeDistance in meters (related to windowSlope time(s) in class CBRIR)
 		*/
 		void setTransitionMeters(float  _windowSlopeDistance);
-		
+		float getTransitionMeters();
+
 		/** \brief Sets the source location
 		*	\details This method sets the location of the original source (direct path).
 		*	\param [in] location: location of the direct path source
@@ -178,7 +185,8 @@ namespace ISM
 
 		Binaural::CCore* GetCore() const;		
 		shared_ptr<Binaural::CListener> GetListener() const;
-		float GetSampleRate();
+		float GetSampleRate();				
+
 		/////////////
 		// Attributes
 		/////////////

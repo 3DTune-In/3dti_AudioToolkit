@@ -58,7 +58,7 @@ namespace ISM
 					 called once per wall to be inserted, after creating a new empty room.
 		*	\param [in] Wall to be inserted.
 		*/
-		void insertWall(Wall newWall);
+		void insertWall(Wall& newWall);
 
 		/** \brief Makes one of the room's walls active
 		*	\details Sets the i-th wall of the room as active and therefore reflective.
@@ -92,12 +92,13 @@ namespace ISM
 		*	\param [out] Walls: vector of walls with all the walls of the room.
 		*/
 		std::vector<Wall> getWalls();
+		const std::vector<Wall>& getWalls2() const;
 
 		/** \brief Returns a vector of image rooms
 		*	\details creates an image (specular) room for each wall of this room and returns a vector contoining them.
 		*	\param [out] ImageRooms: vector containing all image rooms of this room.
 		*/
-		std::vector<Room> getImageRooms();
+		std::vector<Room> getImageRooms();		
 
 		/** \brief Checks wether a 3D point is inside the room or not.
 		*	\details Returns the result of checking wether a 3D point is inside the room or not and the distance to teh nearest wall 
@@ -114,14 +115,16 @@ namespace ISM
 		*	\param [out] center: point (CVector3) which is the center of the room.
 		*/
 		Common::CVector3 getCenter();
+		Common::CVector3 getCenter() const;
 
 	private:
 		////////////
 		// Attributes
 		////////////
 
-		bool shoeBox = false;				//Flag indicating if the room was set up as a shoebox
-		std::vector<Wall> walls;            //Vector with all the walls of the room
+		bool shoeBox = false;						//Flag indicating if the room was set up as a shoebox
+		std::vector<Wall> walls;					//Vector with all the walls of the room
+		//std::vector<std::shared_ptr<Wall>> walls;   //Vector with all the walls of the room
 	};
 
 }//namespace ISM

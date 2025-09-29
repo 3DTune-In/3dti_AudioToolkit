@@ -76,7 +76,8 @@ namespace ISM
 		shoeBox = false;
 	}
 		
-	void Room::insertWall(Wall _newWall)
+	///void Room::insertWall(std::shared_ptr<Wall> _newWall)
+	void Room::insertWall(Wall& _newWall)
 	{
 		walls.push_back(_newWall);
 	}
@@ -111,7 +112,11 @@ namespace ISM
 	{
 		return walls;
 	}
-
+	
+	const std::vector<Wall> & Room::getWalls2() const
+	{
+		return walls;
+	}
 	std::vector<Room> Room::getImageRooms()
 	{
 		std::vector<Room> roomList;
@@ -202,6 +207,11 @@ namespace ISM
 		center.z /= walls.size();
 
 		return center;
+	}
+
+	Common::CVector3 Room::getCenter() const {		
+		
+		return const_cast<Room*>(this)->getCenter();		
 	}
 
 } //namespace ISM

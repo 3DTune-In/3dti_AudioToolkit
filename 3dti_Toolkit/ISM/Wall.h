@@ -92,6 +92,7 @@ namespace ISM
 		*	\param [out] Absortion: absortion of the wall. Vector with the absorption coefficients of each band.
 		*/
 		std::vector<float> getAbsortionB();
+		std::vector<float> getAbsortionB() const;
 
 		/** \brief Returns the normal vector to the wall. If the wall is properly defined, it points towards inside the room.
 		*	\param [out] Normal: normal vector to the wall.
@@ -119,18 +120,21 @@ namespace ISM
 		*	\param [out] Distance: shorterst distance to teh wall's plane (m).
 		*/
 		float getMinimumDistanceFromWall(ISM::Wall wall);
+		float getMinimumDistanceFromWall(ISM::Wall wall) const;
 
 		/** \brief Returns the location of the image of a given point reflected in the wall's plane.
 		*	\param [in] Point: original point for which the image reflected in the wall will be calculated.
 		*	\param [out] Image: location of the image point.
 		*/
-		Common::CVector3 getImagePoint(Common::CVector3 point);
+		Common::CVector3 getImagePoint(const Common::CVector3& point);
+		Common::CVector3 getImagePoint(const Common::CVector3& point) const;
 
 		/** \brief Returns an image wall of another given wall reflected in this wall's plane
 		*	\param [in] Wall: original wall.
 		*	\param [out] ImageWall: image wall, result of reflection of the original wall.
 		*/
 		Wall getImageWall(Wall _wall);
+		Wall getImageWall(Wall _wall) const;
 
 		/** \brief Returns the poin projected in the wall's plane of a given point.
 		*	\param [in] X coordinate of the point to be projected.
@@ -200,7 +204,7 @@ namespace ISM
 				 This method returs wether the wall is active or not.
 		*/
 		bool isActive() { return active; }
-
+		bool isActive() const { return active; }
 
 	private:
 
