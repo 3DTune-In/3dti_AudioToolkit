@@ -128,14 +128,12 @@ namespace ISM
 			UpdateImageVisibility();
 		}		
 
-		void UpdateImagesTreeWallsAbsorptionCoefficients(const std::vector<std::vector<float>>& absortionPerBandPerWall) {
-			// ACTUALIZAR ROOM
-			
+		/*void UpdateImagesTreeWallsAbsorptionCoefficients() {						
 			for (auto& image : imagesTree) {
-				image->UpdateImagesTreeWallsAbsorptionCoefficients(absortionPerBandPerWall);
+				image->UpdateImagesTreeWallsAbsorptionCoefficients();
 			}
 			UpdateImageWallsAbsorptionCoefficients();
-		}
+		}*/
 
 
 		/** \brief Adds wall absortion to the sound
