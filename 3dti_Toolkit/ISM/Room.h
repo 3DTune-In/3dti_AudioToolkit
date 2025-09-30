@@ -22,6 +22,7 @@
 #pragma once
 #include <vector>
 #include "Wall.h"
+#include <Common/ErrorHandler.h>
 
 namespace ISM
 {
@@ -87,6 +88,8 @@ namespace ISM
 		*	\param [in] absortion coeficients for each band (frequency dependent)
 		*/
 		void setWallAbsortion(int wallIndex, std::vector<float> absortionPerBand);
+		void setWallAbsortion(std::vector<std::vector<float>> absortionPerBandPerWall);
+		std::vector<std::vector<float>> GetWallAbsortion();
 
 		/** \brief Returns a vector of walls containing all the walls of the room.
 		*	\param [out] Walls: vector of walls with all the walls of the room.

@@ -108,6 +108,30 @@ namespace ISM
 		walls.at(wallIndex).setAbsortion(absortionPerBand);
 	}
 
+	void Room::setWallAbsortion(std::vector<std::vector<float>> absortionPerBandPerWall)
+	{
+		// Check the number of bands and the number of walls
+		if (absortionPerBandPerWall.size() != getWalls().size())
+		{
+			SET_RESULT(RESULT_ERROR_BADSIZE, "Size of vector of absortion profiles per wall and numbar of walls are different");
+			return;
+		}
+
+		for (int i = 0; i < getWalls().size(); i++)
+		{
+			setWallAbsortion(i, absortionPerBandPerWall.at(i));
+		}		
+	}
+
+	std::vector<std::vector<float>> Room::GetWallAbsortion() {
+		std::vector<std::vector<float>> absortions;
+		for (int i = 0; i < getWalls().size(); i++)
+		{
+			absortions.push_back(getWalls().at(i).getAbsortionB());
+		}
+		return absortions;
+	}
+
 	std::vector<Wall> Room::getWalls()
 	{
 		return walls;
