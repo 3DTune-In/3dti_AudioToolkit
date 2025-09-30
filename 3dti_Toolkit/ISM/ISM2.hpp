@@ -163,39 +163,7 @@ namespace ISM
 		{
 			return ISMParameters->maxDistanceSourcesToListener;
 		}
-
-		/** \brief Returns number of silenced frames
-		*	\details calculates the number od silenced frames depending on the maximum distance between the images and the listener
-		*	\param [in] maxDistanceSourcesToListener
-		*	\param [out] numberOfSilencedFrames
-		*/
-		int calculateNumOfSilencedFrames(float maxDistanceSourcesToListener)		
-		{
-			float buffersize = (float)ownerCore->GetAudioState().bufferSize;
-			float samplerate = (float)ownerCore->GetAudioState().sampleRate;
-			float soundSpeed = ownerCore->GetMagnitudes().GetSoundSpeed();
-
-			int numberOfSlilencedFrames = floor(((maxDistanceSourcesToListener / soundSpeed) * samplerate) / buffersize);
-
-			return numberOfSlilencedFrames;
-		}
-
-		/** \brief Returns number of silenced samples
-		*	\details calculates the number od silenced samples depending on the maximum distance between the images and the listener
-		*	\param [in] maxDistanceSourcesToListener
-		*	\param [out] numberOfSilencedSamples
-		*/
-		int calculateNumOfSilencedSamples(float maxDistanceSourcesToListener)		
-		{
-			float buffersize = (float)ownerCore->GetAudioState().bufferSize;
-			float samplerate = (float)ownerCore->GetAudioState().sampleRate;
-			float soundSpeed = ownerCore->GetMagnitudes().GetSoundSpeed();
-
-			int numberOfSlilencedSamples = floor((maxDistanceSourcesToListener * samplerate / soundSpeed));
-
-			return numberOfSlilencedSamples;
-		}
-
+		
 		/** \brief Sets the source location
 		*	\details This method sets the location of the original source (direct path).
 		*	\param [in] location: location of the direct path source
@@ -217,6 +185,7 @@ namespace ISM
 		*/
 		Common::CVector3 getSourceLocation()		
 		{
+			return sourceLocation;
 			return imageSources->getImageLocation();
 		}
 
@@ -243,6 +212,12 @@ namespace ISM
 			imageSources->getImageData(imageSourceList);
 			return imageSourceList;
 		}
+
+		void SetListenerPosition() {
+			UpdateListenerPosition();
+			imageSources->UpdateImagesTreeVisibilities();
+		}
+
 
 		/** \brief Proccess audio buffers to apply wall absortion
 		*	\details Process all audio buffers (one per image source) colouring them according to wall absortion
@@ -353,7 +328,6 @@ namespace ISM
 		void UpdateListenerPosition() {
 			Common::CTransform listenerTransform = ownerCore->GetListener()->GetListenerTransform();
 			ISMParameters->listenerLocation = listenerTransform.GetPosition();
-
 		}
 
 		////////////////
