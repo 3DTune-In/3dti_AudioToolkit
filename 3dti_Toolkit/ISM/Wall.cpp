@@ -43,7 +43,7 @@ namespace ISM
 		else
 		{
 			double diff = _x * A + _y * B + _z * C + D;
-			diff = fabs(diff);
+			diff = std::fabs(diff);
 			if (diff < THRESHOLD) // ¿DBL_EPSILON? ¿THRESHOLD?
 			{
 				polygon.push_back(tempCorner);
@@ -138,7 +138,7 @@ namespace ISM
 		double diff1, diff2;
 		float rX, rY, rZ;
 
-		calculate_ABCD();
+		//calculate_ABCD();
 		normalV = getNormal();
 		lambda = (double)getDistanceFromPoint(point);
 
@@ -175,7 +175,7 @@ namespace ISM
 	float Wall::getDistanceFromPoint(Common::CVector3 point)
 	{
 		float distance;
-		calculate_ABCD();
+		//calculate_ABCD();
 		distance = fabs(A*point.x + B * point.y + C * point.z + D);
 		distance = distance / sqrtf(A * A + B * B + C * C);
 		return distance;
