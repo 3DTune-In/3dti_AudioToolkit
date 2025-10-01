@@ -76,7 +76,7 @@ namespace ISM
 		/** \brief Returns the corners of the wall
 		*	\param [out] Corners: vector containing the set of corners of the wall in teh same order as they are defined.
 		*/
-		std::vector<Common::CVector3> getCorners();
+		std::vector<Common::CVector3> getCorners() const;
 
 		/** \brief set the absortion coeficient (frequency independent) of the wall
 		*   \param [in] Absortion: absortion coeficient of the wall (expressed as a number between 0 (no absortion) and 1 (total absortion).
@@ -133,8 +133,8 @@ namespace ISM
 		*	\param [in] Wall: original wall.
 		*	\param [out] ImageWall: image wall, result of reflection of the original wall.
 		*/
-		Wall getImageWall(Wall _wall);
-		Wall getImageWall(Wall _wall) const;
+		Wall getImageWall(const Wall& _wall);
+		Wall getImageWall(const Wall& _wall) const;
 
 		/** \brief Returns the poin projected in the wall's plane of a given point.
 		*	\param [in] X coordinate of the point to be projected.

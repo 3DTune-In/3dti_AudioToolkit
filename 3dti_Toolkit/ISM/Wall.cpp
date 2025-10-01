@@ -58,7 +58,7 @@ namespace ISM
 		}
 	}
 
-	std::vector<Common::CVector3> Wall::getCorners()
+	std::vector<Common::CVector3> Wall::getCorners() const
 	{
 		return polygon;
 	}
@@ -222,7 +222,7 @@ namespace ISM
 		return const_cast<Wall*>(this)->getImagePoint(point);
 	}
 
-	Wall Wall::getImageWall(Wall _wall)
+	Wall Wall::getImageWall(const Wall& _wall)
 	{
 		Wall tempWall;
 		std::vector<Common::CVector3> corners = _wall.getCorners();
@@ -236,7 +236,7 @@ namespace ISM
 		return tempWall;
 	}
 
-	Wall Wall::getImageWall(Wall _wall) const {
+	Wall Wall::getImageWall(const Wall& _wall) const {
 		return const_cast<Wall*>(this)->getImageWall(_wall);
 	}
 
