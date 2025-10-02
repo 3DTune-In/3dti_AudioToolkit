@@ -14,75 +14,72 @@
 
 namespace ISM
 {
-	Wall::Wall()
+	Wall::Wall() : A(0.0), B(0.0), C(0.0), D(0.0)
 	{
 		std::vector<float> tempAbsotionBands(NUM_BAND_ABSORTION, 0.0);
 		absortionBands = tempAbsotionBands;								//Wall purely reflective by default
 		active = true;													//Wall active by default
 	}
 
-	int Wall::insertCorner(Common::CVector3 _corner)
-	{
-		return insertCorner(_corner.x, _corner.y, _corner.z);
-	}
-
-
-	int Wall::insertCorner(float _x, float _y, float _z)
-	{
-		Common::CVector3 tempCorner(_x, _y, _z);
-
+	bool Wall::insertCorner(const Common::CVector3& _corner)
+	{				
 		if (polygon.size() < 3)
 		{
-			polygon.push_back(tempCorner);
-			if (polygon.size() == 3)
-			{
-				calculate_ABCD();
-				return 1;
-			}
+			polygon.push_back(_corner);
+			return true;
+		}
+		// Now we have 3 corners
+		if (polygon.size() == 3)
+		{
+			calculate_ABCD();
+		}
+		double diff = _corner.x * A + _corner.y * B + _corner.z * C + D;
+		diff = std::fabs(diff);
+		if (diff < THRESHOLD) // ¿DBL_EPSILON? ¿THRESHOLD?
+		{
+			polygon.push_back(_corner);
+			return true;
 		}
 		else
 		{
-			double diff = _x * A + _y * B + _z * C + D;
-			diff = std::fabs(diff);
-			if (diff < THRESHOLD) // ¿DBL_EPSILON? ¿THRESHOLD?
-			{
-				polygon.push_back(tempCorner);
-				return 1;
-			}
-			else
-			{
-				tempCorner = getPointProjection(_x, _y, _z);
-				polygon.push_back(tempCorner);
-				return 0;
-			}
-		}
+			Common::CVector3 _calculatedCorner = getProjectionPoint(_corner);
+			polygon.push_back(_calculatedCorner);
+			return false;
+		}		
 	}
 
-	std::vector<Common::CVector3> Wall::getCorners() const
+
+	bool Wall::insertCorner(const float& _x, const float& _y, const float& _z)
+	{
+		Common::CVector3 tempCorner(_x, _y, _z);
+		return insertCorner(tempCorner);		
+	}
+	
+	const std::vector<Common::CVector3>& Wall::getCorners() const
 	{
 		return polygon;
 	}
 
-	void Wall::setAbsortion(float _absortion)
+	void Wall::setAbsortion(const float& _absortion)
 	{
 		std::vector<float> tempAbsortionBands(NUM_BAND_ABSORTION, _absortion);
 		absortionBands = tempAbsortionBands;
 	}
 	
-	void Wall::setAbsortion (std::vector<float> _absortionBands)
+	void Wall::setAbsortion (const std::vector<float>& _absortionBands)
 	{
 		absortionBands = _absortionBands;
 	}
 		
-	std::vector<float> Wall::getAbsortionB()
+	const std::vector<float>& Wall::getAbsortionB() const
 	{
 		return absortionBands;
 	}
-	std::vector<float> Wall::getAbsortionB() const {
+	/*std::vector<float> Wall::getAbsortionB() const {
 		return const_cast<Wall*>(this)->getAbsortionB();
-	}
+	}*/
 
-	Common::CVector3 Wall::getNormal()
+	Common::CVector3& Wall::getNormal() const
 	{
 		//Common::CVector3 normal, p1, p2; 
 		Common::CVector3 p1, p2, normal;
@@ -102,7 +99,7 @@ namespace ISM
 		return normal;
 	}
 
-	Common::CVector3 Wall::getCenter()
+	Common::CVector3& Wall::getCenter() const
 	{
 		Common::CVector3 center;
 
@@ -122,17 +119,12 @@ namespace ISM
 
 	}
 
-	Common::CVector3 Wall::getPointProjection(Common::CVector3 point)
-	{
-		return getPointProjection(point.x, point.y, point.z);
-	}
-
-	Common::CVector3 Wall::getPointProjection(float x0, float y0, float z0)
+	Common::CVector3& Wall::getProjectionPoint(const Common::CVector3& point) const
 	{
 		// Vectorial Ec. of straight line --> (X,Y,Z) = (x0, y0, z0) + lambda (normalV.x, normalV.y, normalV.z)
 		// Plane of the wall              --> AX+BY+CZ+D = 0
 
-		Common::CVector3 normalV, point(x0, y0, z0);
+		Common::CVector3 normalV;
 		double rX1, rY1, rZ1, lambda;
 		double rX2, rY2, rZ2;
 		double diff1, diff2;
@@ -144,15 +136,15 @@ namespace ISM
 
 		// lambda could be positive or negative
 		// 
-		rX1 = x0 + lambda * normalV.x;
-		rY1 = y0 + lambda * normalV.y;
-		rZ1 = z0 + lambda * normalV.z;
+		rX1 = point.x + lambda * normalV.x;
+		rY1 = point.y + lambda * normalV.y;
+		rZ1 = point.z + lambda * normalV.z;
 		diff1 = rX1 * A + rY1 * B + rZ1 * C + D;
 		diff1 = fabs(diff1);
 
-		rX2 = x0 - lambda * normalV.x;
-		rY2 = y0 - lambda * normalV.y;
-		rZ2 = z0 - lambda * normalV.z;
+		rX2 = point.x - lambda * normalV.x;
+		rY2 = point.y - lambda * normalV.y;
+		rZ2 = point.z - lambda * normalV.z;
 		diff2 = rX2 * A + rY2 * B + rZ2 * C + D;
 		diff2 = fabs(diff2);
 
@@ -168,11 +160,17 @@ namespace ISM
 			rY = rY2;
 			rZ = rZ2;
 		}
-
-		return Common::CVector3(rX, rY, rZ);
+		Common::CVector3 projectionPoint = Common::CVector3(rX, rY, rZ);
+		return projectionPoint;		
 	}
 
-	float Wall::getDistanceFromPoint(Common::CVector3 point)
+	Common::CVector3& Wall::getProjectionPoint(float& x0, float& y0, float& z0) const
+	{
+		Common::CVector3 point(x0, y0, z0);
+		return getProjectionPoint(point);
+	}
+
+	float Wall::getDistanceFromPoint(const Common::CVector3& point) const
 	{
 		float distance;
 		//calculate_ABCD();
@@ -181,11 +179,11 @@ namespace ISM
 		return distance;
 	}
 
-	float Wall::getMinimumDistanceFromWall(ISM::Wall wall) const {
+	/*float Wall::getMinimumDistanceFromWall(ISM::Wall wall) const {
 		return const_cast<Wall*>(this)->getMinimumDistanceFromWall(wall);
-	}
+	}*/
 
-	float Wall::getMinimumDistanceFromWall(ISM::Wall wall)
+	float Wall::getMinimumDistanceFromWall(const ISM::Wall& wall) const
 	{
 		Common::CVector3 cornerDistance = polygon.at(0) - wall.polygon.at(0);
 		float minimumDistance=cornerDistance.GetDistance();
@@ -203,7 +201,7 @@ namespace ISM
 		return minimumDistance;
 	}
 
-	Common::CVector3 Wall::getImagePoint(const Common::CVector3& point)
+	Common::CVector3 Wall::getImagePoint(const Common::CVector3& point) const
 	{
 		float distance;
 		Common::CVector3 imagePoint, normalRay;
@@ -218,11 +216,11 @@ namespace ISM
 
 		return imagePoint;
 	}
-	Common::CVector3 Wall::getImagePoint(const Common::CVector3& point) const {
+	/*Common::CVector3 Wall::getImagePoint(const Common::CVector3& point) const {
 		return const_cast<Wall*>(this)->getImagePoint(point);
-	}
+	}*/
 
-	Wall Wall::getImageWall(const Wall& _wall)
+	Wall Wall::getImageWall(const Wall& _wall) const
 	{
 		Wall tempWall;
 		std::vector<Common::CVector3> corners = _wall.getCorners();
@@ -236,11 +234,11 @@ namespace ISM
 		return tempWall;
 	}
 
-	Wall Wall::getImageWall(const Wall& _wall) const {
+	/*Wall Wall::getImageWall(const Wall& _wall) const {
 		return const_cast<Wall*>(this)->getImageWall(_wall);
-	}
+	}*/
 
-	Common::CVector3 Wall::getIntersectionPointWithLine(Common::CVector3 p1, Common::CVector3 p2)
+	Common::CVector3& Wall::getIntersectionPointWithLine(const Common::CVector3& p1, const Common::CVector3& p2) const
 	{
 		Common::CVector3 cutPoint, vecLine;
 		float modulus, lambda;
@@ -259,7 +257,7 @@ namespace ISM
 		return cutPoint;
 	}
 
-	int  Wall::checkPointInsideWall(Common::CVector3 point, float &distanceNearestEdge, float &sharpness)
+	int  Wall::checkPointInsideWall(const Common::CVector3& point, float &distanceNearestEdge, float &sharpness) const
 	{
 		float modulus = getDistanceFromPoint(point);
 		if (modulus > 5*THRESHOLD)
@@ -320,12 +318,12 @@ namespace ISM
 		}
 	}
 
-	float Wall::calculateDistanceNearestEdge(Common::CVector3 point) {
+	float Wall::calculateDistanceNearestEdge(const Common::CVector3& point) const {
 		float minDistance = 0.0, distance = 0.0;
 		int n = polygon.size();
 		for (auto i = 0; i < n; i++)
 		{
-			distance = distancePointToLine(point, polygon[i], polygon[(i + 1) % n]);
+			distance = calculateDistancePointToLine(point, polygon[i], polygon[(i + 1) % n]);
 			if (i == 0) minDistance = distance;
 			else
 			{
@@ -335,7 +333,7 @@ namespace ISM
 		return(minDistance);
 	}
 
-	float Wall::distancePointToLine(Common::CVector3 point, Common::CVector3 pointLine1, Common::CVector3 pointLine2)
+	float Wall::calculateDistancePointToLine(const Common::CVector3& point, const Common::CVector3& pointLine1, const Common::CVector3& pointLine2) const
 	{
 		float distance = 0, vectorModulus;
 		Common::CVector3 vector1, vector2, vector3;
