@@ -14,15 +14,17 @@ namespace ISM
 	class CISM2 {
 	public:
 		
-		CISM2(Binaural::CCore* _ownerCore) :
-			ownerCore{ _ownerCore }
-			, reflectionOrder{ 1 }			
+		CISM2(Binaural::CCore* _ownerCore) 
+			: ownerCore{ _ownerCore }
 			, setupDone{ false }
-			, sourceLocation{ Common::CVector3(0, 0, 0) }			
-		{
-			ISMParameters = std::make_shared<CISMParameters>();
-			ISMParameters->sampleRate = ownerCore->GetAudioState().sampleRate;			
-			imageSources = nullptr;			
+			, reflectionOrder{ 1 }
+			, ISMParameters{ std::make_shared<CISMParameters>() }			
+			, sourceLocation{ Common::CVector3(0, 0, 0) }
+			, imageSources{ nullptr }
+			, imageSourcesPositionList{ std::vector<Common::CVector3>() }
+			, imageSourcesDataList{ std::vector<ImageSourceData>() }
+		{			
+			ISMParameters->sampleRate = ownerCore->GetAudioState().sampleRate;						
 		}
 
 		/**
@@ -55,6 +57,7 @@ namespace ISM
 
 			imageSources = std::make_shared<SourceImages2>(ISMParameters);
 			imageSources->createImagesTree(ISMParameters->room, reflectionOrder, sourceLocation);
+			UpdateImageSourceDataFromImageTree();
 			// TODO check if everything went fine before setting setupDone to true
 			setupDone = true;
 			return true;
@@ -64,43 +67,43 @@ namespace ISM
 		*   \details sets the absortion coeficient (absroved energy / incident energy) of each wall of the main room
 		*   \param [in] absortions: vector containing an absortion coeficient (frequency independent) of each wall. Same order as in setup
 		*/
-		void SetRoomWallsAbsortion(std::vector<float> absortionPerWall)		
-		{
-			// Check if dimensions of input vctor and walls fit
-			if (absortionPerWall.size() != ISMParameters->room.getWalls().size())
-			{
-				SET_RESULT(RESULT_ERROR_BADSIZE, "Size of vector of absortions per wall and numbar of walls are different");
-				return;
-			}
+		//void SetRoomWallsAbsortion(std::vector<float> absortionPerWall)		
+		//{
+		//	// Check if dimensions of input vctor and walls fit
+		//	if (absortionPerWall.size() != ISMParameters->room.getWalls().size())
+		//	{
+		//		SET_RESULT(RESULT_ERROR_BADSIZE, "Size of vector of absortions per wall and numbar of walls are different");
+		//		return;
+		//	}
 
-			for (int i = 0; i < ISMParameters->room.getWalls().size(); i++)
-			{
-				ISMParameters->room.setWallAbsortion(i, absortionPerWall.at(i));
-			}
-			//originalSource->createImages(mainRoom, reflectionOrder);
-			//TODO CALL UpdateImagesAbsortionCoeficients
-		}
+		//	for (int i = 0; i < ISMParameters->room.getWalls().size(); i++)
+		//	{
+		//		ISMParameters->room.setWallAbsortion(i, absortionPerWall.at(i));
+		//	}
+		//	//originalSource->createImages(mainRoom, reflectionOrder);
+		//	//TODO CALL UpdateImagesAbsortionCoeficients
+		//}
 
 		/** \brief Sets walls' absortion
 		*   \details sets the vectror with absortion coeficients (absroved energy / incident energy) of each wall of the main room		*	\details sets the vector with absortion coeficients (absorved energy / incident energy) of each wall of the main room
 		*	\param [in] absortions: vector containing the vectors with absortion coeficients of each wall.
 		*/
-		void setAbsortion(std::vector<std::vector<float>> absortionPerBandPerWall)		
-		{
-			// Check the number of bands and the number of walls
-			if (absortionPerBandPerWall.size() != ISMParameters->room.getWalls().size())
-			{
-				SET_RESULT(RESULT_ERROR_BADSIZE, "Size of vector of absortion profiles per wall and numbar of walls are different");
-				return;
-			}
+		//void setAbsortion(std::vector<std::vector<float>> absortionPerBandPerWall)		
+		//{
+		//	// Check the number of bands and the number of walls
+		//	if (absortionPerBandPerWall.size() != ISMParameters->room.getWalls().size())
+		//	{
+		//		SET_RESULT(RESULT_ERROR_BADSIZE, "Size of vector of absortion profiles per wall and numbar of walls are different");
+		//		return;
+		//	}
 
-			for (int i = 0; i < ISMParameters->room.getWalls().size(); i++)
-			{
-				ISMParameters->room.setWallAbsortion(i, absortionPerBandPerWall.at(i));
-			}
-			//originalSource->createImages(mainRoom, reflectionOrder);
-			//TODO CALL UpdateImagesAbsortionCoeficients
-		}
+		//	for (int i = 0; i < ISMParameters->room.getWalls().size(); i++)
+		//	{
+		//		ISMParameters->room.setWallAbsortion(i, absortionPerBandPerWall.at(i));
+		//	}
+		//	//originalSource->createImages(mainRoom, reflectionOrder);
+		//	//TODO CALL UpdateImagesAbsortionCoeficients
+		//}
 
 		/** \brief returns the main room
 		*	\details returns a Room object containing the definition of the main room (without image walls)
@@ -175,8 +178,11 @@ namespace ISM
 				return;
 			
 			if (imageSources != nullptr)
+			{
 				UpdateListenerPosition();
 				imageSources->UpdateSourceLocation(location);
+				UpdateImageSourceDataFromImageTree();
+			}			
 		}
 
 		/** \brief Returns the source location
@@ -185,8 +191,7 @@ namespace ISM
 		*/
 		Common::CVector3 getSourceLocation()		
 		{
-			return sourceLocation;
-			return imageSources->getImageLocation();
+			return sourceLocation;			
 		}
 
 		/** \brief Returns the location of image sources
@@ -195,9 +200,10 @@ namespace ISM
 		*/
 		std::vector<Common::CVector3> getImageSourceLocations()		
 		{
-			std::vector<Common::CVector3> imageSourceList;
+			return imageSourcesPositionList;
+			/*std::vector<Common::CVector3> imageSourceList;
 			imageSources->getImageLocations(imageSourceList);
-			return imageSourceList;
+			return imageSourceList;*/
 		}
 
 		/** \brief Returns data of all image sources
@@ -207,15 +213,14 @@ namespace ISM
 		*/
 		std::vector<ISM::ImageSourceData> getImageSourceData()	
 		{
-			UpdateListenerPosition();
-			std::vector<ImageSourceData> imageSourceList;
-			imageSources->getImageData(imageSourceList);
-			return imageSourceList;
+			std::lock_guard<std::mutex> l(mutex);
+			return imageSourcesDataList;
 		}
 
 		void SetListenerPosition() {
 			UpdateListenerPosition();
 			imageSources->UpdateImagesTreeVisibilities();
+			UpdateImageSourceDataFromImageTree();
 		}
 
 
@@ -277,36 +282,7 @@ namespace ISM
 			return ownerCore->GetAudioState().sampleRate;
 		}
 
-	private:
-		
-		/**
-		 * @brief Finalizes the setup process by configuring reflection order and validating distance parameters for image source creation.
-		 * @param order The desired reflection order for image source creation.
-		 * @param _maxDistanceSourcesToListener The maximum allowed distance from image sources to the listener.
-		 * @param _windowSlopeDistance The window slope distance used for validation.
-		 * @return True if setup completes successfully; false if parameters are invalid or setup fails.
-		 */
-		//bool EndSetup(const int& order, const float& _maxDistanceSourcesToListener, const float& _windowSlopeDistance)
-		//{
-		//	if (setupDone) return false;
-
-		//	//sampleRate = _sampleRate;
-		//	reflectionOrder = order;			
-		//	bool result = setMaxDistanceImageSources(_maxDistanceSourcesToListener, _windowSlopeDistance);
-		//	if (!result)
-		//	{
-		//		SET_RESULT(RESULT_ERROR_INVALID_PARAM, "MaxDistanceSourcesToListener must be smaller than windowSlopeDistance/2");
-		//		return false;
-		//	}
-		//	
-		//	UpdateListenerPosition();
-
-		//	imageSources = std::make_shared<SourceImages2>(ISMParameters);
-		//	imageSources->createImagesTree(ISMParameters->room, reflectionOrder, sourceLocation);
-		//	// TODO check if everything went fine before setting setupDone to true
-		//	setupDone = true;
-		//	return true;
-		//}
+	private:					
 
 		/** \brief Sets the maximum distance between the listener and each source image to be considered visible
 		*	\details Sources that exceed the maximum distance will be considered non-visible sources.
@@ -330,9 +306,28 @@ namespace ISM
 			ISMParameters->listenerLocation = listenerTransform.GetPosition();
 		}
 
+		void  UpdateImageSourceDataFromImageTree()
+		{
+			if (imageSources == nullptr) return;
+			std::lock_guard<std::mutex> l(mutex);
+			imageSourcesDataList.clear();			
+			UpdateListenerPosition();
+			imageSources->getImageSourcesData(imageSourcesDataList);
+			UpdateImageSourcesPositionList();
+		}
+
+		void UpdateImageSourcesPositionList() {
+			imageSourcesPositionList.clear();
+			for (auto& image : imageSourcesDataList) {
+				imageSourcesPositionList.push_back(image.location);
+			}
+		}
+
 		////////////////
 		/// Attributes
 		////////////////
+		
+		mutable std::mutex mutex; // Thread management
 
 		Binaural::CCore* ownerCore;				// owner Core	
 
@@ -347,6 +342,9 @@ namespace ISM
 		Common::CVector3 sourceLocation;		// Location of the original source		
 
 		std::shared_ptr<SourceImages2> imageSources;
+		std::vector<Common::CVector3> imageSourcesPositionList;
+		std::vector<ImageSourceData> imageSourcesDataList;
+
 		bool setupDone;
 
 		friend class SourceImages2;

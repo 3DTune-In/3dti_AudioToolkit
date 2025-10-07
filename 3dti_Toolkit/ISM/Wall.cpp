@@ -234,11 +234,7 @@ namespace ISM
 		return tempWall;
 	}
 
-	/*Wall Wall::getImageWall(const Wall& _wall) const {
-		return const_cast<Wall*>(this)->getImageWall(_wall);
-	}*/
-
-	Common::CVector3& Wall::getIntersectionPointWithLine(const Common::CVector3& p1, const Common::CVector3& p2) const
+	Common::CVector3 Wall::getIntersectionPointWithLine(const Common::CVector3& p1, const Common::CVector3& p2) const
 	{
 		Common::CVector3 cutPoint, vecLine;
 		float modulus, lambda;

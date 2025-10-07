@@ -61,7 +61,7 @@ namespace ISM
 		shoeBox = true;
 	}
 
-	void Room::setupRoomGeometry(RoomGeometry roomGeometry)
+	void Room::setupRoomGeometry(const RoomGeometry& roomGeometry)
 	{
 		walls.clear();
 		for (int i = 0; i < roomGeometry.walls.size(); i++)
@@ -77,7 +77,7 @@ namespace ISM
 	}
 		
 	///void Room::insertWall(std::shared_ptr<Wall> _newWall)
-	void Room::insertWall(Wall& _newWall)
+	void Room::insertWall(const Wall& _newWall)
 	{
 		walls.push_back(_newWall);
 	}
@@ -132,18 +132,21 @@ namespace ISM
 		return absortions;
 	}
 
-	std::vector<Wall> Room::getWalls()
+	/*std::vector<Wall> Room::getWalls()
+	{
+		return walls;
+	}*/
+	
+	const std::vector<Wall> & Room::getWalls() const
 	{
 		return walls;
 	}
 	
-	const std::vector<Wall> & Room::getWalls2() const
+	//std::vector<Room>& Room::getImageRooms() const
+	void  Room::getImageRooms(std::vector<Room>& roomList) const
 	{
-		return walls;
-	}
-	std::vector<Room> Room::getImageRooms()
-	{
-		std::vector<Room> roomList;
+		//std::vector<Room> roomList;
+		roomList.clear();
 		for (int i = 0; i < walls.size(); i++)
 		{
 			if (walls.at(i).isActive())
@@ -157,15 +160,14 @@ namespace ISM
 				roomList.push_back(tempRoom);
 			}
 		}
-		return roomList;
+		//return roomList;
 	}
 
-	bool Room::checkPointInsideRoom(Common::CVector3 point, float &distanceNearestWall)
+	bool Room::checkPointInsideRoom(const Common::CVector3& point, float &distanceNearestWall) const
 	{
 		float distanceToPlane = FLT_MAX;
-		bool inside;
-
-		inside = true;
+		bool inside = true;
+		
 		for (int i = 0; i < walls.size(); i++)
 		{
 			if (walls.at(i).isActive())
@@ -218,7 +220,7 @@ namespace ISM
 		return inside;
 	}
 
-	Common::CVector3 Room::getCenter()
+	Common::CVector3 Room::getCenter() const
 	{
 		Common::CVector3 center = Common::CVector3::ZERO;
 
@@ -233,9 +235,9 @@ namespace ISM
 		return center;
 	}
 
-	Common::CVector3 Room::getCenter() const {		
-		
-		return const_cast<Room*>(this)->getCenter();		
-	}
+	//Common::CVector3 Room::getCenter() const {		
+	//	
+	//	return const_cast<Room*>(this)->getCenter();		
+	//}
 
 } //namespace ISM

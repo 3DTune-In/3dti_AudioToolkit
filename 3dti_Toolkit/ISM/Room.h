@@ -52,14 +52,14 @@ namespace ISM
 		*	\details creates a room with arbitrary geometry by means of defining all its corners and the walls as polygons with those corners
 		*	\param [in] roomGeometry: struct containing all the vertices and walls
 		*/
-		void setupRoomGeometry(RoomGeometry roomGeometry);
+		void setupRoomGeometry(const RoomGeometry& roomGeometry);
 
 		/** \brief insert a new wall in the room
 		*	\details Instead of using the setup method, this method can be used to create any arbitrary room. It should be
 					 called once per wall to be inserted, after creating a new empty room.
 		*	\param [in] Wall to be inserted.
 		*/
-		void insertWall(Wall& newWall);
+		void insertWall(const Wall& newWall);
 
 		/** \brief Makes one of the room's walls active
 		*	\details Sets the i-th wall of the room as active and therefore reflective.
@@ -94,14 +94,15 @@ namespace ISM
 		/** \brief Returns a vector of walls containing all the walls of the room.
 		*	\param [out] Walls: vector of walls with all the walls of the room.
 		*/
-		std::vector<Wall> getWalls();
-		const std::vector<Wall>& getWalls2() const;
+		//std::vector<Wall> getWalls();
+		const std::vector<Wall>& getWalls() const;
 
 		/** \brief Returns a vector of image rooms
 		*	\details creates an image (specular) room for each wall of this room and returns a vector contoining them.
 		*	\param [out] ImageRooms: vector containing all image rooms of this room.
 		*/
-		std::vector<Room> getImageRooms();		
+		//std::vector<Room>& getImageRooms() const;
+		void getImageRooms(std::vector<Room>& roomList) const;
 
 		/** \brief Checks wether a 3D point is inside the room or not.
 		*	\details Returns the result of checking wether a 3D point is inside the room or not and the distance to teh nearest wall 
@@ -111,13 +112,13 @@ namespace ISM
 		*	\param [out] distance to nearest wall passed by reference
 		*	\param [out] Result: returned boolean indicating if the point is inside the room (true) or not (false)
 		*/
-		bool checkPointInsideRoom(Common::CVector3 point, float &distanceNearestWall);
+		bool checkPointInsideRoom(const Common::CVector3& point, float &distanceNearestWall) const;
 
 		/** \brief Returns the center of the room.
 		*	\details The center is calculated as the average of the centers of the walls
 		*	\param [out] center: point (CVector3) which is the center of the room.
 		*/
-		Common::CVector3 getCenter();
+		//Common::CVector3 getCenter();
 		Common::CVector3 getCenter() const;
 
 	private:

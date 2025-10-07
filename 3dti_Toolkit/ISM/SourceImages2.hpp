@@ -61,7 +61,7 @@ namespace ISM
 			original source (direct path).
 		*	\param [out] imageSourceDataList: Vector containing the data of the image sources
 		*/
-		void getImageData(std::vector<ImageSourceData>& imageSourceDataList)		
+		void getImageSourcesData(std::vector<ImageSourceData>& imageSourceDataList)		
 		{			
 			for (auto& image : imagesTree) {
 				ImageSourceData temp;
@@ -71,10 +71,10 @@ namespace ISM
 				temp.visibility = image->visibility;
 				temp.visible = image->visible;
 				imageSourceDataList.push_back(temp);  //Once created, the image source data is added to the list
-				image->getImageData(imageSourceDataList); //recurse to the next level
+				image->getImageSourcesData(imageSourceDataList); //recurse to the next level
 			}
 		}
-						
+
 		/**
 		 * @brief Creates all image sources up to a given order
 		 * @details Creates a recursive tree of imagesources using all active walls up to the reflection order depth. This methos should be
@@ -175,18 +175,18 @@ namespace ISM
 		void UpdateImageVisibility() {
 			visibility = 1.0;
 			visible = true;
-
+			
 			float distanceImageToListener = (ISMParameters->listenerLocation - sourceLocation).GetDistance();
 			float upperBorder = ISMParameters->maxDistanceSourcesToListener + 0.5f * ISMParameters->transitionMeters;
 			float lowerBorder = ISMParameters->maxDistanceSourcesToListener - 0.5f * ISMParameters->transitionMeters;
-
+			
 			if (distanceImageToListener > upperBorder)
 			{
 				visible = false;
 				visibility = 0.0;
 				return;
 			}
-
+			
 			if (!reflectionWallsPath.empty()) {
 				for (auto& wall : reflectionWallsPath) {
 					float distanceToBorder;
@@ -195,9 +195,10 @@ namespace ISM
 					wall.checkPointInsideWall(reflectionPoint, distanceToBorder, wallVisibility);
 					visibility *= wallVisibility;
 					visible &= (wallVisibility > 0);
-
+					
 					if (visibility == 0.0f) break; // It is possible to do this more robustly by using an epsilon comparison
 				}
+				
 				visibility = std::pow(visibility, (1 / (float)reflectionWallsPath.size()));
 			}
 
@@ -232,7 +233,7 @@ namespace ISM
 		void createImagesTree(const Room& _currentRoom, int order, std::vector<Wall>& path, std::vector<float>& absorptionCoefficients) {
 			if (order == 0) return;
 			
-			const auto& wallsList = _currentRoom.getWalls2();
+			const auto& wallsList = _currentRoom.getWalls();
 			for (auto& wall : wallsList) {
 				
 				if (!wall.isActive()) continue;
