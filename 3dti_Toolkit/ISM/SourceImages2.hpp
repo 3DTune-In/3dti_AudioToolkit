@@ -327,20 +327,77 @@ namespace ISM
 		}
 
 
-		bool is_greater(float a, float b) const {					
-			return (a - b) > epsilon;
+		/**
+	 * @brief Determines if the first value is strictly greater than the second, excluding cases where they are almost equal.
+	 * @tparam T The type of the values to compare.
+	 * @param a The first value to compare.
+	 * @param b The second value to compare.
+	 * @return True if 'a' is greater than 'b' and they are not almost equal; otherwise, false.
+	 */
+		template <typename T>
+		bool is_greater(T a, T b) {
+			return (a > b) && !almostEqual(a, b);
 		}
 
-		bool is_greater_or_equal(float a, float b) const {						
-			return (a - b) > -epsilon;
+		/**
+		 * @brief Determines if the first value is greater than or approximately equal to the second value.
+		 * @tparam T The type of the values to compare.
+		 * @param a The first value to compare.
+		 * @param b The second value to compare.
+		 * @return True if the first value is greater than or approximately equal to the second value; otherwise, false.
+		 */
+		template <typename T>
+		bool is_greater_or_equal(T a, T b) {
+			return (a > b) || almostEqual(a, b);
 		}
 	
+		/**
+	 * @brief This method checks if two floating point numbers are almost equal, considering both absolute and relative tolerances.
+	 * @details The method uses default tolerances based on the type of floating point number (float, double, long double).
+	 * @tparam type T
+	 * @param a First floating point number.
+	 * @param b Second floating point number.
+	 * @return true if the numbers are almost equal, false otherwise.
+	 */
+		template <typename T>
+		bool almostEqual(T a, T b) {
+			T relEpsilon;
+			T absEpsilon;
+
+			if constexpr (std::is_same_v<T, float>) {
+				relEpsilon = 1e-5f;
+				absEpsilon = 1e-8f;
+			}
+			else if constexpr (std::is_same_v<T, double>) {
+				relEpsilon = 1e-12;
+				absEpsilon = 1e-15;
+			}
+			else if constexpr (std::is_same_v<T, long double>) {
+				relEpsilon = 1e-15L;
+				absEpsilon = 1e-18L;
+			}
+			else {
+				// generic fallback: use epsilon of the implementation
+				relEpsilon = std::numeric_limits<T>::epsilon();
+				absEpsilon = std::numeric_limits<T>::epsilon();
+			}
+
+			T diff = std::fabs(a - b);
+
+			// Absolute comparison (for small values, close to 0)
+			if (diff <= absEpsilon) {
+				return true;
+			}
+
+			// Relative comparison (for large values)
+			return diff <= relEpsilon * std::max(std::fabs(a), std::fabs(b));
+		}
+
 		////////////////
 		/// Attributes
 		////////////////		
 				
-		
-		const float epsilon = std::numeric_limits<float>::epsilon();
+				
 	
 		bool visible;									// false when visibility = 0, true otherwise
 		float visibility;								// 1.0 if visible, 0.0 if not, something in the middle if the ray is close to the border of walls
