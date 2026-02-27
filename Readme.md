@@ -140,18 +140,14 @@ Other contributors:
 
 ## Copyright and License
 
-The 3D Tune-In Toolkit and the 3D Tune-In Resource Management Package are both Copyright (c) University of Malaga and Imperial College London – 2018.
+The 3D Tune-In Toolkit and the 3D Tune-In Resource Management Package are both Copyright (c) University of Malaga and Imperial College London – 2026.
 
-As copyright owners, University of Malaga and Imperial College London can license the 3D Tune-In Toolkit and the 3D Tune-In Resource Management Package under different license terms, and offer the following licenses for the 3D Tune-In Toolkit and the 3D Tune-In Resource Management Package:
+The 3D Tune-In Toolkit and the 3D Tune-In Resource Management Package are licensed under the terms of the GNU Lesser General Public License version 3 (LGPL-3.0-only).
 
-- GPL v3, a popular open-source license with strong copyleft conditions (the default license)
-- Commercial or closed-source licenses
+If you use, redistribute, or modify the 3D Tune-In Toolkit or the 3D Tune-In Resource Management Package under LGPL-3.0-only, there is no license fee or signed license agreement required: you just need to comply with the LGPL-3.0-only terms and conditions. See [3DTI_AUDIOTOOLKIT_LICENSE](3DTI_AUDIOTOOLKIT_LICENSE) and [LICENSE](LICENSE) for further information.
 
-If you license the 3D Tune-In Toolkit or the 3D Tune-In Resource Management Package under GPL v3, there is no license fee or signed license agreement: you just need to comply with the GPL v3 terms and conditions. See [3DTI_AUDIOTOOLKIT_LICENSE](3DTI_AUDIOTOOLKIT_LICENSE) and [LICENSE](LICENSE) for further information.
+Versions distributed prior to February 2026 were licensed under the GNU General Public License version 3 (GPLv3). Those versions remain under GPLv3.
 
-If you purchase a commercial or closed-source license for the 3D Tune-In Toolkit and the 3D Tune-In Resource Management Package, you must comply with the terms and conditions listed in the associated license agreement; the GPL v3 terms and conditions do not apply. For more information about the commercial license, contact Arcadio Reyes-Lecuona (areyes@uma.es) or Lorenzo Picinali (l.picinali@imperial.ac.uk).
-
-The 3D Tune-In Toolkit and the 3D Tune-In Resource Management Package software themself remain the same: the only difference between an open-source 3D Tune-In Toolkit and a commercial 3D Tune-In Toolkit are the license terms. That is also the case of the 3D Tune-In Resource Management Package.
 
 ## Acknowledgements 
 

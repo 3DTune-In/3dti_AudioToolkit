@@ -1,34 +1,55 @@
-Copyright (c) 2015-2018 University of Malaga and Imperial College London.
+Copyright (c) 2015-2026 University of Malaga and Imperial College London.
 All rights reserved.
 
-This copy of 3dti_AudioToolkit is free software; you can redistribute 
-it and/or modify it under the terms of the GNU General Public License 
+Current Licensing
+=================
+This copy of 3dti_AudioToolkit is free software; you can redistribute
+it and/or modify it under the terms of the GNU Lesser General Public License
 version 3 as published by the Free Software Foundation.
 
-3dti_AudioToolkit is distributed in the hope that it will be useful, but 
-WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
-or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for 
-more details.
+3dti_AudioToolkit is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public
+License version 3 for more details.
 
-You should have received a copy of the GNU General Public License version
-3 along with this program; if not, see http://www.gnu.org/licenses.
+You should have received a copy of the GNU Lesser General Public License
+version 3 along with this program; if not, see https://www.gnu.org/licenses/.
 
-Linking 3dti_AudioToolkit statically or dynamically with other software 
-(such as a library, module or application) is making a combined work based
-on 3dti_AudioToolkit. Thus, the terms and conditions of the GNU General 
-Public License version 3 cover this combined work.
+The full text of the LGPLv3 license is provided in the LICENSE file
+located in the root directory of this repository.
 
-If such software can only be used together with 3dti_AudioToolkit, then not
-only the combined work but the software itself is a work derived from 
-3dti_AudioToolkit and as such shall be licensed under the terms of the GNU 
-General Public License version 3. This includes the situation where 
-3dti_AudioToolkit is only being used through an abstraction layer.
 
-As a special exception to the above, the partners of the 3D Tune-In consortium
-may use this software as developed during the lifetime of the 3D Tune-In 
-project (up to 30th April, 2018), even for comercial purposes, without the 
-obligation of licensing their applications under the terms of the GNU General 
-Public License version 3, provided that, the partner has communicated such 
-development to University of Malaga and Imperial College London and this 
-software is appropriately acknowledged. This exception doesn't apply to the 
-use of any advancemens or changes in this software after 30th April, 2018.
+Previous Licensing
+==================
+Versions of 3dti_AudioToolkit distributed prior to 27/2/2026 were licensed 
+under the terms of the GNU General Public License version 3 (GPLv3).
+
+All rights granted under GPLv3 for those versions remain valid and are
+not affected by the licensing change.
+
+
+Historical Consortium Exception
+===============================
+As a special exception applicable during the lifetime of the 3D Tune-In
+project (until 30th April, 2018), partners of the 3D Tune-In consortium
+were granted additional rights to use the software as developed during
+that period, including for commercial purposes, without the obligation
+of licensing their applications under the terms of the GNU General Public
+License version 3.
+
+This exception:
+
+- Applied exclusively to versions developed and distributed during the
+  project lifetime;
+- Was subject to communication of such development to University of Malaga
+  and Imperial College London;
+- Required appropriate acknowledgment of the software;
+- Does not apply to any advancements, changes, or versions released after
+  30th April, 2018.
+
+
+No Additional Rights
+====================
+Except as expressly stated above, no additional rights or permissions
+are granted beyond those provided under the LGPLv3 license contained
+in the LICENSE file.
