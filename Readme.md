@@ -8,6 +8,12 @@ Technical details about the 3D Tune-In Toolkit spatialiser are described in:
 
 Cuevas-Rodríguez M, Picinali L, González-Toledo D, Garre C, de la Rubia-Cuestas E, Molina-Tanco L and Reyes-Lecuona A. (2019) 3D Tune-In Toolkit: An open-source library for real-time binaural spatialisation. PLOS ONE 14(3): e0211899. https://doi.org/10.1371/journal.pone.0211899
 
+> ⚠️ **Important Notice**  
+> The algorithms originally included in the 3DTI Toolkit have been migrated to the [**BRT (Binaural Rendering Toolbox)**](https://github.com/GrupoDiana/BRTLibrary), which provides an open and extensible architecture designed for advanced audio applications. The BRT offers enhanced functionality, greater flexibility, and is better suited for conducting psychoacoustic experiments and similar tasks.  
+>  
+> If you intend to use or extend the library, we strongly recommend transitioning to the BRT for an improved experience and ongoing support.
+
+
 **The structure of the repository is as follows:**
 ```
 3dti_AudioToolkit
@@ -134,22 +140,18 @@ Other contributors:
 
 ## Copyright and License
 
-The 3D Tune-In Toolkit and the 3D Tune-In Resource Management Package are both Copyright (c) University of Malaga and Imperial College London – 2018.
+The 3D Tune-In Toolkit and the 3D Tune-In Resource Management Package are both Copyright (c) University of Malaga and Imperial College London – 2026.
 
-As copyright owners, University of Malaga and Imperial College London can license the 3D Tune-In Toolkit and the 3D Tune-In Resource Management Package under different license terms, and offer the following licenses for the 3D Tune-In Toolkit and the 3D Tune-In Resource Management Package:
+The 3D Tune-In Toolkit and the 3D Tune-In Resource Management Package are licensed under the terms of the GNU Lesser General Public License version 3 (LGPL-3.0-only).
 
-- GPL v3, a popular open-source license with strong copyleft conditions (the default license)
-- Commercial or closed-source licenses
+If you use, redistribute, or modify the 3D Tune-In Toolkit or the 3D Tune-In Resource Management Package under LGPL-3.0-only, there is no license fee or signed license agreement required: you just need to comply with the LGPL-3.0-only terms and conditions. See [3DTI_AUDIOTOOLKIT_LICENSE](3DTI_AUDIOTOOLKIT_LICENSE) and [LICENSE](LICENSE) for further information.
 
-If you license the 3D Tune-In Toolkit or the 3D Tune-In Resource Management Package under GPL v3, there is no license fee or signed license agreement: you just need to comply with the GPL v3 terms and conditions. See [3DTI_AUDIOTOOLKIT_LICENSE](3DTI_AUDIOTOOLKIT_LICENSE) and [LICENSE](LICENSE) for further information.
+Versions distributed prior to February 2026 were licensed under the GNU General Public License version 3 (GPLv3). Those versions remain under GPLv3.
 
-If you purchase a commercial or closed-source license for the 3D Tune-In Toolkit and the 3D Tune-In Resource Management Package, you must comply with the terms and conditions listed in the associated license agreement; the GPL v3 terms and conditions do not apply. For more information about the commercial license, contact Arcadio Reyes-Lecuona (areyes@uma.es) or Lorenzo Picinali (l.picinali@imperial.ac.uk).
-
-The 3D Tune-In Toolkit and the 3D Tune-In Resource Management Package software themself remain the same: the only difference between an open-source 3D Tune-In Toolkit and a commercial 3D Tune-In Toolkit are the license terms. That is also the case of the 3D Tune-In Resource Management Package.
 
 ## Acknowledgements 
 
-![European Union](docs/images/EU_flag.png "European Union") This project has received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No 644051. 
+![European Union](docs/images/EU_flag.png "European Union") This project has received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No 644051, and the Spanish National Project SAVLab, under grant No. PID2019-107854GB-I00.
 
 We would like to acknowledge Dr. Brian FG Katz and his team for their contributions in the field of sound spatialization, which were used as the basis for part of this software.
 
