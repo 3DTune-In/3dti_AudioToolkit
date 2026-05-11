@@ -1,8 +1,8 @@
-#ifndef _ISM2_HPP_
-#define _ISM2_HPP_
+#ifndef _ISM_HPP_
+#define _ISM_HPP_
 
 #include "Room.h"
-#include "SourceImages2.hpp"
+#include "SourceImages.hpp"
 #include "ISMParameters.hpp"
 #include <Common/Vector3.h>
 #include <Common/Buffer.h>
@@ -11,10 +11,10 @@
 namespace ISM
 {
 
-	class CISM2 {
+	class CISM {
 	public:
 		
-		CISM2(Binaural::CCore* _ownerCore) 
+		CISM(Binaural::CCore* _ownerCore) 
 			: ownerCore{ _ownerCore }
 			, setupDone{ false }
 			, reflectionOrder{ 1 }
@@ -55,7 +55,7 @@ namespace ISM
 
 			UpdateListenerPosition();
 
-			imageSources = std::make_shared<SourceImages2>(ISMParameters);
+			imageSources = std::make_shared<SourceImages>(ISMParameters);
 			imageSources->createImagesTree(ISMParameters->room, reflectionOrder, sourceLocation);
 			UpdateImageSourceDataFromImageTree();
 			// TODO check if everything went fine before setting setupDone to true
@@ -341,13 +341,13 @@ namespace ISM
 
 		Common::CVector3 sourceLocation;		// Location of the original source		
 
-		std::shared_ptr<SourceImages2> imageSources;
+		std::shared_ptr<SourceImages> imageSources;
 		std::vector<Common::CVector3> imageSourcesPositionList;
 		std::vector<ImageSourceData> imageSourcesDataList;
 
 		bool setupDone;
 
-		friend class SourceImages2;
+		friend class SourceImages;
 	};
 }
 #endif

@@ -1,17 +1,27 @@
-#ifndef _SOURCE_IMAGES2_HPP_
-#define _SOURCE_IMAGES2_HPP_
+#ifndef _SOURCE_IMAGES_HPP_
+#define _SOURCE_IMAGES_HPP_
 
 #include "Room.h"
-#include "ISM2.hpp"
+#include "ISM.hpp"
 #include "ISMParameters.hpp"
 #include <Common/Vector3.h>
 #include <Common/CascadeGraphicEq9OctaveBands.h>
 
 namespace ISM
 {	
-	class SourceImages2 {
+	//Struct to store all the data of the image sources
+	struct ImageSourceData
+	{
+		Common::CVector3 location;						//Location of the image source
+		bool visible;									//If the source is visible it should be rendered
+		float visibility;								//1 if visible, 0 if not, something in the middle if in the transition, where the transition is +/-VISIBILITY_MARGIN width
+		std::vector<Wall> reflectionWalls;				//list of walls where the source has reflected (last reflection first)
+		std::vector<float> reflectionBands;             //coeficients, for each octave Band, to be applied to simulate walls' absortion
+	};
+
+	class SourceImages {
 	public:
-		SourceImages2(std::shared_ptr<CISMParameters> _ISMParameters)
+		SourceImages(std::shared_ptr<CISMParameters> _ISMParameters)
 			: visible {false}
 			, visibility{ 0 }
 			, sourceLocation{ Common::CVector3(0,0,0) }
@@ -260,8 +270,11 @@ namespace ISM
 				if (is_greater(roomsDistance, maxDistanceImageSources)) continue;
 				
 				path.push_back(wall);
-											
-				auto child = std::make_shared<SourceImages2>(ISMParameters);
+						
+				//std::vector<std::shared_ptr<Wall>> path2;
+				//path2.push_back(std::make_shared<Wall>(wall));
+
+				auto child = std::make_shared<SourceImages>(ISMParameters);
 				child->sourceLocation = newImageLocation;				
 				child->reflectionWallsPath.assign(path.begin(), path.end());
 				
@@ -403,8 +416,9 @@ namespace ISM
 		float visibility;								// 1.0 if visible, 0.0 if not, something in the middle if the ray is close to the border of walls
 		Common::CVector3 sourceLocation;				// Source location		
 		std::vector<Wall> reflectionWallsPath;			// vector containing the walls where the sound has been reflected in inverse order (last reflection first)
+		std::vector<std::shared_ptr<Wall>> reflectionWallsPath2;			// vector containing the walls where the sound has been reflected in inverse order (last reflection first)
 		std::vector<float> reflectionBands;				// coeficients, for each octave Band, to be applied to simulate walls' absortion
-		std::vector<std::shared_ptr<SourceImages2>> imagesTree;	// recursive list of images			
+		std::vector<std::shared_ptr<SourceImages>> imagesTree;	// recursive list of images			
 		Common::CascadeGraphicEq9OctaveBands eq;		// Filter to simulate walls' absortion		
 
 		std::shared_ptr<CISMParameters> ISMParameters;	// To access ISM parameters
