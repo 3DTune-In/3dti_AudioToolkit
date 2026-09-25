@@ -143,8 +143,11 @@ namespace HAHLSimulation {
 			{
 				return	(octaveBandAttenuations[gammatoneLowerBandGroupIndices[bandIndex]]);
 			}
-			else if (gammatoneLowerBandGroupFactors[bandIndex] > 0 && gammatoneHigherBandGroupFactors[bandIndex] > 0)
+			else if (gammatoneLowerBandGroupFactors[bandIndex] >= 0 && gammatoneHigherBandGroupFactors[bandIndex] >= 0)
 			{
+				// Note: this also correctly covers the case where the group's centre
+				// frequency lands exactly on an octave band (one factor is exactly 0.0),
+				// since a weight of 0 simply zeroes out that term of the interpolation.
 				return	(octaveBandAttenuations[gammatoneLowerBandGroupIndices[bandIndex]]) * gammatoneLowerBandGroupFactors[bandIndex] +
 					(octaveBandAttenuations[gammatoneHigherBandGroupIndices[bandIndex]]) * gammatoneHigherBandGroupFactors[bandIndex];
 			}
